@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wc-entries
+   xmlns="svn:">
+<entry
+   committed-rev="1"
+   name=""
+   committed-date="2009-10-30T05:38:51.696297Z"
+   url="svn+ssh://210.196.79.251/var/svn/amenity/branches/anet-dosys-rev.1.4/anet-dosys/src/sample/upload"
+   last-author="kajioka-h"
+   kind="dir"
+   uuid="b28f2e69-2077-0410-9977-8d54750ab086"
+   revision="2"/>
+<entry
+   committed-rev="1"
+   name="db_insert.php"
+   text-time="2009-11-02T04:53:31.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="a2c65c16528ce11202181389e4d46e53"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:31.000000Z"/>
+<entry
+   committed-rev="1"
+   name="post_upload.php"
+   text-time="2009-11-02T04:53:31.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="7af375dc8fa23b529e6b1375f82c2a86"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:31.000000Z"/>
+<entry
+   name="templates_c"
+   kind="dir"/>
+<entry
+   committed-rev="1"
+   name="ENV_local.php"
+   text-time="2009-11-02T04:53:31.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="bab610e57a5b0ec5e03191e20a9fdc6a"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:31.000000Z"/>
+<entry
+   name="csv"
+   kind="dir"/>
+<entry
+   committed-rev="1"
+   name="db_delete.php"
+   text-time="2009-11-02T04:53:31.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="316b3fbdea21f0e4c11d92ef1e358782"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:31.000000Z"/>
+<entry
+   name="templates"
+   kind="dir"/>
+</wc-entries>

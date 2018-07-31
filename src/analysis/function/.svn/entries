@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wc-entries
+   xmlns="svn:">
+<entry
+   committed-rev="1"
+   name=""
+   committed-date="2009-10-30T05:38:51.696297Z"
+   url="svn+ssh://210.196.79.251/var/svn/amenity/branches/anet-dosys-rev.1.4/anet-dosys/src/analysis/function"
+   last-author="kajioka-h"
+   kind="dir"
+   uuid="b28f2e69-2077-0410-9977-8d54750ab086"
+   revision="2"/>
+<entry
+   committed-rev="1"
+   name="view.fnc"
+   text-time="2009-11-02T04:53:36.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="54f5bda1de31e5a9264ebaa3815500bb"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:36.000000Z"/>
+<entry
+   name="plugins"
+   kind="dir"/>
+<entry
+   committed-rev="1"
+   name="analysis_data_edit.fnc.bak"
+   text-time="2009-11-02T04:53:36.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="95c5340fa53495d027511ed16a7214df"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:36.000000Z"/>
+<entry
+   committed-rev="1"
+   name="analysis_query_ABC.fnc"
+   text-time="2009-11-02T04:53:36.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="a7b55bfd86e981c1b943219b2320f601"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:36.000000Z"/>
+<entry
+   committed-rev="1"
+   name="analysis_data_edit.fnc"
+   text-time="2009-11-02T04:53:36.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="50a4102c6aafc759ca5fc35e3444bcf9"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:36.000000Z"/>
+<entry
+   committed-rev="1"
+   name="analysis.fnc"
+   text-time="2009-11-02T04:53:36.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="7333e9d384fcc0cb113deb2be2e3cc0c"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:36.000000Z"/>
+<entry
+   committed-rev="1"
+   name="form.fnc"
+   text-time="2009-11-02T04:53:36.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="bd134e3d358353a40206390d3786e4be"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:36.000000Z"/>
+<entry
+   committed-rev="1"
+   name="INCLUDE.php"
+   text-time="2009-11-02T04:53:36.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="e6389e9843369a0650c6c8828fdcf381"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:36.000000Z"/>
+<entry
+   committed-rev="1"
+   name="html.fnc"
+   text-time="2009-11-02T04:53:36.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="3a28d23aba5987e45889d9f1b91b4526"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:36.000000Z"/>
+<entry
+   committed-rev="1"
+   name="ReadMe.txt"
+   text-time="2009-11-02T04:53:36.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="a8503955561dcea134a599fdea5cfaa4"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:36.000000Z"/>
+<entry
+   committed-rev="1"
+   name="analysis_data_edit_ABC.fnc"
+   text-time="2009-11-02T04:53:36.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="6c255a77bd5a3de40d0b088dd0a998f9"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:36.000000Z"/>
+<entry
+   committed-rev="1"
+   name="analysis_query.fnc"
+   text-time="2009-11-02T04:53:36.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="c0765cb513da9fffc80521b270a67f32"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:36.000000Z"/>
+</wc-entries>

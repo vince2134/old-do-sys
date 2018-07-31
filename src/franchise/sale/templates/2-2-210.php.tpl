@@ -1,0 +1,314 @@
+{$var.html_header}
+
+<body bgcolor="#D8D0C8">
+<form name="dateForm" method="post">
+
+{*+++++++++++++++ 外枠 begin +++++++++++++++*}
+<table width="100%" height="90%" class="M_table">
+
+    {*+++++++++++++++ ヘッダ類 begin +++++++++++++++*}
+    <tr align="center" height="60">
+        <td width="100%" colspan="2" valign="top">{$var.page_header}</td>
+    </tr>
+    {*--------------- ヘッダ類 e n d ---------------*}
+
+    {*+++++++++++++++ コンテンツ部 begin +++++++++++++++*}
+    <tr align="center" valign="top">
+        <td>
+            <table>
+                <tr>
+                    <td>
+
+{*+++++++++++++++ メッセージ類１ begin +++++++++++++++*}
+{if $var.pattern_err != null}
+    <span style="color: #ff0000; font-weight: bold; line-height: 130%;">
+    <li>{$var.pattern_err}<br>
+    </span><br>
+{/if}
+
+{if $var.commit_flg != true}
+    <span style="font-weight: bold; color: #555555;">※現在、以下の発行元が登録済みです。</span>
+{else}
+    <span style="font-weight: bold; color: #0000ff;">
+        印字パターンを登録しました。<br><br>
+        ※この画面は実際のイメージとは異なる可能性があります。<br>
+        　実際の売上伝票はプレビューをご確認ください。
+    </span>
+{/if}
+{*--------------- メッセージ類１ e n d ---------------*}
+
+{*+++++++++++++++ 画面表示１ begin +++++++++++++++*}
+{$form.hidden}
+
+<table width="950">
+    <tr>
+        <td>
+
+{if $var.commit_flg != true}
+    <table width="1050">
+        <tr valign="bottom">
+            <td>{$form.pattern_select.html}<br></td>
+        </tr>
+        <tr>
+            <td width=350 align=right>{$form.preview_radio.html}　{$form.preview_button.html}</td>
+        </tr>
+    </table>
+{else}
+<br>　　　　　　　　　　　{$form.ok_button.html}
+{/if}
+
+        </td>
+    </tr>
+</table>
+
+<hr>
+{if $var.commit_flg != true}
+{$form.form_new_button.html}　　{$form.change_button.html}　　{$form.clear_button.html}
+{/if}
+{*--------------- 画面表示１ e n d ---------------*}
+
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+
+{*+++++++++++++++ メッセージ類２ begin +++++++++++++++*}
+{* 登録・変更完了メッセージ出力 *}
+{if $var.qf_err_flg == true}
+    <span style="color: #ff0000; font-weight: bold; line-height: 130%;">
+    {if $form.pattern_name.error != null}
+        <li>{$form.pattern_name.error}</li><br>
+    {/if}
+    {if $form.pattern_no.error != null}
+        <li>{$form.pattern_no.error}</li><br>
+    {/if}
+    {if $form.s_memo5.error != null}
+        <li>{$form.s_memo5.error}</li><br>
+    {/if}
+    {if $form.s_memo6.error != null}
+        <li>{$form.s_memo6.error}</li><br>
+    {/if}
+    {if $form.s_memo7.error != null}
+        <li>{$form.s_memo7.error}</li><br>
+    {/if}
+    {if $form.s_memo8.error != null}
+        <li>{$form.s_memo8.error}</li><br>
+    {/if}
+    {if $form.s_memo9.error != null}
+        <li>{$form.s_memo9.error}</li><br>
+    {/if}
+    </span>
+{/if}
+{*--------------- メッセージ類２ e n d ---------------*}
+
+{*+++++++++++++++ 画面表示２ begin +++++++++++++++*}
+{if $smarty.post.form_new_flg != true && $smarty.post.form_update_flg != true || $var.pattern_err != null}
+{*
+    {$form.form_new_button.html}　　{$form.change_button.html}　　{$form.clear_button.html}
+*}
+{else}
+
+<table width="100%">
+    <tr>
+        <td>
+
+<table class="Data_Table" border="1" width="360">
+<col width="110" style="font-weight: bold;">
+<col>
+    <tr>
+        <td class="Title_Purple">パターンNo.</td>
+        <td class="Value">{$form.pattern_no.html}</td>
+    </tr>
+    <tr>
+        <td class="Title_Purple">パターン名</td>
+        <td class="Value">{$form.pattern_name.html}</td>
+    </tr>
+    <tr>
+        <td class="Title_Purple">請求書</td>
+        <td class="Value">{$form.bill_send_radio.html}</td>
+    </tr>
+</table>
+
+        </td>
+    </tr>
+</table>
+<br>
+
+{/if}
+{*--------------- 画面表示２ a n d ---------------*}
+
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+
+{*+++++++++++++++ 画面表示３ begin +++++++++++++++*}
+{if $smarty.post.form_new_flg != true && $smarty.post.form_update_flg != true || $var.pattern_err != null}
+
+{else}
+
+<table>
+    <tr>
+        <td>
+
+{* お買上伝票 *}
+<table class="List_Table" width="1050" height="370" cellpadding="0"><tr><td class="Value">
+<table width="100%" height="100%" style="background: url({$var.path_sale_slip}) no-repeat fixed 30% 50%;">
+    <tr>
+        <td valign="top" width="50%">
+        {* 備考 *}
+        {if $var.commit_flg != true}
+            <table style="position: relative; top: 260px; left: 35px;">
+            {*<table valign="bottom">*}
+                <tr style="color: #ff0000;">
+                    <td>{$form.s_memo6.html}</td>
+                </tr>
+            </table>
+        {else}
+            <table style="position: relative; top: 260px; left: 15px;">
+            {*<table valign="bottom">*}
+                <tr>
+                    <td span style="font-size: 11px;">{$form.s_memo6.html}</td>
+                </tr>
+            </table>
+        {/if}
+        </td>
+        <td align="left" valign="top">
+        {* 社名等 *}
+        {if $var.commit_flg != true}
+            <table style="position: relative; top: 30px; left: 35px;" cellspacing="0" cellpadding="0">
+            {*<table cellspacing="0" cellpadding="0">*}
+                <tr>
+                    <td>
+                        {$form.s_memo1.html}
+                        {$form.s_memo2.html}<br>
+                        {$form.s_memo3.html}
+                        {$form.s_memo4.html}<br>
+                        {$form.s_memo5.html}<br>
+                    </td>
+                </tr>
+            </table>
+        {else}
+            <table style="position: relative; top: 15px; left: 100px;" cellspacing="0" cellpadding="0">
+            {*<table cellspacing="0" cellpadding="0" style="padding-left: 550px;">*}
+                <tr>
+                    <td>
+                        <span style="font: bold 15px;">
+                        {$form.s_memo1.html}
+                        {$form.s_memo2.html}<br>
+                        </span>
+                        <span style="font-size: 11px;">
+                        {$form.s_memo3.html}
+                        {$form.s_memo4.html}<br>
+                        {$form.s_memo5.html}<br>
+                        </span>
+                    </td>
+                </tr>
+            </table>
+        {/if}
+        </td>
+    </tr>
+</table>
+</tr></td></table>
+<br>
+
+{* 請求書 *}
+<table class="List_Table" width="1050" height="370" cellpadding="0"><tr><td class="Value">
+<table width="100%" height="100%" style="background: url({$var.path_claim_slip}) no-repeat fixed 30% 50%;">
+    <tr>
+        <td valign="top">
+        {* 取引銀行 *}
+        {if $var.commit_flg != true}
+            <table style="position: relative; top: 255px; left: 35px;">
+                <tr>
+                    <td style="color: #ff0000;">{$form.s_memo7.html}</td>
+                </tr>
+            </table>
+        {else}
+            <table style="position: relative; top: 260px; left: 15px;">
+                <tr>
+                    <td span style="font-size: 11px;">{$form.s_memo7.html}</td>
+                </tr>
+            </table>
+        {/if}
+        </td>
+    </tr>
+</table>
+</td></tr></table>
+<br>
+
+{* 納品書 *}
+<table class="List_Table" width="1050" height="370" cellpadding="0"><tr><td class="Value">
+<table width="100%" height="100%" style="background: url({$var.path_deli_slip}) no-repeat fixed 30% 50%;">
+    <tr>
+        <td valign="top">
+        {* 取引銀行 *}
+        {if $var.commit_flg != true}
+            <table style="position: relative; top: 255px; left: 35px;">
+                <tr>
+                    <td style="color: #ff0000;"></td>
+                </tr>
+            </table>
+        {else}
+            <table style="position: relative; top: 260px; left: 15px;">
+                <tr>
+                    <td span style="font-size: 11px;">{$form.s_memo8.html}</td>
+                </tr>
+            </table>
+        {/if}
+        </td>
+    </tr>
+</table>
+</td></tr></table>
+<br>
+
+{* 領収書 *}
+<table class="List_Table" width="1050" height="370" cellpadding="0"><tr><td class="Value">
+<table width="100%" height="100%" style="background: url({$var.path_receive_slip}) no-repeat fixed 30% 50%;">
+    <tr>
+        <td valign="top">
+        {* 取引銀行 *}
+        {if $var.commit_flg != true}
+            <table style="position: relative; top: 255px; left: 35px;">
+                <tr>
+                    <td style="color: #ff0000;"></td>
+                </tr>
+            </table>
+        {else}
+            <table style="position: relative; top: 260px; left: 15px;">
+                <tr>
+                    <td span style="font-size: 11px;">{$form.s_memo9.html}</td>
+                </tr>
+            </table>
+        {/if}
+        </td>
+    </tr>
+</table>
+</td></tr></table>
+<br>
+
+<table width="100%">
+    <tr>
+        <td><b><font color="#ff0000">※は必須入力です</font></b></td>
+        <td align="right">
+        {if $var.commit_flg != true}{$form.new_button.html}{else}{$form.ok_button.html}{/if}</td>
+    </tr>
+</table>
+{/if}
+
+        </td>
+    </tr>
+</table>
+{*--------------- 画面表示２ e n d ---------------*}
+
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+    {*--------------- コンテンツ部 e n d ---------------*}
+
+</table>
+{*--------------- 外枠 e n d ---------------*}
+
+{$var.html_footer}

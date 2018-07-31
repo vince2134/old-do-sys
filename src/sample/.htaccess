@@ -1,0 +1,3 @@
+php_value mbstring.internal_encoding "EUC-JP"
+php_value mbstring.http_output       "S-JIS"
+php_value mbstring.script_encoding   "S-JIS"

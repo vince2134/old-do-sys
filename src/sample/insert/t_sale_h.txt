@@ -1,0 +1,61 @@
+--売上ヘッダテーブル
+CREATE TABLE t_sale_h (
+	sale_id int8 PRIMARY KEY,
+	sale_no varchar(8),
+	aord_id int8 REFERENCES t_aorder_h(aord_id) ON DELETE CASCADE,
+	sale_day date,
+	claim_day date,
+	client_id int4 REFERENCES t_client(client_id) ON DELETE RESTRICT ON UPDATE CASCADE,
+	direct_id int4 REFERENCES t_direct(direct_id) ON DELETE RESTRICT ON UPDATE CASCADE,
+	trade_id varchar(2) REFERENCES t_trade(trade_id) ON DELETE RESTRICT ON UPDATE CASCADE,
+	trans_id int4 REFERENCES t_trans(trans_id) ON DELETE RESTRICT ON UPDATE CASCADE,
+	green_flg boolean DEFAULT false,
+	ware_id int4 REFERENCES t_ware(ware_id) ON DELETE RESTRICT ON UPDATE CASCADE,
+	c_staff_id int4 REFERENCES t_staff(staff_id) ON DELETE RESTRICT ON UPDATE CASCADE,
+	note varchar(20),
+	cost_amount int8,
+	net_amount int8,
+	tax_amount int8,
+	slip_flg boolean DEFAULT false,
+	renew_flg boolean DEFAULT false,
+	e_staff_id int4 REFERENCES t_staff(staff_id) ON DELETE RESTRICT ON UPDATE CASCADE,
+	shop_id int4 NOT NULL REFERENCES t_client(client_id) ON DELETE RESTRICT ON UPDATE CASCADE,
+	shop_gid int4 NOT NULL REFERENCES t_shop_gr(shop_gid) ON DELETE RESTRICT ON UPDATE CASCADE,
+	client_name varchar(15),
+	client_cd1 varchar(6),
+	client_cd2 varchar(4),
+	direct_name varchar(15),
+	trans_name varchar(15),
+	c_staff_name varchar(10),
+	ware_name varchar(10),
+	e_staff_name varchar(10)
+);
+GRANT ALL ON t_sale_h TO PUBLIC;
+
+--売上データテーブル
+CREATE TABLE t_sale_d (
+	sale_d_id int8 PRIMARY KEY,
+	sale_id int8 NOT NULL REFERENCES t_sale_h(sale_id) ON DELETE CASCADE,
+	line int4 NOT NULL,
+	sale_dic_cd varchar(2) NOT NULL,
+	serv_id int4 REFERENCES t_serv(serv_id) ON DELETE RESTRICT ON UPDATE CASCADE,
+	goods_id int4 REFERENCES t_goods(goods_id) ON DELETE RESTRICT ON UPDATE CASCADE,
+	goods_name varchar(30) NOT NULL,
+	num int4 NOT NULL,
+	tax_div varchar(1) NOT NULL,
+	cost_price numeric(11,2) NOT NULL,
+	sale_price numeric(11,2) NOT NULL,
+	cost_amount int8 NOT NULL,
+	sale_amount int8 NOT NULL,
+	rgoods_id int4,
+	rgoods_num int2,
+	slip_flg boolean,
+	slip_info varchar(1),
+	aord_d_id int8 REFERENCES t_aorder_d(aord_d_id) ON DELETE CASCADE,
+	goods_cd varchar(8),
+	serv_name varchar(15),
+	rgoods_cd varchar(8),
+	rgoods_name varchar(30),
+	UNIQUE(sale_id, line)
+);
+GRANT ALL ON t_sale_d TO PUBLIC;

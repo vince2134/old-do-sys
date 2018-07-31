@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wc-entries
+   xmlns="svn:">
+<entry
+   committed-rev="1"
+   name=""
+   committed-date="2009-10-30T05:38:51.696297Z"
+   url="svn+ssh://210.196.79.251/var/svn/amenity/branches/anet-dosys-rev.1.4/anet-dosys/src/sample/goods_work/20061215"
+   last-author="kajioka-h"
+   kind="dir"
+   uuid="b28f2e69-2077-0410-9977-8d54750ab086"
+   revision="2"/>
+<entry
+   committed-rev="1"
+   name="g_goods.txt"
+   text-time="2009-11-02T04:53:31.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="2b0e9a15109532d408e3c05d3be03bd4"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:31.000000Z"/>
+<entry
+   committed-rev="1"
+   name="t_g_product_20061215.csv"
+   text-time="2009-11-02T04:53:31.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="d9cf5099e15e0c1cf7bf456917e84a1e"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:31.000000Z"/>
+<entry
+   committed-rev="1"
+   name="g_product.txt"
+   text-time="2009-11-02T04:53:31.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="f8afb18c10d2a629f7b3b317cf6e20e7"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:31.000000Z"/>
+<entry
+   committed-rev="1"
+   name="t_product_1215.csv"
+   text-time="2009-11-02T04:53:31.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="5a7bcc7ef98e8e4c9663a1b6019e9a47"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:31.000000Z"/>
+<entry
+   committed-rev="1"
+   name="t_g_goods_1215.csv"
+   text-time="2009-11-02T04:53:31.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="03c4281ed4424b7b09ef81433f10d41a"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:31.000000Z"/>
+<entry
+   committed-rev="1"
+   name="t_goods_20061215.csv"
+   text-time="2009-11-02T04:53:31.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="71065b7c150d71ceed41d5266d3b94a6"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:31.000000Z"/>
+<entry
+   committed-rev="1"
+   name="goods.txt"
+   text-time="2009-11-02T04:53:31.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="14987b5efc907256d3f6156dac9a6769"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:31.000000Z"/>
+<entry
+   committed-rev="1"
+   name="product.txt"
+   text-time="2009-11-02T04:53:31.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="45e9b7e72bfb58c2b76c5afdaa5c7829"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:31.000000Z"/>
+</wc-entries>

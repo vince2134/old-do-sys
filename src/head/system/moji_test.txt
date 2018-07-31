@@ -1,0 +1,481 @@
+<?php
+$page_title = "銀行マスタ";
+
+//環境設定ファイル
+require_once("ENV_local.php");
+
+//HTML_QuickFormを作成
+$form =& new HTML_QuickForm("dateForm", "POST", "$_SERVER[PHP_SELF]");
+
+//DB接続
+$db_con = Db_Connect();
+
+/****************************/
+//外部変数取得
+/****************************/
+$shop_gid  = $_SESSION[shop_gid];
+
+/****************************/
+//部品定義
+/****************************/
+//呼出コード
+$form->addElement("text","form_enter_cd","テキストフォーム","size=\"4\" maxLength=\"4\"".$g_form_option."\"");
+//銀行コード
+$form->addElement("text","form_bank_cd","テキストフォーム","size=\"18\" maxLength=\"14\"".$g_form_option."\"");
+//銀行名
+$form->addElement("text","form_bank_name","テキストフォーム","size=\"34\" maxLength=\"20\"".$g_form_option."\"");
+//略称
+$form->addElement("text","form_bank_cname","テキストフォーム","size=\"22\" maxLength=\"10\"".$g_form_option."\"");
+//郵便番号
+$text[] =& $form->createElement("text","form_post_no1","テキストフォーム","size=\"3\" maxLength=\"3\" onkeyup=\"changeText(this.form,'form_post[form_post_no1]','form_post[form_post_no2]',3)\"".$g_form_option."\"");
+$text[] =& $form->createElement("static","","","-");
+$text[] =& $form->createElement("text","form_post_no2","テキストフォーム","size=\"4\" maxLength=\"4\"".$g_form_option."\"");
+$form->addGroup( $text, "form_post", "form_post");
+//住所１
+$form->addElement("text","form_address1","テキストフォーム","size=\"34\" maxLength=\"15\"".$g_form_option."\"");
+//住所２
+$form->addElement("text","form_address2","テキストフォーム","size=\"34\" maxLength=\"15\"".$g_form_option."\"");
+//TEL
+$form->addElement("text","form_tel","テキストフォーム","size=\"15\" maxLength=\"13\"".$g_form_option."\"");
+//FAX
+$form->addElement("text","form_fax","テキストフォーム","size=\"15\" maxLength=\"13\" ".$g_form_option."\"");
+//口座種別
+$form->addElement("text","form_account_kind","テキストフォーム","size=\"5\" maxLength=\"5\"".$g_form_option."\"");
+//口座番号
+$form->addElement("text","form_account_no","テキストフォーム","size=\"8\" maxLength=\"7\"".$g_form_option."\"");
+//備考
+$form->addElement("text","form_note","テキストフォーム","size=\"34\" maxLength=\"30\"".$g_form_option."\"");
+
+//クリア
+$form->addElement("button","clear_button","クリア","onClick=\"javascript:location.href('$_SERVER[PHP_SELF]');\"");
+//登録
+$form->addElement("submit","entry_button","登　録","onClick=\"javascript:return Dialogue('登録します。','#')\"");
+//CSV出力
+$form->addElement("button","csv_button","CSV出力","onClick=\"javascript:Button_Submit('csv_button_flg','#','true')\"");
+//自動入力
+$form->addElement("button","input_button","自動入力","onClick=\"javascript:Button_Submit('input_button_flg','#','true')\"");
+
+//更新リンク押下判定フラグ
+$form->addElement("hidden", "update_flg");
+//自動入力ボタン押下判定フラグ
+$form->addElement("hidden", "input_button_flg");
+//CSV出力ボタン押下判定フラグ
+$form->addElement("hidden", "csv_button_flg");
+
+/******************************/
+//自動入力ボタン押下処理
+/*****************************/
+if($_POST["input_button_flg"]==true){
+    $post1     = $_POST["form_post"]["form_post_no1"];             //郵便番号１
+    $post2     = $_POST["form_post"]["form_post_no2"];             //郵便番号２
+    //郵便番号から値取得
+    $post_value = Post_Get($post1,$post2,$db_con);
+    $cons_data["form_post"]["form_post_no1"]     = $post1;
+    $cons_data["form_post"]["form_post_no2"]     = $post2;
+    $cons_data["form_address1"]                  = $post_value[1];  //住所1
+    $cons_data["form_address2"]                  = $post_value[2];  //住所2
+    //郵便番号フラグをクリア
+    $cons_data["input_button_flg"] = "";
+    $form->setConstants($cons_data);
+}
+
+/******************************/
+//CSV出力ボタン押下処理
+/*****************************/
+if($_POST["csv_button_flg"]==true && $_POST["entry_button"] != "登　録" && $_POST["input_button_flg"]!=true){
+    /** CSV作成SQL **/
+    $sql = "SELECT ";
+    $sql .= "bank_cd,";             //銀行コード
+    $sql .= "enter_cd,";            //呼出コード
+    $sql .= "bank_name,";           //銀行名
+    $sql .= "bank_cname,";          //略称
+    $sql .= "post_no1,";            //郵便番号1
+    $sql .= "post_no2,";            //郵便番号2
+    $sql .= "address1,";            //住所1
+    $sql .= "address2,";            //住所2
+    $sql .= "tel,";                 //TEL
+    $sql .= "fax,";                 //FAX
+    $sql .= "account_kind,";        //口座種別
+    $sql .= "account_no,";          //口座番号
+    $sql .= "note ";                //備考
+    $sql .= "FROM ";
+    $sql .= "t_bank ";
+    $sql .= "WHERE ";
+    $sql .= "shop_gid = $shop_gid ";
+    $sql .= "ORDER BY ";
+    $sql .= "bank_cd;";
+
+    $result = Db_Query($db_con,$sql);
+
+    //CSVデータ取得
+    $i=0;
+    while($data_list = pg_fetch_array($result)){
+        //銀行コード
+        $bank_data[$i][0] = $data_list[0];
+        //呼出コード
+        $bank_data[$i][1] = $data_list[1];
+        //銀行名
+        $bank_data[$i][2] = $data_list[2];
+        //略称
+        $bank_data[$i][3] = $data_list[3];
+        //郵便番号1-郵便番号2(両方or片方が未入力の場合はnull表示)
+        if($data_list[4] != null && $data_list[5] != null){
+            $bank_data[$i][4] = $data_list[4]."-".$data_list[5];
+        }else{
+            $bank_data[$i][4] = "";
+        }
+        //住所
+        $bank_data[$i][5] = $data_list[6].$data_list[7];
+        //TEL
+        $bank_data[$i][6] = $data_list[8];
+        //FAX
+        $bank_data[$i][7] = $data_list[9];
+        //口座種別
+        $bank_data[$i][8] = $data_list[10];
+        //口座番号
+        $bank_data[$i][9] = $data_list[11];
+        //備考
+        $bank_data[$i][10] = $data_list[12];
+        $i++;
+    }
+
+    //CSVファイル名
+    $csv_file_name = "銀行マスタ".date("Ymd").".csv";
+    //CSVヘッダ作成
+    $csv_header = array(
+        "銀行コード", 
+        "呼出コード", 
+        "銀行名",
+        "略称",
+        "郵便番号",
+        "住所",
+        "TEL",
+        "FAX",
+        "口座種別",
+        "口座番号",
+        "備考"
+    );
+    $csv_file_name = mb_convert_encoding($csv_file_name, "SJIS", "EUC");
+    $csv_data = Make_Csv($bank_data, $csv_header);
+    Header("Content-disposition: attachment; filename=$csv_file_name");
+    Header("Content-type: application/octet-stream; name=$csv_file_name");
+    print $csv_data;
+    exit;
+}
+
+/****************************/
+//変更処理（リンク）
+/****************************/
+
+//変更リンク押下判定
+if($_GET["bank_id"] != ""){
+
+    //変更するレンタルIDを取得
+    $update_num = $_GET["bank_id"];
+
+    /** 銀行マスタ取得SQL作成 **/
+    $sql = "SELECT ";
+    $sql .= "bank_cd,";             //銀行コード
+    $sql .= "enter_cd,";            //呼出コード
+    $sql .= "bank_name,";           //銀行名
+    $sql .= "bank_cname,";          //略称
+    $sql .= "post_no1,";            //郵便番号1
+    $sql .= "post_no2,";            //郵便番号2
+    $sql .= "address1,";            //住所1
+    $sql .= "address2,";            //住所2
+    $sql .= "tel,";                 //TEL
+    $sql .= "fax,";                 //FAX
+    $sql .= "account_kind,";        //口座種別
+    $sql .= "account_no,";          //口座番号
+    $sql .= "note ";                //備考
+    $sql .= "FROM ";
+    $sql .= "t_bank ";
+    $sql .= "WHERE ";
+    $sql .= "shop_gid = $shop_gid ";
+	$sql .= "AND ";
+    $sql .= "bank_id = ".$update_num.";";
+    $result = Db_Query($db_con,$sql);
+    //GETデータ判定
+    Get_Id_Check($result);
+    $data_list = pg_fetch_array($result,0);
+
+    //フォームに値を復元
+    $def_fdata["form_bank_cd"]                        =    $data_list[0];  
+    $def_fdata["form_enter_cd"]                       =    $data_list[1];  
+    $def_fdata["form_bank_name"]                      =    $data_list[2];  
+    $def_fdata["form_bank_cname"]                     =    $data_list[3];  
+    $def_fdata["form_post"]["form_post_no1"]          =    $data_list[4];  
+    $def_fdata["form_post"]["form_post_no2"]          =    $data_list[5];  
+    $def_fdata["form_address1"]                       =    $data_list[6];  
+    $def_fdata["form_address2"]                       =    $data_list[7];  
+    $def_fdata["form_tel"]                            =    $data_list[8];  
+    $def_fdata["form_fax"]                            =    $data_list[9];  
+    $def_fdata["form_account_kind"]                   =    $data_list[10]; 
+    $def_fdata["form_account_no"]                     =    $data_list[11]; 
+    $def_fdata["form_note"]                           =    $data_list[12]; 
+    $def_fdata["update_flg"]                          =    "true"; 
+    
+    $form->setDefaults($def_fdata);
+}
+
+/****************************/
+//エラーチェック(AddRule)
+/****************************/
+//◇呼出コード
+//・必須チェック
+$form->addRule('form_enter_cd','呼出コード は半角数字のみです。','required');
+//・文字種チェック
+$form->addRule('form_enter_cd','呼出コード は半角数字のみです。','numeric');
+
+//◇銀行名
+//・必須チェック
+$form->addRule('form_bank_name','銀行名 は1文字以上20文字以下です。','required');
+
+//◇略称
+//・必須チェック
+$form->addRule('form_bank_cname','略称 は1文字以上10文字以下です。','required');
+
+//◇郵便番号
+//・文字数チェック
+//・文字種チェック
+$form->addGroupRule('form_post', array(
+    'form_post_no1' => array(
+        array('郵便番号は半角数字の7桁です。','rangelength',array(3,3)),
+        array('郵便番号は半角数字の7桁です。','numeric')
+    ),
+    'form_post_no2' => array(
+        array('郵便番号は半角数字の7桁です。','rangelength',array(4,4)),
+        array('郵便番号は半角数字の7桁です。','numeric'),
+    )
+));
+
+//◇口座番号
+//・文字種チェック
+$form->addRule('form_account_no','口座番号 は半角数字のみです。','numeric');
+
+//◇TEL
+//・文字種チェック
+$form->addRule("form_tel", "TELは半角数字と「-」のみ13桁です。", "regex", "/^[0-9-]+$/");
+
+//◇FAX
+//・文字種チェック
+$form->addRule("form_fax", "FAXは半角数字と「-」のみ13桁です。", "regex", "/^[0-9-]+$/");
+
+/****************************/
+//登録処理
+/****************************/
+if($_POST["entry_button"] == "登　録"){
+    //入力フォーム値取得
+    $bank_cd      = $_POST["form_bank_cd"];                 //銀行コード
+    $enter_cd     = $_POST["form_enter_cd"];                //呼出コード
+    $bank_name    = $_POST["form_bank_name"];               //銀行名
+    $bank_cname   = $_POST["form_bank_cname"];              //略称
+    $post1        = $_POST["form_post"]["form_post_no1"];   //郵便番号1
+    $post2        = $_POST["form_post"]["form_post_no2"];   //郵便番号2
+    $address1     = $_POST["form_address1"];                //住所1
+    $address2     = $_POST["form_address2"];                //住所2
+    $tel          = $_POST["form_tel"];                     //TEL
+    $fax          = $_POST["form_fax"];                     //FAX
+    $account_kind = $_POST["form_account_kind"];            //口座種別 
+    $account_no   = $_POST["form_account_no"];              //口座番号 
+    $note         = $_POST["form_note"];                    //備考 
+    $update_flg   = $_POST["update_flg"];                   //登録・更新判定
+    $update_num   = $_GET["bank_id"];                       //銀行ID
+
+
+    /****************************/
+    //エラーチェック(PHP)
+    /****************************/
+    //◇呼出コード
+    //・重複チェック
+    if($enter_cd != null){
+        //呼出コードに０を埋める
+        $enter_cd = str_pad($enter_cd, 4, 0, STR_POS_LEFT);
+        //入力したコードがマスタに存在するかチェック
+        $sql  = "SELECT ";
+        $sql .= "enter_cd ";                //呼出コード
+        $sql .= "FROM ";
+        $sql .= "t_bank ";
+        $sql .= "WHERE ";
+        $sql .= "enter_cd = '$enter_cd' ";
+        $sql .= "AND ";
+        $sql .= "shop_gid = '$shop_gid'";
+
+        //変更の場合は、自分のデータ以外を参照する
+        if($update_num != null){
+            $sql .= " AND NOT ";
+            $sql .= "bank_id = '$update_num'";
+        }
+        $sql .= ";";
+        $result = Db_Query($db_con, $sql);
+        $row_count = pg_num_rows($result);
+        if($row_count != 0){
+            $form->setElementError("form_enter_cd","既に使用されている 呼出コード です。");
+        }
+    }
+
+    //◇銀行コード
+    //・文字種チェック
+    if(!ereg("^[0-9]+-[0-9]+$", $bank_cd) && $bank_cd != null){
+        $form->setElementError("form_bank_cd","銀行コード は半角数字と「-」の14桁以下です。");
+    }
+
+    //エラーの際には、登録処理を行わない
+    if($form->validate()){
+        
+        Db_Query($db_con, "BEGIN;");
+
+        //更新か登録か判定
+        if($update_flg == "true"){
+            //作業区分は更新
+            $work_div = '2';
+            //変更完了メッセージ
+            $comp_msg = "変更しました。";
+
+            $sql  = "UPDATE ";
+            $sql .= "t_bank ";
+            $sql .= "SET ";
+            $sql .= "enter_cd = '$enter_cd',";
+            $sql .= "bank_cd = '$bank_cd',";
+            $sql .= "bank_name = '$bank_name',";
+            $sql .= "bank_cname = '$bank_cname',";
+            $sql .= "post_no1 = '$post1',";
+            $sql .= "post_no2 = '$post2',";
+            $sql .= "address1 = '$address1',";
+            $sql .= "address2 = '$address2',";
+            $sql .= "tel = '$tel',";
+            $sql .= "fax = '$fax',";
+            $sql .= "account_kind = '$account_kind',";
+            $sql .= "account_no = '$account_no',";
+            $sql .= "note = '$note' ";
+            $sql .= "WHERE ";
+            $sql .= "bank_id = $update_num;";
+        }else{
+            //作業区分は登録
+            $work_div = '1';
+            //登録完了メッセージ
+            $comp_msg = "登録しました。";
+
+            $sql  = "INSERT INTO ";
+            $sql .= "t_bank ";
+            $sql .= "VALUES(";
+            $sql .= "(SELECT ";
+            $sql .= "COALESCE(MAX(bank_id), 0)+1 ";
+            $sql .= "FROM ";
+            $sql .= "t_bank),";
+            $sql .= "'$enter_cd',";
+            $sql .= "'$bank_cd',";
+            $sql .= "'$bank_name',";
+            $sql .= "'$bank_cname',";
+            $sql .= "'$post1',";
+            $sql .= "'$post2',";
+            $sql .= "'$address1',";
+            $sql .= "'$address2',";
+            $sql .= "'$tel',";
+            $sql .= "'$fax',";
+            $sql .= "'$account_kind',";
+            $sql .= "'$account_no',";
+            $sql .= "'$note',";
+            $sql .= "$shop_gid);";
+        }
+        $result = Db_Query($db_con,$sql);
+        if($result == false){
+            Db_Query($db_con,"ROLLBACK;");
+            exit;
+        }
+        //銀行マスタの値をログに書き込む
+        $result = Log_Save($db_con,'bank',$work_div,$bank_cd,$bank_name);
+        //ログ登録時にエラーになった場合
+        if($result == false){
+            Db_Query($db_con,"ROLLBACK;");
+            exit;
+        }
+        Db_Query($db_con, "COMMIT;");
+
+        //フォームの値を初期化
+        $def_fdata["form_bank_cd"]                        =    "";
+        $def_fdata["form_enter_cd"]                       =    "";
+        $def_fdata["form_bank_name"]                      =    "";
+        $def_fdata["form_bank_cname"]                     =    "";
+        $def_fdata["form_post"]["form_post_no1"]          =    "";
+        $def_fdata["form_post"]["form_post_no2"]          =    "";
+        $def_fdata["form_address1"]                       =    "";
+        $def_fdata["form_address2"]                       =    "";
+        $def_fdata["form_tel"]                            =    "";
+        $def_fdata["form_fax"]                            =    "";
+        $def_fdata["form_account_kind"]                   =    "";
+        $def_fdata["form_account_no"]                     =    "";
+        $def_fdata["form_note"]                           =    "";
+        $def_fdata["update_flg"]                          =    "";
+
+        $form->setConstants($def_fdata);
+    }
+}
+
+/******************************/
+//ヘッダーに表示させる全件数
+/*****************************/
+/** 銀行マスタ取得SQL作成 **/
+$sql  = "SELECT ";
+$sql .= "bank_id,";                //銀行ID
+$sql .= "bank_cd,";                //銀行コード
+$sql .= "enter_cd,";               //呼出コード
+$sql .= "bank_name,";              //銀行名
+$sql .= "bank_cname ";             //略称
+$sql .= "FROM ";
+$sql .= "t_bank ";
+$sql .= "WHERE ";
+$sql .= "shop_gid = $shop_gid ";
+$sql .= "ORDER BY ";
+$sql .= "bank_cd;";
+
+$result = Db_Query($db_con,$sql);
+//全件数取得(ヘッダー)
+$total_count = pg_num_rows($result);
+
+//行データ部品を作成
+$row = Get_Data($result);
+
+/****************************/
+//HTMLヘッダ
+/****************************/
+$html_header = Html_Header($page_title);
+
+/****************************/
+//HTMLフッタ
+/****************************/
+$html_footer = Html_Footer();
+
+/****************************/
+//メニュー作成
+/****************************/
+$page_menu = Create_Menu_h('system','1');
+
+/****************************/
+//画面ヘッダー作成
+/****************************/
+$page_title .= "　（全".$total_count."件）";
+$page_header = Create_Header($page_title);
+
+
+// Render関連の設定
+$renderer =& new HTML_QuickForm_Renderer_ArraySmarty($smarty);
+$form->accept($renderer);
+
+//form関連の変数をassign
+$smarty->assign('form',$renderer->toArray());
+
+//その他の変数をassign
+$smarty->assign('var',array(
+    'html_header'   => "$html_header",
+    'page_menu'     => "$page_menu",
+    'page_header'   => "$page_header",
+    'html_footer'   => "$html_footer",
+    'total_count'   => "$total_count",
+    'comp_msg'      => "$comp_msg"
+));
+$smarty->assign('row',$row);
+//テンプレートへ値を渡す
+$smarty->display(basename($_SERVER[PHP_SELF] .".tpl"));
+
+?>

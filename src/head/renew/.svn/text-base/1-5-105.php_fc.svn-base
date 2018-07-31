@@ -1,0 +1,434 @@
+<?php
+$page_title = "バッチ表";
+
+// 環境設定ファイル
+require_once("ENV_local.php");
+
+// HTML_QuickFormを作成
+$form =& new HTML_QuickForm( "$_SERVER[PHP_SELF]","POST");
+
+// DB接続設定
+$db_con = Db_Connect();
+
+// 権限チェック
+$auth = Auth_Check($db_con);
+
+
+/****************************/
+// 外部変数取得
+/****************************/
+$shop_id = $_SESSION["client_id"];
+
+
+/****************************/
+// フォーム初期値設定
+/****************************/
+$def_fdata = array(
+    "form_output_radio"    => "1"
+);
+
+$form->setDefaults($def_fdata);
+
+
+/****************************/
+// フォームパーツ定義
+/****************************/
+// 出力形式
+$radio = null;
+$radio[] =& $form->createElement("radio", null, null, "画面", "1");
+$radio[] =& $form->createElement("radio", null, null, "帳票", "2");
+$form->addGroup($radio, "form_output_radio", "");
+
+// オペレータ
+$select_staff   = null;
+$select_staff   = Select_Get($db_con, "shop_staff");
+$form->addElement("select", "form_staff_select", "", $select_staff, "$g_form_option_select");
+
+// 表示ボタン
+$form->addElement("submit", "form_show_button", "表　示");
+
+// クリアボタン
+$form->addElement("button", "form_clear_button", "クリア", "onClick=\"location.href='$_SERVER[PHP_SELF]'\"");
+
+
+/****************************/
+// 一覧表示用データ取得
+/****************************/
+$staff_id = $_POST["form_staff_select"];
+
+// 一覧表示用金額取得SQL
+$sql  = "SELECT \n";
+$sql .= "   t_all_staff.staff_id, \n";
+$sql .= "   t_all_staff.charge_cd, \n";
+$sql .= "   t_all_staff.staff_name, \n";
+$sql .= "   (CASE WHEN t_sale_kake.main_amount_sum IS NULL THEN 0 ELSE t_sale_kake.main_amount_sum END) AS sale_kake_sum, \n";
+$sql .= "   (CASE WHEN t_sale_genkin.main_amount_sum IS NULL THEN 0 ELSE t_sale_genkin.main_amount_sum END) AS sale_genkin_sum, \n";
+$sql .= "   (CASE WHEN t_buy_kake.buy_kake_sum IS NULL THEN 0 ELSE t_buy_kake.buy_kake_sum END) AS buy_kake_sum, \n";
+$sql .= "   (CASE WHEN t_buy_genkin.buy_genkin_sum IS NULL THEN 0 ELSE t_buy_genkin.buy_genkin_sum END) AS buy_genkin_sum, \n";
+$sql .= "   (CASE WHEN t_payin_kake.payin_kake_sum IS NULL THEN 0 ELSE t_payin_kake.payin_kake_sum END) AS payin_kake_sum, \n";
+$sql .= "   (CASE WHEN t_payin_genkin.payin_genkin_sum IS NULL THEN 0 ELSE t_payin_genkin.payin_genkin_sum END) AS payin_genkin_sum, \n";
+$sql .= "   (CASE WHEN t_payin_rebate.payin_rebate_sum IS NULL THEN 0 ELSE t_payin_rebate.payin_rebate_sum END) AS payin_rebate_sum, \n";
+$sql .= "   (CASE WHEN t_payout_kake.payout_kake_sum IS NULL THEN 0 ELSE t_payout_kake.payout_kake_sum END) AS payout_kake_sum, \n";
+$sql .= "   (CASE WHEN t_payout_genkin.payout_genkin_sum IS NULL THEN 0 ELSE t_payout_genkin.payout_genkin_sum END) AS payout_genkin_sum, \n";
+$sql .= "   (CASE WHEN t_payout_rebate.payout_rebate_sum IS NULL THEN 0 ELSE t_payout_rebate.payout_rebate_sum END) AS payout_rebate_sum \n";
+$sql .= "FROM \n";
+// スタッフ
+$sql .= "   ( \n";
+$sql .= "   SELECT \n";
+$sql .= "       t_attach.staff_id, \n";
+$sql .= "       t_staff.charge_cd, \n";
+$sql .= "       t_staff.staff_name \n";
+$sql .= "   FROM \n";
+$sql .= "       t_attach \n";
+$sql .= "       INNER JOIN t_staff ON t_attach.staff_id = t_staff.staff_id ";
+$sql .= "   WHERE \n";
+$sql .= "       t_attach.shop_id = $_SESSION[client_id] \n";
+$sql .= "   ORDER BY \n";
+$sql .= "   t_attach.staff_id \n";
+$sql .= "   ) \n";
+$sql .= "   AS t_all_staff \n";
+// 売上（掛）
+$sql .= "   LEFT JOIN \n";
+$sql .= "   (\n";
+$sql .= "       SELECT \n";
+$sql .= "           t_sale_staff.staff_id, \n";
+$sql .= "           sum(CASE WHEN t_sale_amount.main_amount IS NULL THEN 0 ELSE t_sale_amount.main_amount END) AS main_amount_sum, \n";
+$sql .= "           t_sale_h.renew_flg, \n";
+$sql .= "           t_sale_h.trade_id \n";
+$sql .= "       FROM \n";
+$sql .= "           t_sale_h \n";
+$sql .= "               LEFT JOIN t_sale_staff ON t_sale_h.sale_id = t_sale_staff.sale_id \n";
+$sql .= "               LEFT JOIN t_sale_amount ON t_sale_h.sale_id = t_sale_amount.sale_id \n";
+$sql .= "       WHERE \n";
+$sql .= "           t_sale_h.shop_id = $_SESSION[client_id] \n";
+$sql .= "       AND \n";
+$sql .= "           t_sale_h.renew_flg = 'f' \n";
+$sql .= "       AND \n";
+$sql .= "           (t_sale_h.trade_id = 11 OR t_sale_h.trade_id = 13 OR t_sale_h.trade_id = 14) \n";
+$sql .= "       GROUP BY \n";
+$sql .= "           t_sale_staff.staff_id, t_sale_h.trade_id, t_sale_h.renew_flg \n";
+$sql .= "       ORDER BY \n";
+$sql .= "           t_sale_staff.staff_id, t_sale_h.trade_id, t_sale_h.renew_flg \n";
+$sql .= "   ) \n";
+$sql .= "   AS t_sale_kake \n";
+$sql .= "   ON t_all_staff.staff_id = t_sale_kake.staff_id \n";
+// 売上（現金）
+$sql .= "   LEFT JOIN \n";
+$sql .= "   ( \n";
+$sql .= "       SELECT \n";
+$sql .= "           t_sale_staff.staff_id, \n";
+$sql .= "           sum(CASE WHEN t_sale_amount.main_amount IS NULL THEN 0 ELSE t_sale_amount.main_amount END) AS main_amount_sum, \n";
+$sql .= "           t_sale_h.renew_flg, \n";
+$sql .= "           t_sale_h.trade_id \n";
+$sql .= "       FROM \n";
+$sql .= "           t_sale_h \n";
+$sql .= "               LEFT JOIN t_sale_staff ON t_sale_h.sale_id = t_sale_staff.sale_id \n";
+$sql .= "               LEFT JOIN t_sale_amount ON t_sale_h.sale_id = t_sale_amount.sale_id \n";
+$sql .= "       WHERE \n";
+$sql .= "           t_sale_h.shop_id = $_SESSION[client_id] \n";
+$sql .= "       AND \n";
+$sql .= "           t_sale_h.renew_flg = 'f' \n";
+$sql .= "       AND \n";
+$sql .= "           (t_sale_h.trade_id = 61 OR t_sale_h.trade_id = 63 OR t_sale_h.trade_id = 64) \n";
+$sql .= "       GROUP BY \n";
+$sql .= "           t_sale_staff.staff_id, t_sale_h.trade_id, t_sale_h.renew_flg \n";
+$sql .= "       ORDER BY \n";
+$sql .= "           t_sale_staff.staff_id, t_sale_h.trade_id, t_sale_h.renew_flg \n";
+$sql .= "   ) AS t_sale_genkin \n";
+$sql .= "   ON t_all_staff.staff_id = t_sale_genkin.staff_id \n";
+// 仕入（掛）
+$sql .= "   LEFT JOIN \n";
+$sql .= "   ( \n";
+$sql .= "       SELECT \n";
+$sql .= "           c_staff_id, \n";
+$sql .= "           sum(CASE WHEN t_buy_h.net_amount IS NULL THEN 0 ELSE t_buy_h.net_amount END) \n";
+$sql .= "           +sum(CASE WHEN t_buy_h.tax_amount IS NULL THEN 0 ELSE t_buy_h.tax_amount END) AS buy_kake_sum \n";
+$sql .= "       FROM \n";
+$sql .= "           t_buy_h \n";
+$sql .= "       WHERE \n";
+$sql .= "           t_buy_h.shop_id = $_SESSION[client_id] \n";
+$sql .= "       AND \n";
+$sql .= "           t_buy_h.renew_flg = 'f' \n";
+$sql .= "       AND \n";
+$sql .= "           (trade_id = 71 OR trade_id = 72 OR trade_id = 73 OR trade_id = 74) \n";
+$sql .= "       GROUP BY \n";
+$sql .= "           c_staff_id, trade_id \n";
+$sql .= "       ORDER BY \n";
+$sql .= "           c_staff_id, trade_id \n";
+$sql .= "   ) \n";
+$sql .= "   As t_buy_kake \n";
+$sql .= "   ON t_all_staff.staff_id = t_buy_kake.c_staff_id \n";
+// 仕入（現金）
+$sql .= "   LEFT JOIN \n";
+$sql .= "   ( \n";
+$sql .= "       SELECT \n";
+$sql .= "           c_staff_id, \n";
+$sql .= "           sum(CASE WHEN t_buy_h.net_amount IS NULL THEN 0 ELSE t_buy_h.net_amount END) \n";
+$sql .= "           +sum(CASE WHEN t_buy_h.tax_amount IS NULL THEN 0 ELSE t_buy_h.tax_amount END) AS buy_genkin_sum \n";
+$sql .= "       FROM \n";
+$sql .= "           t_buy_h \n";
+$sql .= "       WHERE \n";
+$sql .= "           t_buy_h.shop_id = $_SESSION[client_id] \n";
+$sql .= "       AND \n";
+$sql .= "           t_buy_h.renew_flg = 'f' \n";
+$sql .= "       AND \n";
+$sql .= "           (trade_id = 21 OR trade_id = 22 OR trade_id = 23 OR trade_id = 24) \n";
+$sql .= "       GROUP BY \n";
+$sql .= "           c_staff_id, trade_id \n";
+$sql .= "       ORDER BY \n";
+$sql .= "           c_staff_id, trade_id \n";
+$sql .= "   ) \n";
+$sql .= "   AS t_buy_genkin \n";
+$sql .= "   ON t_all_staff.staff_id = t_buy_genkin.c_staff_id \n";
+// 入金（掛）
+$sql .= "   LEFT JOIN \n";
+$sql .= "   ( \n";
+$sql .= "       SELECT \n";
+$sql .= "           e_staff_id, \n";
+$sql .= "           sum(CASE WHEN t_payin.pay_amount IS NULL THEN 0 ELSE t_payin.pay_amount END) AS payin_kake_sum \n";
+$sql .= "       FROM \n";
+$sql .= "           t_payin \n";
+$sql .= "       WHERE \n";
+$sql .= "           t_payin.shop_id = $_SESSION[client_id] \n";
+$sql .= "       AND \n";
+$sql .= "           t_payin.renew_flg = 'f' \n";
+$sql .= "       AND \n";
+$sql .= "           (trade_id = 32 OR trade_id = 33 OR trade_id = 34 OR trade_id = 37) \n";
+$sql .= "       GROUP BY \n";
+$sql .= "           e_staff_id, trade_id \n";
+$sql .= "       ORDER BY \n";
+$sql .= "           e_staff_id, trade_id \n";
+$sql .= "   ) \n";
+$sql .= "   AS t_payin_kake \n";
+$sql .= "   ON t_all_staff.staff_id = t_payin_kake.e_staff_id \n";
+// 入金（現金）
+$sql .= "   LEFT JOIN \n";
+$sql .= "   ( \n";
+$sql .= "       SELECT \n";
+$sql .= "           e_staff_id, \n";
+$sql .= "           sum(CASE WHEN t_payin.pay_amount IS NULL THEN 0 ELSE t_payin.pay_amount END) AS payin_genkin_sum \n";
+$sql .= "       FROM \n";
+$sql .= "           t_payin \n";
+$sql .= "       WHERE \n";
+$sql .= "           t_payin.shop_id = $_SESSION[client_id] \n";
+$sql .= "       AND \n";
+$sql .= "           t_payin.renew_flg = 'f' \n";
+$sql .= "       AND \n";
+$sql .= "           (trade_id = 31) \n";
+$sql .= "       GROUP BY \n";
+$sql .= "           e_staff_id, trade_id \n";
+$sql .= "       ORDER BY \n";
+$sql .= "           e_staff_id, trade_id \n";
+$sql .= "   ) \n";
+$sql .= "   AS t_payin_genkin \n";
+$sql .= "   ON t_all_staff.staff_id = t_payin_genkin.e_staff_id \n";
+// 入金（手数料）
+$sql .= "   LEFT JOIN \n";
+$sql .= "   ( \n";
+$sql .= "       SELECT \n";
+$sql .= "           e_staff_id, \n";
+$sql .= "           sum(CASE WHEN t_payin.pay_amount IS NULL THEN 0 ELSE t_payin.tax_amount END) AS payin_rebate_sum \n";
+$sql .= "       FROM \n";
+$sql .= "           t_payin \n";
+$sql .= "       WHERE \n";
+$sql .= "           t_payin.shop_id = $_SESSION[client_id] \n";
+$sql .= "       AND \n";
+$sql .= "           t_payin.renew_flg = 'f' \n";
+$sql .= "       GROUP BY \n";
+$sql .= "           e_staff_id \n";
+$sql .= "       ORDER BY \n";
+$sql .= "           e_staff_id \n";
+$sql .= "   ) \n";
+$sql .= "   AS t_payin_rebate \n";
+$sql .= "   ON t_all_staff.staff_id = t_payin_rebate.e_staff_id \n";
+// 支払（掛）
+$sql .= "   LEFT JOIN \n";
+$sql .= "   ( \n";
+$sql .= "       SELECT \n";
+$sql .= "           e_staff_id, \n";
+$sql .= "           sum(CASE WHEN t_payout.pay_amount IS NULL THEN 0 ELSE t_payout.pay_amount END) AS payout_kake_sum \n";
+$sql .= "       FROM \n";
+$sql .= "           t_payout \n";
+$sql .= "       WHERE \n";
+$sql .= "           t_payout.shop_id = $_SESSION[client_id] \n";
+$sql .= "       AND \n";
+$sql .= "           t_payout.renew_flg = 'f' \n";
+$sql .= "       AND \n";
+$sql .= "           (trade_id = 43 OR trade_id = 44 OR trade_id = 45 OR trade_id = 47) \n";
+$sql .= "       GROUP BY \n";
+$sql .= "           e_staff_id, trade_id \n";
+$sql .= "       ORDER BY \n";
+$sql .= "           e_staff_id, trade_id \n";
+$sql .= "   ) \n";
+$sql .= "   AS t_payout_kake \n";
+$sql .= "   ON t_all_staff.staff_id = t_payout_kake.e_staff_id \n";
+// 支払（現金）
+$sql .= "   LEFT JOIN \n";
+$sql .= "   ( \n";
+$sql .= "       SELECT \n";
+$sql .= "           e_staff_id, \n";
+$sql .= "           sum(CASE WHEN t_payout.pay_amount IS NULL THEN 0 ELSE t_payout.pay_amount END) AS payout_genkin_sum \n";
+$sql .= "       FROM \n";
+$sql .= "           t_payout \n";
+$sql .= "       WHERE \n";
+$sql .= "           t_payout.shop_id = $_SESSION[client_id] \n";
+$sql .= "       AND \n";
+$sql .= "           t_payout.renew_flg = 'f' \n";
+$sql .= "       AND \n";
+$sql .= "           (trade_id = 41) \n";
+$sql .= "       GROUP BY \n";
+$sql .= "           e_staff_id, trade_id \n";
+$sql .= "       ORDER BY \n";
+$sql .= "           e_staff_id, trade_id \n";
+$sql .= "   ) \n";
+$sql .= "   AS t_payout_genkin \n";
+$sql .= "   ON t_all_staff.staff_id = t_payout_genkin.e_staff_id \n";
+// 支払（手数料）
+$sql .= "   LEFT JOIN \n";
+$sql .= "   ( \n";
+$sql .= "       SELECT \n";
+$sql .= "           e_staff_id, \n";
+$sql .= "           sum(CASE WHEN t_payout.pay_amount IS NULL THEN 0 ELSE t_payout.pay_amount END) AS payout_rebate_sum \n";
+$sql .= "       FROM \n";
+$sql .= "           t_payout \n";
+$sql .= "       WHERE \n";
+$sql .= "           t_payout.shop_id = $_SESSION[client_id] \n";
+$sql .= "       AND \n";
+$sql .= "           t_payout.renew_flg = 'f' \n";
+$sql .= "       GROUP BY \n";
+$sql .= "           e_staff_id \n";
+$sql .= "       ORDER BY \n";
+$sql .= "           e_staff_id \n";
+$sql .= "   ) \n";
+$sql .= "   AS t_payout_rebate \n";
+$sql .= "   ON t_all_staff.staff_id = t_payout_rebate.e_staff_id \n";
+// 条件追加
+$sql .= "WHERE \n";
+$sql .= "   ( \n";
+$sql .= "       t_sale_kake.main_amount_sum != 0 \n";
+$sql .= "   OR ";
+$sql .= "       t_sale_genkin.main_amount_sum != 0 \n";
+$sql .= "   OR ";
+$sql .= "       t_buy_kake.buy_kake_sum != 0 \n";
+$sql .= "   OR ";
+$sql .= "       t_buy_genkin.buy_genkin_sum != 0 \n";
+$sql .= "   OR ";
+$sql .= "       t_payin_kake.payin_kake_sum != 0 \n";
+$sql .= "   OR ";
+$sql .= "       t_payin_genkin.payin_genkin_sum != 0 \n";
+$sql .= "   OR ";
+$sql .= "       t_payin_rebate.payin_rebate_sum != 0 \n";
+$sql .= "   OR ";
+$sql .= "       t_payout_kake.payout_kake_sum != 0 \n";
+$sql .= "   OR ";
+$sql .= "       t_payout_genkin.payout_genkin_sum != 0 \n";
+$sql .= "   OR ";
+$sql .= "       t_payout_rebate.payout_rebate_sum != 0 \n";
+$sql .= "   ) \n";
+$sql .= ($staff_id != null) ? " AND t_all_staff.staff_id = $staff_id \n" : null;
+$sql .= "   ORDER BY t_all_staff.charge_cd \n";
+$sql .= ";";
+$res  = Db_Query($db_con, $sql);
+
+$numrows = pg_num_rows($res);
+
+// 1件以上あれば
+if ($numrows > 0){
+
+    $i = 0;
+    while ($data_list = pg_fetch_array($res)){
+        // 表示用配列にデータを代入
+        $disp_data[$i][0]   = $data_list["staff_id"];
+        $disp_data[$i][1]   = $data_list["staff_name"];
+        $disp_data[$i][2]   = number_format($data_list["sale_genkin_sum"]);
+        $disp_data[$i][3]   = number_format($data_list["sale_kake_sum"]);
+        $disp_data[$i][4]   = number_format($data_list["sale_genkin_sum"] + $data_list["sale_kake_sum"]);
+        $disp_data[$i][5]   = number_format($data_list["payin_genkin_sum"]);
+        $disp_data[$i][6]   = number_format($data_list["payin_kake_sum"]);
+        $disp_data[$i][7]   = number_format($data_list["payin_rebate_sum"]);
+        $disp_data[$i][8]   = number_format($data_list["payin_genkin_sum"] + $data_list["payin_kake_sum"] + $data_list["payin_rebate_sum"]);
+        $disp_data[$i][9]   = number_format($data_list["buy_genkin_sum"]);
+        $disp_data[$i][10]   = number_format($data_list["buy_kake_sum"]);
+        $disp_data[$i][11]   = number_format($data_list["buy_genkin_sum"] + $data_list["buy_kake_sum"]);
+        $disp_data[$i][12]  = number_format($data_list["payout_genkin_sum"]);
+        $disp_data[$i][13]  = number_format($data_list["payout_kake_sum"]);
+        $disp_data[$i][14]  = number_format($data_list["payout_rebate_sum"]);
+        $disp_data[$i][15]  = number_format($data_list["payout_genkin_sum"] + $data_list["payout_kake_sum"] + $data_list["payout_rebate_sum"]);
+        $i++;
+    }
+
+}
+
+// 最終日次更新日時を取得
+$sql  = "SELECT to_date(renew_time, 'YYYY-MM-DD') || ' ' || to_char(renew_time, 'hh24:mi:ss') ";
+$sql .= "FROM   t_sys_renew ";
+$sql .= "WHERE  renew_div = '1' ";
+$sql .= "AND    shop_id = $shop_id ";
+$sql .= ";";
+$res  = Db_Query($db_con, $sql);
+$daily_update_time = pg_fetch_result($res, 0);
+
+
+/****************************/
+// HTMLヘッダ
+/****************************/
+$html_header = Html_Header($page_title);
+
+/****************************/
+// HTMLフッタ
+/****************************/
+$html_footer = Html_Footer();
+
+/****************************/
+// メニュー作成
+/****************************/
+$page_menu = Create_Menu_h("renew", "1");
+
+/****************************/
+// 画面ヘッダー作成
+/****************************/
+$page_header = Create_Header($page_title);
+
+/****************************/
+// ページ作成
+/****************************/
+/*
+// 仮の件数
+$total_count = 100;
+
+// 表示範囲指定
+$range = "20";
+
+// ページ数を取得
+$page_count = $_POST["f_page1"];
+
+$html_page = Html_Page($total_count,$page_count,1,$range);
+$html_page2 = Html_Page($total_count,$page_count,2,$range);
+*/
+
+// Render関連の設定
+$renderer =& new HTML_QuickForm_Renderer_ArraySmarty($smarty);
+$form->accept($renderer);
+
+// form関連の変数をassign
+$smarty->assign("form", $renderer->toArray());
+
+// その他の変数をassign
+$smarty->assign("var", array(
+	"html_header"       => "$html_header",
+	"page_menu"         => "$page_menu",
+	"page_header"       => "$page_header",
+	"html_footer"       => "$html_footer",
+	"html_page"         => "$html_page",
+	"html_page2"        => "$html_page2",
+    "daily_update_time" => "$daily_update_time",
+    "now"               => date("Y-m-d H:i:s"),
+    "numrows"           => "$numrows",
+));
+
+$smarty->assign("disp_data", $disp_data);
+
+// テンプレートへ値を渡す
+$smarty->display(basename($_SERVER[PHP_SELF] .".tpl"));
+
+?>

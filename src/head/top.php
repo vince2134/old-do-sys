@@ -1,0 +1,521 @@
+<?php
+/*
+ * 変更履歴
+ * 1.0.0 (2006/03/09) shop_aidからclient_idに変更
+ * 1.1.0 (2006/03/21) システム切り替えリンクの非表示を追加
+ * 1.2.0 (2006/05/30) レイアウト変更
+ *       (2006/07/27) 請求初期残高設定削除
+ *  2007-01-23  ふ      「レンタル料一覧」の削除。「レンタルTOレンタル」の移動
+ *  2007-10-02  watanabe-k   統計情報のディレクトリ構成変更に伴い、パスを変更
+ * @version     1.2.0 (2006/05/30)
+*/
+
+$page_title='本部メニュー';
+
+//環境設定ファイル
+require_once("ENV_local.php");
+
+//セッション開始
+session_start();
+
+#2008-06-14 urlの変更により追加
+$_SESSION['url'] = $_SERVER['REQUEST_URI'];
+
+
+//DBに接続
+$conn = Db_Connect();
+
+//データ取得
+$staff_name  = htmlspecialchars($_SESSION["staff_name"]);
+$shop_name   = htmlspecialchars($_SESSION["h_shop_name"]);
+
+//本部スタッフじゃなければログインに遷移
+if($_SESSION["h_staff_flg"] != "t") {
+    header("Location: ../login.php");
+    exit;
+}
+//システム切替フラグが"t"の場合だけ、リンク表示
+if($_SESSION["sys_flg"] != "t") {
+    $menu_link = "";
+}
+else {
+    $menu_link = "<table><tr><td>";
+    $menu_link .= "<img src='".IMAGE_DIR."Head_on.gif' border='0'><br>";
+    $menu_link .= "<a href='".TOP_PAGE_F."'><img src='".IMAGE_DIR."FC_off.gif' border='0'></a>";
+    $menu_link .= "</td></tr></table>";
+}
+
+//受注納期返信データがあるか判定
+$select_sql  = " SELECT ";
+$select_sql .= "    t_order_h.ord_id,";
+$select_sql .= "    to_char(t_order_h.ord_time, 'yyyy-mm-dd'),";
+$select_sql .= "    to_char(t_order_h.ord_time, 'hh24:mi'),";
+$select_sql .= "    t_order_h.hope_day,";
+$select_sql .= "    t_client.client_cd1,";
+$select_sql .= "    t_client.client_cd2,";
+$select_sql .= "    t_client.client_name,";
+$select_sql .= "    trim(to_char( t_order_h.net_amount + t_order_h.tax_amount,'999,999,999,999,999'))";
+$select_sql .= " FROM ";
+$select_sql .= "    t_order_h";
+$select_sql .= "    INNER JOIN ";
+$select_sql .= "    (SELECT ";
+$select_sql .= "    client_id,";
+$select_sql .= "    client_cd1,";
+$select_sql .= "    client_cd2,";
+$select_sql .= "    client_name";
+$select_sql .= "    FROM";
+$select_sql .= "    t_client)AS t_client";
+$select_sql .= "    ON t_order_h.shop_id = t_client.client_id";
+$select_sql .= " WHERE";
+$select_sql .= "    t_order_h.ord_stat = 1";
+$order_by  = " ORDER BY t_order_h.ord_time";
+
+//該当データ件数
+$total_count_sql = $select_sql.$order_by.";";
+$count_res = Db_Query($conn, $total_count_sql);
+$total_count = pg_num_rows($count_res);
+//データがあるか
+if($total_count != 0){
+    //存在した場合は、赤画像
+    $online_order_img = "1_1_1-2.gif";
+}else{
+    //存在しない場合は、青画像
+    $online_order_img = "1_1_1.gif";
+}
+
+//***************************/
+//表示するメニュー選択
+/****************************/
+$select_menu = $_POST["select_menu"];
+
+/*****************************/
+//メニュー定義
+/*****************************/
+//--------------------メニュー大項目--------------------
+if($select_menu == '0'){
+    $l_menu = array(
+        "<a href='#' onClick=Button_Submit('select_menu','$_SERVER[PHP_SELF]','0')><img src='".IMAGE_DIR."main_menu/1_sale_on.gif' border='0'></a>",
+        "<a href='#' onClick=Button_Submit('select_menu','$_SERVER[PHP_SELF]','1')><img src='".IMAGE_DIR."main_menu/2_buy_off.gif' border='0'></a>",
+        "<a href='#' onClick=Button_Submit('select_menu','$_SERVER[PHP_SELF]','2')><img src='".IMAGE_DIR."main_menu/3_stock_off.gif' border='0'></a>",
+        "<a href='#' onClick=Button_Submit('select_menu','$_SERVER[PHP_SELF]','3')><img src='".IMAGE_DIR."main_menu/4_update_off.gif' border='0'></a>",
+        "<a href='#' onClick=Button_Submit('select_menu','$_SERVER[PHP_SELF]','4')><img src='".IMAGE_DIR."main_menu/5_data_output_off.gif' border='0'></a>",
+        "<a href='#' onClick=Button_Submit('select_menu','$_SERVER[PHP_SELF]','5')><img src='".IMAGE_DIR."main_menu/6_master_off.gif' border='0'></a>"
+    );
+}elseif($select_menu == '1'){
+    $l_menu = array(
+        "<a href='#' onClick=Button_Submit('select_menu','$_SERVER[PHP_SELF]','0')><img src='".IMAGE_DIR."main_menu/1_sale_off.gif' border='0'></a>",
+        "<a href='#' onClick=Button_Submit('select_menu','$_SERVER[PHP_SELF]','1')><img src='".IMAGE_DIR."main_menu/2_buy_on.gif' border='0'></a>",
+        "<a href='#' onClick=Button_Submit('select_menu','$_SERVER[PHP_SELF]','2')><img src='".IMAGE_DIR."main_menu/3_stock_off.gif' border='0'></a>",
+        "<a href='#' onClick=Button_Submit('select_menu','$_SERVER[PHP_SELF]','3')><img src='".IMAGE_DIR."main_menu/4_update_off.gif' border='0'></a>",
+        "<a href='#' onClick=Button_Submit('select_menu','$_SERVER[PHP_SELF]','4')><img src='".IMAGE_DIR."main_menu/5_data_output_off.gif' border='0'></a>",
+        "<a href='#' onClick=Button_Submit('select_menu','$_SERVER[PHP_SELF]','5')><img src='".IMAGE_DIR."main_menu/6_master_off.gif' border='0'></a>"
+    );
+}elseif($select_menu == '2'){
+    $l_menu = array(
+        "<a href='#' onClick=Button_Submit('select_menu','$_SERVER[PHP_SELF]','0')><img src='".IMAGE_DIR."main_menu/1_sale_off.gif' border='0'></a>",
+        "<a href='#' onClick=Button_Submit('select_menu','$_SERVER[PHP_SELF]','1')><img src='".IMAGE_DIR."main_menu/2_buy_off.gif' border='0'></a>",
+        "<a href='#' onClick=Button_Submit('select_menu','$_SERVER[PHP_SELF]','2')><img src='".IMAGE_DIR."main_menu/3_stock_on.gif' border='0'></a>",
+        "<a href='#' onClick=Button_Submit('select_menu','$_SERVER[PHP_SELF]','3')><img src='".IMAGE_DIR."main_menu/4_update_off.gif' border='0'></a>",
+        "<a href='#' onClick=Button_Submit('select_menu','$_SERVER[PHP_SELF]','4')><img src='".IMAGE_DIR."main_menu/5_data_output_off.gif' border='0'></a>",
+        "<a href='#' onClick=Button_Submit('select_menu','$_SERVER[PHP_SELF]','5')><img src='".IMAGE_DIR."main_menu/6_master_off.gif' border='0'></a>"
+    );
+}elseif($select_menu == '3'){
+    $l_menu = array(
+        "<a href='#' onClick=Button_Submit('select_menu','$_SERVER[PHP_SELF]','0')><img src='".IMAGE_DIR."main_menu/1_sale_off.gif' border='0'></a>",
+        "<a href='#' onClick=Button_Submit('select_menu','$_SERVER[PHP_SELF]','1')><img src='".IMAGE_DIR."main_menu/2_buy_off.gif' border='0'></a>",
+        "<a href='#' onClick=Button_Submit('select_menu','$_SERVER[PHP_SELF]','2')><img src='".IMAGE_DIR."main_menu/3_stock_off.gif' border='0'></a>",
+        "<a href='#' onClick=Button_Submit('select_menu','$_SERVER[PHP_SELF]','3')><img src='".IMAGE_DIR."main_menu/4_update_on.gif' border='0'></a>",
+        "<a href='#' onClick=Button_Submit('select_menu','$_SERVER[PHP_SELF]','4')><img src='".IMAGE_DIR."main_menu/5_data_output_off.gif' border='0'></a>",
+        "<a href='#' onClick=Button_Submit('select_menu','$_SERVER[PHP_SELF]','5')><img src='".IMAGE_DIR."main_menu/6_master_off.gif' border='0'></a>"
+    );
+}elseif($select_menu == '4'){
+    $l_menu = array(
+        "<a href='#' onClick=Button_Submit('select_menu','$_SERVER[PHP_SELF]','0')><img src='".IMAGE_DIR."main_menu/1_sale_off.gif' border='0'></a>",
+        "<a href='#' onClick=Button_Submit('select_menu','$_SERVER[PHP_SELF]','1')><img src='".IMAGE_DIR."main_menu/2_buy_off.gif' border='0'></a>",
+        "<a href='#' onClick=Button_Submit('select_menu','$_SERVER[PHP_SELF]','2')><img src='".IMAGE_DIR."main_menu/3_stock_off.gif' border='0'></a>",
+        "<a href='#' onClick=Button_Submit('select_menu','$_SERVER[PHP_SELF]','3')><img src='".IMAGE_DIR."main_menu/4_update_off.gif' border='0'></a>",
+        "<a href='#' onClick=Button_Submit('select_menu','$_SERVER[PHP_SELF]','4')><img src='".IMAGE_DIR."main_menu/5_data_output_on.gif' border='0'></a>",
+        "<a href='#' onClick=Button_Submit('select_menu','$_SERVER[PHP_SELF]','5')><img src='".IMAGE_DIR."main_menu/6_master_off.gif' border='0'></a>"
+    );
+}elseif($select_menu == '5'){
+    $l_menu = array(
+        "<a href='#' onClick=Button_Submit('select_menu','$_SERVER[PHP_SELF]','0')><img src='".IMAGE_DIR."main_menu/1_sale_off.gif' border='0'></a>",
+        "<a href='#' onClick=Button_Submit('select_menu','$_SERVER[PHP_SELF]','1')><img src='".IMAGE_DIR."main_menu/2_buy_off.gif' border='0'></a>",
+        "<a href='#' onClick=Button_Submit('select_menu','$_SERVER[PHP_SELF]','2')><img src='".IMAGE_DIR."main_menu/3_stock_off.gif' border='0'></a>",
+        "<a href='#' onClick=Button_Submit('select_menu','$_SERVER[PHP_SELF]','3')><img src='".IMAGE_DIR."main_menu/4_update_off.gif' border='0'></a>",
+        "<a href='#' onClick=Button_Submit('select_menu','$_SERVER[PHP_SELF]','4')><img src='".IMAGE_DIR."main_menu/5_data_output_off.gif' border='0'></a>",
+        "<a href='#' onClick=Button_Submit('select_menu','$_SERVER[PHP_SELF]','5')><img src='".IMAGE_DIR."main_menu/6_master_on.gif' border='0'></a>"
+    );
+}else{
+    $l_menu = array(
+        "<a href='#' onClick=Button_Submit('select_menu','$_SERVER[PHP_SELF]','0')><img src='".IMAGE_DIR."main_menu/1_sale_on.gif' border='0'></a>",
+        "<a href='#' onClick=Button_Submit('select_menu','$_SERVER[PHP_SELF]','1')><img src='".IMAGE_DIR."main_menu/2_buy_on.gif' border='0'></a>",
+        "<a href='#' onClick=Button_Submit('select_menu','$_SERVER[PHP_SELF]','2')><img src='".IMAGE_DIR."main_menu/3_stock_on.gif' border='0'></a>",
+        "<a href='#' onClick=Button_Submit('select_menu','$_SERVER[PHP_SELF]','3')><img src='".IMAGE_DIR."main_menu/4_update_on.gif' border='0'></a>",
+        "<a href='#' onClick=Button_Submit('select_menu','$_SERVER[PHP_SELF]','4')><img src='".IMAGE_DIR."main_menu/5_data_output_on.gif' border='0'></a>",
+        "<a href='#' onClick=Button_Submit('select_menu','$_SERVER[PHP_SELF]','5')><img src='".IMAGE_DIR."main_menu/6_master_on.gif' border='0'></a>"
+    );
+}
+
+//--------------------メニュー中項目--------------------
+//■売上管理
+$m_menu[0] = array(
+    "<img border='0' src='".IMAGE_DIR."main_menu/1_1.gif'>",
+//    "<img border='0' src='".IMAGE_DIR."main_menu/1_2.gif'>", //月例販売精算書
+    "<img border='0' src='".IMAGE_DIR."main_menu/1_3.gif'>",
+    "<img border='0' src='".IMAGE_DIR."main_menu/1_4.gif'>",
+    "<img border='0' src='".IMAGE_DIR."main_menu/1_5.gif'>",
+    "<img border='0' src='".IMAGE_DIR."main_menu/1_6.gif'>",
+);
+
+//■仕入管理
+$m_menu[1] = array(
+    "<img border='0' src='".IMAGE_DIR."main_menu/2_1.gif'>",
+    "<img border='0' src='".IMAGE_DIR."main_menu/2_2.gif'>",
+    "<img border='0' src='".IMAGE_DIR."main_menu/2_3.gif'>",
+    "<img border='0' src='".IMAGE_DIR."main_menu/2_4.gif'>",
+);
+
+//■在庫管理
+$m_menu[2] = array(
+    "<img border='0' src='".IMAGE_DIR."main_menu/3_1.gif'>",
+    "<img border='0' src='".IMAGE_DIR."main_menu/3_2.gif'>",
+);
+
+//■更新
+$m_menu[3] = array(
+    "<img border='0' src='".IMAGE_DIR."main_menu/4_1.gif'>",
+);
+
+//■データ出力
+$m_menu[4] = array(
+    "<img border='0' src='".IMAGE_DIR."main_menu/5_1.gif'>",
+    "<img border='0' src='".IMAGE_DIR."main_menu/5_2.gif'>",
+    "<img border='0' src='".IMAGE_DIR."main_menu/5_3.gif'>",
+    "<img border='0' src='".IMAGE_DIR."main_menu/5_4.gif'>",
+    "<img border='0' src='".IMAGE_DIR."main_menu/5_5.gif'>",
+);
+
+//■マスタ管理
+$m_menu[5] = array(
+    "<img border='0' src='".IMAGE_DIR."main_menu/6_5.gif'>",
+    "<img border='0' src='".IMAGE_DIR."main_menu/6_2.gif'>",
+    "<img border='0' src='".IMAGE_DIR."main_menu/6_1.gif'>",
+    "<img border='0' src='".IMAGE_DIR."main_menu/6_3.gif'>",
+    "<img border='0' src='".IMAGE_DIR."main_menu/6_4.gif'>",
+); 
+
+//widthsize
+$m_width[0]= "120";     //売上管理
+$m_width[1]= "187";     //仕入管理
+$m_width[2]= "375";     //在庫管理
+$m_width[3]= "750";     //更新
+$m_width[4]= "150";     //データ出力
+$m_width[5]= "150";     //マスタ管理
+
+//------------------メニュー小項目------------
+//■売上管理
+//受注取引
+$s_menu[0][0] = array(
+    array("sale/1-2-102.php","<img border='0' src='".IMAGE_DIR."main_menu/$online_order_img'>"),
+    array("sale/1-2-101.php","<img border='0' src='".IMAGE_DIR."main_menu/1_1_11.gif'>"),
+    array("sale/1-2-105.php","<img border='0' src='".IMAGE_DIR."main_menu/1_1_13.gif'>"),
+    array("sale/1-2-106.php","<img border='0' src='".IMAGE_DIR."main_menu/1_1_12.gif'>"),
+    array("sale/1-2-130.php","<img border='0' src='".IMAGE_DIR."main_menu/1_1_14.gif'>"),
+//    array("sale/1-2-132.php?top_menu='true'","<img border='0' src='".IMAGE_DIR."main_menu/1_1_14.gif'>"),
+);
+
+//月例精算販売書
+/*
+$s_menu[0][1] = array(
+//    array("sale/1-6-204.php","<img border='0' src='".IMAGE_DIR."main_menu/1_2_1.gif'>"),
+//    array("system/1-1-142.php","<img border='0' src='".IMAGE_DIR."main_menu/1_2_2.gif'>"),
+//    array("system/1-1-132.php","<img border='0' src='".IMAGE_DIR."main_menu/1_2_3.gif'>"),
+    array("sale/1-2-132.php?top_menu='true'","<img border='0' src='".IMAGE_DIR."main_menu/1_1_14.gif'>"),
+);
+*/
+//売上取引
+$s_menu[0][1] = array(
+    array("sale/1-2-201.php","<img border='0' src='".IMAGE_DIR."main_menu/1_3_1.gif'>"),
+    array("sale/1-2-203.php","<img border='0' src='".IMAGE_DIR."main_menu/1_3_7.gif'>"),
+    array("sale/1-2-209.php","<img border='0' src='".IMAGE_DIR."main_menu/1_3_11.gif'>"),
+);
+
+//請求管理
+$s_menu[0][2] = array(
+    array("sale/1-2-301.php","<img border='0' src='".IMAGE_DIR."main_menu/1_4_1.gif'>"),
+    //array("sale/1-2-302.php","<img border='0' src='".IMAGE_DIR."main_menu/1_4_2.gif'>"),
+    //array("sale/1-2-306.php","<img border='0' src='".IMAGE_DIR."main_menu/1_4_3.gif'>"),
+);
+
+//入金管理
+$s_menu[0][3] = array(
+    //array("sale/1-2-401.php","<img border='0' src='".IMAGE_DIR."main_menu/1_5_1.gif'>"),
+    array("sale/1-2-402.php","<img border='0' src='".IMAGE_DIR."main_menu/1_5_2.gif'>"),
+    array("sale/1-2-403.php","<img border='0' src='".IMAGE_DIR."main_menu/1_5_3.gif'>"),
+);
+
+//実績管理
+$s_menu[0][4] = array(
+    array("sale/1-2-501.php","<img border='0' src='".IMAGE_DIR."main_menu/1_6_1.gif'>"),
+    //array("sale/1-2-503.php","<img border='0' src='".IMAGE_DIR."main_menu/1_6_2.gif'>"),
+    array("sale/1-2-503.php","<img border='0' src='".IMAGE_DIR."main_menu/1_6_3.gif'>"),
+);
+
+//■仕入管理
+//発注取引
+$s_menu[1][0] = array( 
+    array("buy/1-3-101.php","<img border='0' src='".IMAGE_DIR."main_menu/2_1_1.gif'>"),
+    array("buy/1-3-102.php","<img border='0' src='".IMAGE_DIR."main_menu/2_1_3.gif'>"), 
+    array("buy/1-3-104.php","<img border='0' src='".IMAGE_DIR."main_menu/2_1_4.gif'>"), 
+    array("buy/1-3-106.php","<img border='0' src='".IMAGE_DIR."main_menu/2_1_5.gif'>"), 
+);
+
+//仕入取引
+$s_menu[1][1] = array(
+    array("buy/1-3-207.php","<img border='0' src='".IMAGE_DIR."main_menu/2_2_2.gif'>"),
+    array("buy/1-3-202.php","<img border='0' src='".IMAGE_DIR."main_menu/2_2_3.gif'>"),
+);
+
+//支払管理
+$s_menu[1][2] = array(
+    array("buy/1-3-307.php","<img border='0' src='".IMAGE_DIR."main_menu/2_3_5.gif'>"),
+    //array("buy/1-3-301.php","<img border='0' src='".IMAGE_DIR."main_menu/2_3_4.gif'>"), 
+    array("buy/1-3-302.php","<img border='0' src='".IMAGE_DIR."main_menu/2_3_2.gif'>"), 
+    array("buy/1-3-303.php","<img border='0' src='".IMAGE_DIR."main_menu/2_3_3.gif'>"), 
+);
+
+//実績管理
+$s_menu[1][3] = array(
+    array("buy/1-3-401.php","<img border='0' src='".IMAGE_DIR."main_menu/2_4_1.gif'>"),
+    array("buy/1-3-403.php","<img border='0' src='".IMAGE_DIR."main_menu/2_4_2.gif'>"),
+);
+
+//■在庫管理
+//在庫取引
+$s_menu[2][0] = array(
+    array("stock/1-4-101.php","<img border='0' src='".IMAGE_DIR."main_menu/3_1_1.gif'>"),
+//    array("stock/1-4-105.php","<img border='0' src='".IMAGE_DIR."main_menu/3_1_2.gif'>"),
+    array("stock/1-4-107.php","<img border='0' src='".IMAGE_DIR."main_menu/3_1_3.gif'>"),
+//    array("stock/1-4-110.php","<img border='0' src='".IMAGE_DIR."main_menu/3_1_4.gif'>"),
+    array("stock/1-4-109.php","<img border='0' src='".IMAGE_DIR."main_menu/3_1_6.gif'>"),
+    array("stock/1-4-104.php","<img border='0' src='".IMAGE_DIR."main_menu/3_1_7.gif'>"),
+);
+
+//棚卸管理
+$s_menu[2][1] = array(
+    array("stock/1-4-201.php","<img border='0' src='".IMAGE_DIR."main_menu/3_2_1.gif'>"),
+//    array("stock/1-4-205.php","<img border='0' src='".IMAGE_DIR."main_menu/3_2_2.gif'>"),
+    array("stock/1-4-108.php","<img border='0' src='".IMAGE_DIR."main_menu/3_1_8.gif'>"),
+//    array("stock/1-4-112.php","<img border='0' src='".IMAGE_DIR."main_menu/3_1_9.gif'>"),
+);
+
+//■更新
+//更新管理
+$s_menu[3][0] = array(
+    array("renew/1-5-105.php","<img border='0' src='".IMAGE_DIR."main_menu/4_1_1.gif'>"),
+    array("renew/1-5-107.php","<img border='0' src='".IMAGE_DIR."main_menu/4_1_2.gif'>"),
+    array("renew/1-5-101.php","<img border='0' src='".IMAGE_DIR."main_menu/4_1_3.gif'>"),
+    //array("renew/1-5-103.php","<img border='0' src='".IMAGE_DIR."main_menu/4_1_4.gif'>"),
+    array("renew/1-5-104.php","<img border='0' src='".IMAGE_DIR."main_menu/4_1_5.gif'>"),
+    array("renew/1-5-102.php","<img border='0' src='".IMAGE_DIR."main_menu/4_1_6.gif'>"),
+);
+
+//■データ出力
+//統計情報
+$s_menu[4][0] = array(
+    array(ANALYSIS_DIR."head/1-6-132.php","<img border='0' src='".IMAGE_DIR."main_menu/5_1_1.gif'>"),
+    //array(ANALYSIS_DIR."head/1-6-131.php","<img border='0' src='".IMAGE_DIR."main_menu/5_1_2.gif'>"),
+    //array(ANALYSIS_DIR."head/1-6-135.php","<img border='0' src='".IMAGE_DIR."main_menu/5_1_3.gif'>"),
+    //array(ANALYSIS_DIR."head/1-6-133.php","<img border='0' src='".IMAGE_DIR."main_menu/5_1_4.gif'>"),
+    //array(ANALYSIS_DIR."head/1-6-143.php","<img border='0' src='".IMAGE_DIR."main_menu/5_1_6.gif'>"),
+);
+
+//売上推移
+$s_menu[4][1] = array(
+    array(ANALYSIS_DIR."head/1-6-103.php","<img border='0' src='".IMAGE_DIR."main_menu/5_3_5.gif'>"),
+    //array(ANALYSIS_DIR."head/1-6-100.php","<img border='0' src='".IMAGE_DIR."main_menu/5_2_2.gif'>"),
+    array(ANALYSIS_DIR."head/1-6-101.php","<img border='0' src='".IMAGE_DIR."main_menu/5_2_3.gif'>"),
+    array(ANALYSIS_DIR."head/1-6-108.php","<img border='0' src='".IMAGE_DIR."main_menu/5_2_5.gif'>"),
+    //array(ANALYSIS_DIR."head/1-6-105.php","<img border='0' src='".IMAGE_DIR."main_menu/5_2_6.gif'>"),
+    array(ANALYSIS_DIR."head/1-6-106.php","<img border='0' src='".IMAGE_DIR."main_menu/5_2_10.gif'>"),
+    array(ANALYSIS_DIR."head/1-6-107.php","<img border='0' src='".IMAGE_DIR."main_menu/5_2_8.gif'>"),
+);
+
+//ABC分析
+$s_menu[4][2] = array(
+    array(ANALYSIS_DIR."head/1-6-112.php","<img border='0' src='".IMAGE_DIR."main_menu/5_3_5.gif'>"),
+    array(ANALYSIS_DIR."head/1-6-110.php","<img border='0' src='".IMAGE_DIR."main_menu/5_2_3.gif'>"),
+    array(ANALYSIS_DIR."head/1-6-111.php","<img border='0' src='".IMAGE_DIR."main_menu/5_3_6.gif'>"),
+    array(ANALYSIS_DIR."head/1-6-113.php","<img border='0' src='".IMAGE_DIR."main_menu/5_3_3.gif'>"),
+    array(ANALYSIS_DIR."head/1-6-114.php","<img border='0' src='".IMAGE_DIR."main_menu/5_3_4.gif'>"),
+);
+
+//仕入推移
+$s_menu[4][3] = array(
+    array(ANALYSIS_DIR."head/1-6-122.php","<img border='0' src='".IMAGE_DIR."main_menu/5_4_1.gif'>"),
+    array(ANALYSIS_DIR."head/1-6-121.php","<img border='0' src='".IMAGE_DIR."main_menu/5_4_2.gif'>"),
+);
+
+//CSV出力
+$s_menu[4][4] = array(
+    array(ANALYSIS_DIR."head/1-6-301.php","<img border='0' src='".IMAGE_DIR."main_menu/5_5_1.gif'>"),
+    array(ANALYSIS_DIR."head/1-6-302.php","<img border='0' src='".IMAGE_DIR."main_menu/5_5_2.gif'>"),
+    array(ANALYSIS_DIR."head/1-6-303.php","<img border='0' src='".IMAGE_DIR."main_menu/5_5_3.gif'>")
+);
+
+//■マスタ管理
+//本部管理マスタ
+$s_menu[5][0] = array(
+    array("system/1-1-205.php","<img border='0' src='".IMAGE_DIR."main_menu/6_5_1.gif'>"),
+    array("system/1-1-234.php","<img border='0' src='".IMAGE_DIR."main_menu/6_5_2.gif'>"),
+    array("system/1-1-233.php","<img border='0' src='".IMAGE_DIR."main_menu/6_5_3.gif'>"),
+    array("system/1-1-231.php","<img border='0' src='".IMAGE_DIR."main_menu/6_2_5.gif'>"),
+    array("system/1-1-230.php","<img border='0' src='".IMAGE_DIR."main_menu/6_1_7.gif'>"),
+);
+
+//一部共有マスタ
+$s_menu[5][1] = array(
+    array("system/1-1-211.php","<img border='0' src='".IMAGE_DIR."main_menu/6_2_3.gif'>"),
+    array("system/1-1-209.php","<img border='0' src='".IMAGE_DIR."main_menu/6_2_4.gif'>"),
+    array("system/1-1-235.php","<img border='0' src='".IMAGE_DIR."main_menu/6_2_6.gif'>"),
+    array("system/1-1-220.php","<img border='0' src='".IMAGE_DIR."main_menu/6_2_2.gif'>"),
+);
+
+//個別マスタ
+$s_menu[5][2] = array(
+    array("system/1-1-203.php","<img border='0' src='".IMAGE_DIR."main_menu/6_1_2.gif'>"),
+    array("system/1-1-201.php","<img border='0' src='".IMAGE_DIR."main_menu/6_1_1.gif'>"),
+    array("system/1-1-213.php","<img border='0' src='".IMAGE_DIR."main_menu/6_1_3.gif'>"),
+    array("system/1-1-207.php","<img border='0' src='".IMAGE_DIR."main_menu/6_1_4.gif'>"),
+    array("system/1-1-107.php","<img border='0' src='".IMAGE_DIR."main_menu/6_2_1.gif'>"),
+    array("system/1-1-302.php","<img border='0' src='".IMAGE_DIR."main_menu/6_4_5.gif'>"),
+    array("system/1-1-227.php","<img border='0' src='".IMAGE_DIR."main_menu/6_1_8.gif'>"),
+    array("system/1-1-101.php","<img border='0' src='".IMAGE_DIR."main_menu/6_1_15.gif'>"),
+    array("system/1-1-113.php","<img border='0' src='".IMAGE_DIR."main_menu/6_1_10.gif'>"),
+    //array("system/1-1-116.php","<img border='0' src='".IMAGE_DIR."main_menu/6_1_11.gif'>"),
+    //array("system/1-1-216.php","<img border='0' src='".IMAGE_DIR."main_menu/6_1_12.gif'>"),
+    array("system/1-1-219.php","<img border='0' src='".IMAGE_DIR."main_menu/6_1_13.gif'>"),
+    array("system/1-1-225.php","<img border='0' src='".IMAGE_DIR."main_menu/6_1_14.gif'>"),
+    array("system/1-1-224.php","<img border='0' src='".IMAGE_DIR."main_menu/6_1_6.gif'>"),
+);
+
+//帳票設定
+$s_menu[5][3] = array(
+    array("system/1-1-303.php","<img border='0' src='".IMAGE_DIR."main_menu/6_3_1.gif'>"),
+    array("system/1-1-304.php","<img border='0' src='".IMAGE_DIR."main_menu/6_3_3.gif'>"),
+    //array("system/1-1-311.php","<img border='0' src='".IMAGE_DIR."main_menu/6_5_4.gif'>"),
+    array("system/1-1-312.php","<img border='0' src='".IMAGE_DIR."main_menu/6_3_4.gif'>"),
+    array("system/1-1-310.php","<img border='0' src='".IMAGE_DIR."main_menu/6_3_2.gif'>"),
+); 
+
+//システム設定
+$s_menu[5][4] = array(
+    array("system/1-1-301.php","<img border='0' src='".IMAGE_DIR."main_menu/6_5_5.gif'>"),
+    array("system/1-1-305.php","<img border='0' src='".IMAGE_DIR."main_menu/6_4_2.gif'>"),
+    array("system/1-1-306.php","<img border='0' src='".IMAGE_DIR."main_menu/6_4_3.gif'>"),
+    array("system/1-1-307.php","<img border='0' src='".IMAGE_DIR."main_menu/6_4_4.gif'>"),
+);
+
+
+/****************************/
+//HTMLヘッダ
+/****************************/
+$html_header = Html_Header($page_title);
+
+/****************************/
+//HTMLフッタ
+/****************************/
+$html_footer = Html_Footer();
+
+//HTML****************************************/
+
+echo "
+$html_header 
+
+<style type='text/css'>
+li{
+    line-height: 20px;
+}
+</style>
+
+<body onload=\"deleteCookie()\">
+<form name=\"dateForm\" method=\"post\">
+<!---------------------- 画面タイトルテーブル --------------------->
+
+<table width='100%' border='0' bgcolor='#213B82'>
+    <tr>
+        <td width='300' align='left' nowrap>
+        <font color='#FFFFFF' valign='center'><b> $shop_name<br>
+        $staff_name</b></font><br>
+        </td>
+        <td align='center'>
+        <font color='#FFFFFF' size='3'><b>本部　MENU</b></font>
+        </td>
+        <td width='300' align='right' valign='top' width='450' nowrap>
+        $menu_link
+        </td>
+    </tr>
+</table>
+
+<!--トップメニュー-->
+
+<table width='100%'>
+    <tr align='center' valign='middle' >
+        <td>
+        <table align='center'>
+            <tr>";
+                for($i = 0; $i < count($l_menu); $i++){
+
+print               "<td width='16%' align='left'>";
+                    print $l_menu[$i];
+print               "</td>";
+                }
+print       "<input type='hidden' name='select_menu'>
+            </tr>
+        </table>
+        </td>
+    </tr>
+</table>
+
+<table width='100%' height='370'>
+    <tr>
+        <td height='5'><hr color='#A0A0CF'></td>
+    </tr>
+    <tr valign='top'>
+        <td>
+        <table align='center' border=\"0\">
+            <tr valign='top'>";
+            for($i = 0; $i < count($m_menu[$select_menu]); $i++){
+print           "<td>";
+print           "<table align='left'  border=\"0\">";
+print               "<tr>";
+print                   "<td align='right'>".$m_menu[$select_menu][$i]."</td>";
+print               "</tr>";
+print               "<tr>";
+print                   "<td align='right'>";
+                        for($j = 0; $j < count($s_menu[$select_menu][$i]); $j++){
+print                       "<a href=".$s_menu[$select_menu][$i][$j][0].">".$s_menu[$select_menu][$i][$j][1]."</a><br>";
+                        }
+print                   "</td>";
+print               "</tr>";
+print           "</table>";
+print           "</td>";
+            }
+
+print"      </tr>
+        </table>
+        </td>
+    </tr> 
+</table>
+
+<table border='0' align=\"center\">
+<tr><td align='center'>
+    <a href='".LOGOUT_PAGE."'><img src='".IMAGE_DIR."logout.gif' border='0'></a>
+</td></tr>
+</table>
+
+$html_footer
+";
+
+?>

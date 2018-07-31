@@ -1,0 +1,583 @@
+{$var.html_header}
+
+{*+++++++++++++++ 外枠 begin +++++++++++++++*}
+<body bgcolor="#D8D0C8">
+<form name="dateForm" method="post">
+{$form.hidden}
+<table width="100%" height="90%" class="M_Table">
+
+    {*+++++++++++++++ ヘッダ類 begin +++++++++++++++*}
+    <tr align="center" height="60">
+        <td width="100%" colspan="2" valign="top">{$var.page_header}</td>
+    </tr>
+    {*--------------- ヘッダ類 e n d ---------------*}
+
+    {*+++++++++++++++ コンテンツ部 begin +++++++++++++++*}
+    <tr align="center" valign="top">
+        <td>
+            <table>
+                <tr>
+                    <td>
+
+{*+++++++++++++++ メッセージ類 begin +++++++++++++++*}
+
+{*--------------- メッセージ類 e n d ---------------*}
+
+{*+++++++++++++++ 画面表示１ begin +++++++++++++++*}
+<table width="960">
+    <tr>
+        <td>
+<span style="color: #0000ff; font-weight: bold; line-height: 130%;">
+{* 一括訂正完了メッセージ *}
+{if $var.lump_change_comp_mess != null}
+    <li>{$var.lump_change_comp_mess}
+{/if}
+{* 削除完了メッセージ *}
+{if $var.del_comp_mess != null}
+    <li>{$var.del_comp_mess}
+{/if}
+{* 確定完了メッセージ *}
+{if $var.confirm_comp_mess != null}
+    <li>{$var.confirm_comp_mess}
+{/if}
+{* 報告完了メッセージ *}
+{if $var.repo_comp_mess != null}
+    <li>{$var.repo_comp_mess}
+{/if}
+{* 承認完了メッセージ *}
+{if $var.accept_comp_mess != null}
+    <li>{$var.accept_comp_mess}
+{/if}
+</span>
+
+{* エラーメッセージ *}
+<span style="font: bold; color: #ff0000;">
+    <ul style="margin-left: 16px;">
+
+{*--- 一括訂正処理時エラー ---*}
+{* 予定巡回日エラー *}
+{if $form.form_lump_change_date.error != null}
+    <li>{$form.form_lump_change_date.error}
+{/if}
+
+{*--- 削除処理時エラー ---*}
+{* 削除処理の同時実行エラー *}
+{if $form.del_err_mess.error != null}
+    <li>{$form.del_err_mess.error}
+{/if}
+{* 削除時の倉庫指定ないエラー *}
+{if $form.back_ware[$var.del_line].error != null}
+    <li>{$form.back_ware[$var.del_line].error}
+{/if}
+
+{*--- 確定処理時エラー ---*}
+{* 確定処理の既に確定エラー *}
+{if $var.confirm_err != null}
+    <li>{$var.confirm_err}<br>
+    {foreach from=$var.ary_err_confirm         key=i item=slip_no}　　{$slip_no}<br>{/foreach}
+{/if}
+{* 確定処理の既に削除エラー *}
+{if $var.del_err != null}
+    <li>{$var.del_err}<br>
+    {foreach from=$var.ary_err_del             key=i item=slip_no}　　{$slip_no}<br>{/foreach}
+    {* 報告時 *}
+    {foreach from=$var.del_no                  key=i item=slip_no}　　{$slip_no}<br>{/foreach}
+{/if}
+{* 予定巡回日の月次更新エラー *}
+{if $var.deli_day_renew_err != null}
+    <li>{$var.deli_day_renew_err}<br>
+    {foreach from=$var.ary_err_deli_day_renew  key=i item=slip_no}　　{$slip_no}<br>{/foreach}
+{/if}
+{* 予定巡回日のシステム開始日エラー *}
+{if $var.deli_day_start_err != null}
+    <li>{$var.deli_day_start_err}<br>
+    {foreach from=$var.ary_err_deli_day_start  key=i item=slip_no}　　{$slip_no}<br>{/foreach}
+{/if}
+{* 請求日の月次更新エラー *}
+{if $var.claim_day_renew_err != null}
+    <li>{$var.claim_day_renew_err}<br>
+    {foreach from=$var.ary_err_claim_day_renew key=i item=slip_no}　　{$slip_no}<br>{/foreach}
+{/if}
+{* 請求日のシステム開始日エラー *}
+{if $var.deli_day_start_err != null}
+    <li>{$var.deli_day_start_err}<br>
+    {foreach from=$var.ary_err_deli_day_start  key=i item=slip_no}　　{$slip_no}<br>{/foreach}
+{/if}
+{* 請求日の前回請求日エラー *}
+{if $var.claim_day_bill_err != null}
+    <li>{$var.claim_day_bill_err}<br>
+    {foreach from=$var.ary_err_claim_day_bill  key=i item=slip_no}　　{$slip_no}<br>{/foreach}
+    {* 報告時 *}
+    {foreach from=$var.claim_day_bill_no       key=i item=slip_no}　　{$slip_no}<br>{/foreach}
+{/if}
+{* 紹介料本部月次更新日エラー *}
+{if $var.buy_err_mess1 != null}
+    <li>{$var.buy_err_mess1}<br>
+    {foreach from=$var.ary_err_buy1            key=i item=slip_no}　　{$slip_no}<br>{/foreach}
+{/if}
+{* 紹介料本部仕入締日エラー *}
+{if $var.buy_err_mess2 != null}
+    <li>{$var.buy_err_mess2}<br>
+    {foreach from=$var.ary_err_buy2            key=i item=slip_no}　　{$slip_no}<br>{/foreach}
+{/if}
+{* 紹介料仕入締日エラー *}
+{if $var.buy_err_mess3 != null}
+    <li>{$var.buy_err_mess3}<br>
+    {foreach from=$var.ary_err_buy3            key=i item=slip_no}　　{$slip_no}<br>{/foreach}
+{/if}
+{* 入金番号重複エラー *}
+{if $var.error_pay_no != null}
+    <li>{$var.error_pay_no}<br>
+    {foreach from=$var.ary_err_pay_no          key=i item=slip_no}　　{$slip_no}<br>{/foreach}
+{/if}
+{* 紹介料仕入番号重複エラー *}
+{if $var.error_buy_no != null}
+    <li>{$var.error_buy_no}<br>
+    {foreach from=$var.ary_err_buy_no          key=i item=slip_no}　　{$slip_no}<br>{/foreach}
+{/if}
+
+{*--- 報告処理時エラー ---*}
+{* 報告処理の既に報告エラー *}
+{if $var.trust_confirm_err != null}
+    <li>{$var.trust_confirm_err}<br>
+    {foreach from=$var.trust_confirm_no        key=i item=slip_no}　　{$slip_no}<br>{/foreach}
+{/if}
+{* 予定巡回日が委託先の月次更新エラー *}
+{if $var.ord_time_itaku_err != null}
+    <li>{$var.ord_time_itaku_err}<br>
+    {foreach from=$var.ord_time_itaku_no       key=i item=slip_no}　　{$slip_no}<br>{/foreach}
+{/if}
+{* 予定巡回日のシステム開始日エラー *}
+{if $var.ord_time_start_err != null}
+    <li>{$var.ord_time_start_err}<br>
+    {foreach from=$var.ord_time_start_no       key=i item=slip_no}　　{$slip_no}<br>{/foreach}
+{/if}
+{* 予定巡回日が自分の月次更新エラー *}
+{if $var.ord_time_err != null}
+    <li>{$var.ord_time_err}<br>
+    {foreach from=$var.ord_time_err            key=i item=slip_no}　　{$slip_no}<br>{/foreach}
+{/if}
+{* 伝票番号重複（受託先の代行料売上）エラー *}
+{if $var.error_sale != null}
+    <li>{$var.error_sale}<br>
+    {foreach from=$var.err_sale_no             key=i item=slip_no}　　{$slip_no}<br>{/foreach}
+{/if}
+
+{*--- 承認処理時エラー ---*}
+{* 報告されたオンライン代行の委託先の既に取消エラー *}
+{if $var.cancel_err != null}
+    <li>{$var.cancel_err}
+{/if}
+{* 代行料or紹介料の仕入番号重複エラー *}
+{if $var.error_buy != null}
+    <li>{$var.error_buy}
+{/if}
+{* 入金番号重複エラー *}
+{if $var.error_payin != null}
+    <li>{$var.error_payin}
+{/if}
+{* 代行料の本部月次以前 *}
+{if $var.deli_day_act_renew_err != null}
+    <li>{$var.deli_day_act_renew_err}
+{/if}
+{* 代行料の本部仕入締以前 *}
+{if $var.pay_day_act_err != null}
+    <li>{$var.pay_day_act_err}
+{/if}
+{* 紹介料の本部月次以前 *}
+{if $var.deli_day_intro_renew_err != null}
+    <li>{$var.deli_day_intro_renew_err}
+{/if}
+{* 紹介料の本部仕入締以前 *}
+{if $var.pay_day_intro_renew_err != null}
+    <li>{$var.pay_day_intro_renew_err}
+{/if}
+
+
+{* 紹介料の本部月次、仕入締エラー *}
+{*
+{if $var.buy_err_mess != null}
+    <li>{$var.buy_err_mess}
+{/if}
+*}
+
+
+{*--- 前受エラー ---*}
+{* 取引区分が現金エラー *}
+{if $var.err_trade_advance_msg != null}
+    <li>{$var.err_trade_advance_msg}<br>
+    {* 確定時 *}
+    {foreach from=$var.ary_err_trade_advance key=i item=slip_no}　　{$slip_no}<br>{/foreach}
+    {* 承認時 *}
+    {foreach from=$var.ary_trade_advance_no key=i item=slip_no}　　{$slip_no}<br>{/foreach}
+{/if}
+{* 予定巡回日が未来の場合のエラー *}
+{if $var.err_future_date_msg != null}
+    <li>{$var.err_future_date_msg}<br>
+    {* 確定時 *}
+    {foreach from=$var.ary_err_future_date key=i item=slip_no}　　{$slip_no}<br>{/foreach}
+    {* 承認時、報告時 *}
+    {foreach from=$var.ary_future_date_no key=i item=slip_no}　　{$slip_no}<br>{/foreach}
+{/if}
+{* 未確定の前受金伝票があるエラー *}
+{if $var.err_advance_fix_msg != null}
+    <li>{$var.err_advance_fix_msg}<br>
+    {* 確定時 *}
+    {foreach from=$var.ary_err_advance_fix key=i item=slip_no}　　{$slip_no}<br>{/foreach}
+    {* 承認時 *}
+    {foreach from=$var.ary_advance_fix_no key=i item=slip_no}　　{$slip_no}<br>{/foreach}
+{/if}
+{* 前受金残高不足エラー *}
+{if $var.err_paucity_advance_msg != null}
+    <li>{$var.err_paucity_advance_msg}<br>
+    {* 確定時 *}
+    {foreach from=$var.ary_err_paucity_advance key=i item=slip_no}　　{$slip_no}<br>{/foreach}
+    {* 承認時 *}
+    {foreach from=$var.ary_paucity_advance_no key=i item=slip_no}　　{$slip_no}<br>{/foreach}
+{/if}
+{* 前受ありで予定巡回日 != 請求日エラー *}
+{* 現状ではチェックなし（受託先が予定巡回日を変更したら、請求日も同じ日を突っ込んでます）
+{if $var.err_day_advance_msg != null}
+    <li>{$var.err_day_advance_msg}
+{/if}
+*}
+
+</span>
+
+{* 商品予定出荷してない警告 *}
+{if $var.move_warning != null}
+<table border="0" width="650px" cellpadding="0" cellspacing="0" style="font-weight: bold; width: 650px;">
+    <tr width="650px" style="width: 650px;"><td width="650px" style="width: 650px;">
+    <font color="#ff00ff">[警告]<br>
+    {$var.move_warning}</font><br>
+    {$form.form_confirm_warn.html}<br><br>
+    </td></tr>
+</table>
+{/if}
+
+
+{* 予定データ削除して0件になった場合、戻るボタン表示 *}
+{if $var.modoru_disp_flg == true}
+    {$form.modoru.html}
+
+{* 0件じゃない場合は一括訂正フォームを表示 *}
+{else}
+<table width="550">
+    <tr>
+        <td width="260">
+            <table class="List_Table" width="250">
+                <tr class="Result1">
+                    <td class="Title_Pink" width="100" align="center"><b>予定巡回日</b></td>
+                    <td>{$form.form_lump_change_date.html}</td>
+                </tr>
+            </table>
+        </td>
+        <td width="290" align="left">
+            {$form.btn_lump_change.html}
+        </td>
+    </tr>
+    <tr>
+        <td align="left" width="" colspan="2">
+            <b><font color="blue">
+                <li>指定した日付で 予定巡回日 と 請求日 を一括訂正します。
+                <li>一括訂正は 売上未確定、または オンライン代行で未報告 の予定データが対象です。
+            </font></b>
+        </td>
+    </tr>
+</table>
+<br>
+{/if}
+
+
+{* 伝票ごとに表示 *}
+{foreach from=$h_data_list key=i item=item}
+<fieldset width="100%">
+<legend><span style="font: bold 15px; color: #555555;">
+    【伝票番号　{if $h_data_list[$i][0][0] != NULL}{$h_data_list[$i][0][0]}{else}　　　　{/if}】
+</span></legend>
+<br>
+<table class="List_Table" border="1" width="400">
+    <tr class="{$h_data_list[$i][0][23]}">
+        <td class="Title_Pink" width="100" align="center"><b>代行区分</b></td>
+        <td >{if $h_data_list[$i][0][20] == "1"}自社巡回{elseif $h_data_list[$i][0][20] == "2"}オンライン代行{else}オフライン代行{/if}</td>
+    </tr>
+    <tr class="{$h_data_list[$i][0][23]}">
+        <td class="Title_Pink" width="100" align="center"><b>巡回日</b></td>
+        <td >{$h_data_list[$i][0][34]}</td>
+    </tr>
+</table>
+<br>
+<table class="List_Table" border="1" width="100%">
+{* <table class="List_Table" border="1"> *}
+    {*--- 1行目 巡回日等のヘッダ ---*}
+    <tr align="center" style="font-weight: bold;">
+        <td class="Title_Pink">予定巡回日</td>
+        {if $h_data_list[$i][0][20] == "1" || $smarty.session.group_kind != "2"}<td class="Title_Pink">順路</td>{/if}
+        <td class="Title_Pink">得意先名</td>
+        <td class="Title_Pink">取引区分</td>
+        {* FC側の代行では、請求情報を非表示 *}
+        {if $h_data_list[$i][0][20] == "1" || $smarty.session.group_kind == "2"}
+        <td class="Title_Pink">請求日</td>
+        <td class="Title_Pink">請求先</td>
+        {/if}
+        {if $h_data_list[$i][0][20] == "1" || $smarty.session.group_kind != "2"}<td class="Title_Pink">巡回担当チーム</td>{/if}
+    </tr>
+
+    {*--- 2行目 巡回日等のデータ ---*}
+    <tr class="{$h_data_list[$i][0][23]}">
+        <td align="center">{$h_data_list[$i][0][1]}</td>
+        {if $h_data_list[$i][0][20] == "1" || $smarty.session.group_kind != "2"}<td align="center">{$h_data_list[$i][0][2]}</td>{/if}
+        <td>{$h_data_list[$i][0][3]}-{$h_data_list[$i][0][4]}<br>{$h_data_list[$i][0][5]}</td>
+        <td align="center">{$h_data_list[$i][0][6]}</td>
+        {* FC側の代行では、請求情報を非表示 *}
+        {if $h_data_list[$i][0][20] == '1' || $smarty.session.group_kind == '2'}
+        <td align="center">{$h_data_list[$i][0][8]}</td>
+        <td align="left">{$h_data_list[$i][0][33]}<br>{$h_data_list[$i][0][32]}</td>
+        {/if}
+        {if $h_data_list[$i][0][20] == "1" || $smarty.session.group_kind != "2"}
+        <td>{$h_data_list[$i][0][9]}{$h_data_list[$i][0][10]}{$h_data_list[$i][0][11]}{$h_data_list[$i][0][12]}</td>
+        {/if}
+    </tr>
+
+    {*--- 3行目 直送先 ---*}
+    {* 予定手書で作った伝票の場合、直送先を表示 *}
+    {if $h_data_list[$i][0][40] == "t"}
+    <tr class="{$h_data_list[$i][0][23]}">
+        <td class="Title_Pink" align="center"><b>直送先</b></td>
+        {if $h_data_list[$i][0][20] == "1"}<td align="left" colspan="6">{else}<td align="left" colspan="4">{/if}
+        {if $h_data_list[$i][0][41] != null}{$h_data_list[$i][0][42]}：{$h_data_list[$i][0][43]}　請求先：{$h_data_list[$i][0][44]}{/if}
+        </td>
+    </tr>
+    {/if}
+
+    {*--- 4行目 紹介口座 ---*}
+    {if $h_data_list[$i][0][20] == "1" || $smarty.session.group_kind == "2"}
+    <tr class="{$h_data_list[$i][0][23]}">
+        <td class="Title_Pink" align="center"><b>紹介口座先</b></td>
+        {if $h_data_list[$i][0][20] == "1"}<td align="left" colspan="3">{else}<td align="left" colspan="2">{/if}
+        {if $h_data_list[$i][0][26] != null}{$h_data_list[$i][0][27]}<br>{$h_data_list[$i][0][29]}{else}無し{/if}
+        </td>
+        <td class="Title_Pink" width="100" align="center"><b>紹介口座料<br>(税抜)</b></td>
+        {if $h_data_list[$i][0][20] == "1"}
+            {if $h_data_list[$i][0][30] == "1"}<td align="left" colspan="2">発生しない{else}<td align="right" colspan="2">{$h_data_list[$i][0][31]}{/if}
+        {else}
+            {if $h_data_list[$i][0][30] == "1"}<td align="left">発生しない{else}<td align="right">{$h_data_list[$i][0][31]}{/if}
+        {/if}
+        </td>
+    </tr>
+    {/if}
+
+    {*--- 5行目 代行先 ---*}
+    {if $h_data_list[$i][0][20] != "1"}
+    <tr class="{$h_data_list[$i][0][23]}">
+        <td class="Title_Pink" width="100" align="center"><b>代行先</b></td>
+        <td align="left" colspan="2">{$h_data_list[$i][0][35]}</td>
+        <td class="Title_Pink" width="100" align="center"><b>代行委託料<br>(税抜)</b></td>
+        {if $h_data_list[$i][0][36] == "発生しない"}<td align="left">{else}<td align="right">{/if}{$h_data_list[$i][0][36]}</td>
+    </tr>
+    {/if}
+
+    {*--- 6行目 備考 ---*}
+    <tr class="{$h_data_list[$i][0][23]}">
+        <td class="Title_Pink" width="100" align="center"><b>備考</b></td>
+        {if $h_data_list[$i][0][20] == "1"}
+        {* 通常 *}
+        <td colspan="3">{$h_data_list[$i][0][24]}</td>
+        {elseif $smarty.session.group_kind == "2"}
+        {* 直営の代行 *}
+        <td colspan="2">{$h_data_list[$i][0][24]}</td>
+        {else}
+        {* FC側の代行 *}
+        <td colspan="2">{$h_data_list[$i][0][25]}</td>
+        {/if}
+        <td class="Title_Pink" width="100" align="center"><b>訂正理由</b></td>
+        {if $h_data_list[$i][0][20] == "1"}<td colspan="2">{else}<td>{/if}{$h_data_list[$i][0][15]}</td>
+    </tr>
+
+    {*--- 7行目 伝票金額 ---*}
+    <tr class="{$h_data_list[$i][0][23]}">
+        <td class="Title_Pink" width="100" align="center"><b>税抜合計<br>消費税</b></td>
+        {if $h_data_list[$i][0][20] == "1"}<td align="right" colspan="3">{else}<td align="right" colspan="2">{/if}
+            {$h_data_list[$i][0][13]}<br>{$h_data_list[$i][0][14]}
+        </td>
+        <td class="Title_Pink" width="100" align="center"><b>伝票合計</b></td>
+        {if $h_data_list[$i][0][20] == "1"}<td align="right" colspan="2">{else}<td align="right" colspan="1">{/if}
+            {$h_data_list[$i][0][22]}
+        </td>
+    </tr>
+
+    {*--- 8行目 前受 ---*}
+    {if $h_data_list[$i][0][20] == "1" || $smarty.session.group_kind == "2"}
+    <tr class="{$h_data_list[$i][0][23]}">
+        <td class="Title_Pink" width="100" align="center"><b>前受金残高</b></td>
+        {if $h_data_list[$i][0][20] == "1"}<td align="right" colspan="3">{else}<td align="right" colspan="2">{/if}
+            {$h_data_list[$i][0][45]}
+        </td>
+        <td class="Title_Pink" width="100" align="center"><b>前受相殺額合計</b></td>
+        {if $h_data_list[$i][0][20] == "1"}<td align="right" colspan="2">{else}<td align="right" colspan="1">{/if}
+            {$h_data_list[$i][0][46]}
+        </td>
+    </tr>
+    {/if}
+
+</table>
+<br>
+
+<table class="List_Table" border="1" width="100%">
+{*
+<col width="30">
+<col width="60">
+<col width="*">
+<col width="*">
+<col width="30">
+<col width="70">
+<col width="70">
+<col width="*">
+<col width="30">
+<col width="*">
+<col width="30">
+<col width="*">
+*}
+{* <col width="30"> *}
+    <tr align="center" style="font-weight: bold;">
+        <td class="Title_Pink">No.</td>
+        <td class="Title_Pink">販売区分</td>
+        <td class="Title_Pink">サービス名</td>
+        <td class="Title_Pink">アイテム</td>
+        <td class="Title_Pink">数量</td>
+        <td class="Title_Pink">営業原価<br>売上単価</td>
+        <td class="Title_Pink">原価合計額<br>売上合計額</td>
+        <td class="Title_Pink">消耗品</td>
+        <td class="Title_Pink">数量</td>
+        <td class="Title_Pink">本体商品</td>
+        <td class="Title_Pink">数量</td>
+    {if $h_data_list[$i][0][20] == "1" || $smarty.session.group_kind == "2"}
+        <td class="Title_Pink">口座料<br>(商品単位)</td>
+        <td class="Title_Pink">前受相殺額</td>
+    {/if}
+        {* <td class="Title_Pink">内訳</td> *}
+    </tr>
+
+    {* 伝票データを表示 *}
+    {foreach from=$data_list[$i] key=j item=item}
+    {* aoyama-n 2009-09-18 *}
+    {if $data_list[$i][$j][27] === "t" }
+    <tr class="{$data_list[$i][$j][19]}" style="color: red">
+    {else}
+    <tr class="{$data_list[$i][$j][19]}">
+    {/if}
+        <td align="right">{$j+1}</td>
+        {* 販売区分 *}
+        <td align="center" nowrap>{$data_list[$i][$j][0]}</td>
+        {* サービス *}
+        <td valign="top" nowrap>{$data_list[$i][$j][1]}　{$data_list[$i][$j][2]}<br>　　{$data_list[$i][$j][3]}</td>
+        {* アイテム *}
+        <td valign="top" nowrap>{$data_list[$i][$j][4]}　{$data_list[$i][$j][5]}<br>　　{$data_list[$i][$j][22]}<br>　　{$data_list[$i][$j][6]}</td>
+        {* 数量 *}
+        {if $data_list[$i][$j][7] == 't' && $data_list[$i][$j][8] != NULL}
+        <td align="center" nowrap>
+            <table cellpadding="0" cellspacing="0" style="color: #555555;">
+                <tr><td align="center">一式</td></tr>
+                <tr><td align="right">{$data_list[$i][$j][8]}</td></tr>
+            </table>
+        </td>
+        {elseif $data_list[$i][$j][7] == 't' && $data_list[$i][$j][8] == NULL}
+        <td align="center">一式</td>
+        {elseif $data_list[$i][$j][7] != 't' && $data_list[$i][$j][8] != NULL}
+        <td align="right">{$data_list[$i][$j][8]}</td>
+        {/if}
+
+        {* 営業原価・売上単価 *}
+        <td align="right" nowrap>{$data_list[$i][$j][20]}<br>{$data_list[$i][$j][9]}</td>
+        {* 原価合計・売上合計 *}
+        <td align="right" nowrap>{$data_list[$i][$j][21]}<br>{$data_list[$i][$j][10]}</td>
+        {* 消耗品 *}
+        <td >{$data_list[$i][$j][11]}<br>{$data_list[$i][$j][12]}</td>
+        <td align="right" nowrap>{$data_list[$i][$j][13]}</td>
+        {* 本体商品 *}
+        <td >{$data_list[$i][$j][14]}<br>{$data_list[$i][$j][15]}</td>
+        <td align="right" nowrap>{$data_list[$i][$j][16]}</td>
+
+        {if $h_data_list[$i][0][20] == "1" || $smarty.session.group_kind == "2"}
+        {* 紹介口座料(商品単位) *}
+        <td align="left" nowrap>
+        {* 紹介口座がある場合だけ表示 *}
+            {if $h_data_list[$i][0][26] != null}
+            <table width="100%">
+                {if $data_list[$i][$j][23] != null}
+                <tr><td><font color="#555555">固定額</font></td><td align="right"><font color="#555555">{$data_list[$i][$j][23]}</font></td></tr>
+                {elseif $data_list[$i][$j][24] != null}
+                <tr><td><font color="#555555">売上の</font></td><td align="right"><font color="#555555">{$data_list[$i][$j][24]}&nbsp;％</font></td></tr>
+                {else}
+                {* <tr><td><font color="#555555">なし</font></td></tr> *}
+                <tr><td></td></tr>
+                {/if}
+            </table>
+            {/if}
+
+        {* 前受相殺額 *}
+        <td align="right" nowrap>
+            {if $data_list[$i][$j][25] == "2"}{$data_list[$i][$j][26]}{/if}
+        </td>
+
+        {/if}
+
+        {* 内訳が入力されていた場合にリンクを表示 *}
+{*
+        {if $data_list[$i][$j][22] == true}
+            <td align="center" ><a href="#" onClick="Open_mlessDialmg_g('../system/2-1-116.php',{$data_list[$i][$j][17]},{$data_list[$i][$j][18]},670,470,'sale');">内訳</a></td>
+        {else}
+            <td align="center" >　</td>
+        {/if}
+*}
+    </tr>
+    {/foreach}
+
+</table>
+<br>
+<table border="0" width="100%" style="color: #555555;">
+    {if $form.back_ware[$i].html != null}
+    <tr>
+        <td align="left" colspan="2">
+            <ul style="color: #0000ff; font-weight: bold; line-height: 130%; margin-left: 16px; margin-top: 0px; margin-bottom: 0px;">
+                <li>商品予定出荷で在庫移動済みの伝票を削除する場合は、<br>商品を戻す倉庫を指定してください。
+            </ul>
+        </td>
+    </tr>
+    {/if}
+    <tr>
+        <td align="left">
+            {* 在庫をどこに戻すかセレクト *}
+            {if $form.back_ware[$i].html != null}在庫返却倉庫：{$form.back_ware[$i].html}{/if}
+            {* 削除ボタン *}
+            {if $form.slip_del[$i].html != null}{$form.slip_del[$i].html}{/if}
+        </td>
+        <td align="right">
+            {if $form.confirm[$i].html != null}{$form.confirm[$i].html}　{* 確定ボタン *}
+            {elseif $form.report[$i].html != null}{$form.report[$i].html}　{* 報告ボタン *}
+            {elseif $form.accept[$i].html != null}{$form.accept[$i].html}　{* 承認ボタン *}
+            {/if}
+            {$form.slip_change[$i].html}　{$form.con_change[$i].html}　{$form.modoru.html}
+        </td>
+    </tr>
+</table>
+</fieldset>
+<br><br><br>
+{/foreach}
+
+        </td>
+    </tr>
+</table>
+{*--------------- 画面表示１ e n d ---------------*}
+
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+    {*--------------- コンテンツ部 e n d ---------------*}
+
+</table>
+{*--------------- 外枠 e n d ---------------*}
+
+{$var.html_footer}

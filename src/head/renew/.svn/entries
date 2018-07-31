@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wc-entries
+   xmlns="svn:">
+<entry
+   committed-rev="1"
+   name=""
+   committed-date="2009-10-30T05:38:51.696297Z"
+   url="svn+ssh://210.196.79.251/var/svn/amenity/branches/anet-dosys-rev.1.4/anet-dosys/src/head/renew"
+   last-author="kajioka-h"
+   kind="dir"
+   uuid="b28f2e69-2077-0410-9977-8d54750ab086"
+   revision="2"/>
+<entry
+   committed-rev="1"
+   name="1-5-105.php.091021"
+   text-time="2009-11-02T04:53:29.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="615617b0affbdbb73e002e3176b0814b"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:29.000000Z"/>
+<entry
+   committed-rev="1"
+   name="1-5-101.php"
+   text-time="2009-11-02T04:53:29.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="16a9622d745ce84f10116af7fa29db0c"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:29.000000Z"/>
+<entry
+   committed-rev="1"
+   name="1-5-102.php"
+   text-time="2009-11-02T04:53:29.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="95e34774f4ab82f584bae18c64946cbf"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:29.000000Z"/>
+<entry
+   committed-rev="1"
+   name="ENV_local.php"
+   text-time="2009-11-02T04:53:29.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="5f439470fb017c1a0c74c1f751ac42be"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:29.000000Z"/>
+<entry
+   committed-rev="1"
+   name="1-5-103.php"
+   text-time="2009-11-02T04:53:29.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="ced4532181bf05d7ae43ba9d5e2aa592"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:29.000000Z"/>
+<entry
+   committed-rev="1"
+   name="1-5-104.php"
+   text-time="2009-11-02T04:53:29.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="21e08a19b3d5c32650b5e3e2cd1d6a83"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:29.000000Z"/>
+<entry
+   committed-rev="1"
+   name="1-5-105.php"
+   text-time="2009-11-02T04:53:29.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="7cd1550fa0921610b112ff218b3d270d"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:29.000000Z"/>
+<entry
+   committed-rev="1"
+   name="1-5-105.php.091017"
+   text-time="2009-11-02T04:53:29.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="6d2b48310ee5c57b46a52021ca2e6678"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:29.000000Z"/>
+<entry
+   committed-rev="1"
+   name="1-5-106.php"
+   text-time="2009-11-02T04:53:29.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="6cad9182543e76407625873d59173fc2"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:29.000000Z"/>
+<entry
+   committed-rev="1"
+   name="1-5-107.php"
+   text-time="2009-11-02T04:53:29.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="3d42263cb2f413ed815ef1897af0cd60"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:29.000000Z"/>
+<entry
+   name="templates"
+   kind="dir"/>
+<entry
+   committed-rev="1"
+   name="1-5-108.php"
+   text-time="2009-11-02T04:53:29.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="0f52848b05d93e55333e486f5d8fb313"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:29.000000Z"/>
+<entry
+   committed-rev="1"
+   name="1-5-109.php"
+   text-time="2009-11-02T04:53:29.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="4ebd30c6ef47fbf1d44398bde578a182"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:29.000000Z"/>
+<entry
+   name="templates_c"
+   kind="dir"/>
+<entry
+   committed-rev="1"
+   name="1-5-105.php_fc"
+   text-time="2009-11-02T04:53:29.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="04741d52e13210d46c22106977309bbb"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:29.000000Z"/>
+</wc-entries>

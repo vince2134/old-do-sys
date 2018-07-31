@@ -1,0 +1,542 @@
+<?php
+/********************
+ * 発注点警告リスト
+ *
+ *
+ * 変更履歴
+ *    2006/07/07 (kaji)
+ *      ・shop_gidをなくす
+ *    2006/07/21
+ *    　・引当数の計算を変更
+ *    2006/0726(watanabe-k)
+ *      ・商品の抽出条件変更
+ ********************/
+/*
+ * 履歴：
+ * 　日付　　　　B票No.　　　　担当者　　　内容　
+ *  2006/10/17  06-007      watanabe-k  発注点警告リストでSQLエラーが発生するバグの修正 
+ *  2006/11/29  scl_0016    watanabe-k  受け払いが無い状態で商品情報が表示されてしまうバグの修正 
+ *  2007-03-28              fukuda      検索条件復元処理追加
+ *  2009/10/12              hashimoto-y 在庫管理フラグをショップ別商品情報テーブルに変更
+ *  2010/05/12   Rev.1.5    hashimoto-y 初期表示に検索項目だけ表示する修正
+ *   
+ */
+$page_title = "発注点警告リスト";
+
+// 環境設定ファイル
+require_once("ENV_local.php");
+require_once(INCLUDE_DIR."common_quickform.inc");
+
+// HTML_QuickFormを作成
+$form =& new HTML_QuickForm("dateForm", "POST", $_SERVER["PHP_SELF"]);
+
+// DB接続
+$conn = Db_Connect();
+
+// 権限チェック
+$auth       = Auth_Check($conn);
+// ボタンDisabled
+$disabled   = ($auth[0] == "r") ? "disabled" : null;
+
+
+/****************************/
+// 検索条件復元関連
+/****************************/
+// 検索フォーム初期値配列
+$ary_form_list = array(
+    "form_designated_date"  => "7",
+    "form_target_goods"     => "3",
+    "form_supplier_cd"      => "",
+    "form_supplier_name"    => "",
+    "form_g_goods"          => "",
+    "form_goods_cd"         => "",
+    "form_goods_name"       => "",
+);
+
+// 再遷移時に復元を除外するフォーム配列
+$ary_pass_list = array(
+    "order_button_flg"      => "",
+);
+
+// 検索条件復元
+Restore_Filter2($form, "ord", "form_show_button", $ary_form_list, $ary_pass_list);
+
+
+/****************************/
+// 外部変数
+/****************************/
+$shop_id    = $_SESSION["client_id"];
+$rank_cd    = $_SESSION["rank_cd"];
+$group_kind = $_SESSION["group_kind"];
+
+
+/****************************/
+// 初期値設定
+/****************************/
+$form->setDefaults($ary_form_list);
+
+$designated_date    = "7";
+$match_count        = "0";
+
+
+/****************************/
+// フォームパーツ定義
+/****************************/
+// 出荷可能数
+$form->addElement("text", "form_designated_date", "",
+    "size=\"4\" maxLength=\"4\" style=\"text-align: right; $g_form_style\" $g_form_option"
+);
+
+// 対象商品
+$form_target_goods[] =& $form->createElement("radio", null, null, "本部商品", "1");
+$form_target_goods[] =& $form->createElement("radio", null, null, "その他商品", "2");
+$form_target_goods[] =& $form->createElement("radio", null, null, "全て", "3");
+$form->addGroup($form_target_goods, "form_target_goods", "");
+
+// 仕入先コード
+$form->addElement("text", "form_supplier_cd", "",
+    "size=\"7\" maxLength=\"6\" style=\"$g_form_style\" $g_form_option"
+);
+
+// 主な仕入先
+$form->addElement("text", "form_supplier_name", "", "size=\"34\" maxLength=\"15\" $g_form_option");
+
+// Ｍ区分
+$where  = " WHERE t_g_goods.shop_id ";
+$where .= ($_SESSION[group_kind] == "2") ? " IN (".Rank_Sql().") " : " = $shop_id ";
+$where .= " OR ";
+$where .= " (t_g_goods.shop_id = $shop_id OR t_g_goods.public_flg = 't') "; 
+$select_value = Select_Get($conn,'g_goods', $where);
+$form->addElement("select", "form_g_goods", "", $select_value, $g_form_option_select);
+
+// 商品コード
+$form->addElement("text", "form_goods_cd", "",
+    "size=\"10\" maxLength=\"8\" style=\"$g_form_style\" $g_form_option"
+);
+
+// 商品名
+$form->addElement("text", "form_goods_name", "", "size=\"34\" maxLength=\"15\" $g_form_goods");
+
+// 表示ボタン
+$form->addElement("submit", "form_show_button", "表　示");
+
+// クリアボタン
+$form->addElement("button", "form_clear_button", "クリア", "onClick=\"location.href='".$_SERVER["PHP_SELF"]."'\"");
+
+// 発注入力へボタン
+$form->addElement("button", "form_order_button", "発注入力へ",
+    "onClick=\"javascript:Button_Submit('order_button_flg', '".$_SERVER["PHP_SELF"]."', 'true'); \" $disabled"
+);
+
+// 値保持用hidden
+$form->addElement("hidden", "hdn_target");  // 表示ボタン押下時のみ対象商品の値をセットするためのhidden
+
+// 処理フラグ
+$form->addElement("hidden", "order_button_flg");
+
+// エラーセット用
+$form->addElement("text", "order_err1");
+$form->addElement("text", "order_err2");
+
+
+/*****************************/
+// 表示ボタン押下処理
+/*****************************/
+
+#2010-05-12 hashimoto-y
+if($_POST["form_show_button"]=="表　示" || $_POST["order_button_flg"] == "true"){
+
+
+if ($_POST["form_show_button"] != null){
+
+    /****************************/
+    // エラーチェック
+    /****************************/
+    // ■出荷可能数
+    $form->addRule("form_designated_date", "出荷可能数は半角数字のみ入力可能です。", "regex", "/^[0-9]+$/");
+
+    /****************************/
+    // エラーチェック結果集計
+    /****************************/
+    // チェック適用
+    $form->validate();
+    // 結果をフラグに
+    $err_flg = (count($form->_errors) > 0) ? true : false;
+
+    $post_flg = ($err_flg != true) ? true : false;
+
+}
+
+
+/****************************/
+// 1. 表示ボタン押下＋エラーなし時
+// 2. ページ切り替え時
+/****************************/
+if (($_POST["form_show_button"] != null && $err_flg != true) || ($_POST != null && $_POST["form_show_button"] == null)){
+
+    // 1. フォームの値を変数にセット
+    // 2. SESSION（hidden用）の値（検索条件復元関数内でセット）を変数にセット
+    // 一覧取得クエリ条件に使用
+    $designated_date    = $_POST["form_designated_date"];
+    $target_goods       = $_POST["form_target_goods"];
+    $supplier_cd        = $_POST["form_supplier_cd"];
+    $supplier_name      = $_POST["form_supplier_name"];
+    $g_goods            = $_POST["form_g_goods"];
+    $goods_cd           = $_POST["form_goods_cd"];
+    $goods_name         = $_POST["form_goods_name"];
+
+    $post_flg = true;
+
+}
+
+
+/****************************/
+// 一覧データ取得条件作成
+/****************************/
+if ($post_flg == true && $err_flg != true){
+
+    // 対象商品
+    if ($target_goods != null){
+        // 本部商品
+        if ($target_goods == "1"){
+            $sql .= "AND \n";
+            $sql .= "   t_stock_total.public_flg = 't' \n";
+        // その他商品
+        }elseif ($target_goods == "2"){
+            $sql .= "AND \n";
+            $sql .= ($_SESSION["group_kind"] == "2") ? "   t_stock_total.shop_id IN (".Rank_Sql().") \n"
+                                                     : "   t_stock_total.shop_id = ".$_SESSION["client_id"]." \n";
+            $sql .= "AND \n";
+            $sql .= "   t_stock_total.shop_id = $shop_id \n";
+            $sql .= "AND \n";
+            $sql .= "   t_stock_total.public_flg = 'f' \n";
+        }
+    }
+    // 仕入先コード
+    $sql .= ($supplier_cd != null) ? "AND t_client.client_cd1 LIKE '$supplier_cd%' \n" : null;
+    // 主な仕入先
+    $sql .= ($supplier_name != null) ? "AND t_client.client_name LIKE '%$supplier_name%' \n" : null;
+    // Ｍ区分
+    $sql .= ($g_goods != null) ? "AND t_g_goods.g_goods_id = $g_goods \n" : null;
+    // 商品コード
+    $sql .= ($goods_cd != null) ? "AND t_stock_total.goods_cd LIKE '$goods_cd%' \n" : null;
+    // 商品名
+    $sql .= ($goods_name != null) ? "AND t_stock_total.goods_name LIKE '%$goods_name%' \n" : null;
+
+    // 変数詰め替え
+    $where_sql = $sql;
+
+}
+
+
+/******************************/
+// 一覧データ作成
+/******************************/
+if ($err_flg != true){
+
+    $sql  = "SELECT \n";
+    $sql .= "   t_client.client_name, \n";
+    $sql .= "   t_g_goods.g_goods_name, \n";
+    $sql .= "   t_stock_total.goods_cd, \n";
+    $sql .= "   t_stock_total.goods_name, \n";
+    $sql .= "   t_price.r_price, \n";
+    $sql .= "   t_stock_total.goods_id, \n";
+    $sql .= "   t_stock_total.rack_num, \n";
+    $sql .= "   COALESCE(t_stock_total.order_num,0), \n";
+    $sql .= "   COALESCE(t_stock_total.allowance_total,0), \n";
+    $sql .= "   t_goods_info.order_point \n";
+    $sql .= "FROM \n";
+    $sql .= "   ( \n";
+    $sql .= "       SELECT \n";
+    $sql .= "           t_goods.g_goods_id, \n";
+    $sql .= "           t_goods.shop_id, \n";
+    $sql .= "           t_goods.goods_id, \n";
+    $sql .= "           t_goods.goods_cd, \n";
+    $sql .= "           t_goods.goods_name, \n";
+    $sql .= "           t_goods.public_flg, \n";   
+    $sql .= "           t_stock.stock_num AS rack_num, \n";
+    $sql .= "           t_stock_io.order_num AS order_num, \n";
+    $sql .= "           CASE \n";
+    $sql .= "               WHEN t_stock.rstock_num IS NOT NULL \n";
+    $sql .= "               THEN t_stock.rstock_num \n";
+    $sql .= "           END \n";
+    $sql .= "           AS allowance_total \n";
+    $sql .= "       FROM \n";
+    $sql .= "       t_goods \n";
+    // 在庫数
+    $sql .= "       LEFT JOIN \n";
+    $sql .= "       ( \n";
+    $sql .= "           SELECT \n";
+    $sql .= "               t_stock.goods_id, \n";
+    $sql .= "               SUM(t_stock.stock_num)  AS stock_num, \n";
+    $sql .= "               SUM(t_stock.rstock_num) AS rstock_num \n";
+    $sql .= "           FROM \n";
+    $sql .= "               t_stock \n";
+    $sql .= "               INNER JOIN t_ware ON t_stock.ware_id = t_ware.ware_id \n";
+    $sql .= "           WHERE \n";
+    $sql .= "               t_stock.shop_id = $shop_id \n";
+    $sql .= "           AND \n";
+    $sql .= "               t_ware.count_flg = 't' \n";
+    $sql .= "           GROUP BY \n";
+    $sql .= "               t_stock.goods_id \n";
+    $sql .= "       ) \n";
+    $sql .= "       AS t_stock \n";
+    $sql .= "       ON t_goods.goods_id = t_stock.goods_id \n";
+    // 発注残
+    $sql .= "       LEFT JOIN \n";
+    $sql .= "       ( \n";
+    $sql .= "           SELECT \n";
+    $sql .= "               t_stock_hand.goods_id, \n";
+    $sql .= "               SUM(t_stock_hand.num * CASE t_stock_hand.io_div WHEN 1 THEN 1 WHEN 2 THEN -1 END) AS order_num \n";
+    $sql .= "           FROM \n";
+    $sql .= "               t_stock_hand \n";
+    $sql .= "           INNER JOIN t_ware ON t_stock_hand.ware_id = t_ware.ware_id \n";
+    $sql .= "           WHERE \n";
+    $sql .= "               t_stock_hand.work_div = 3 \n";
+    $sql .= "           AND \n";
+    $sql .= "               t_stock_hand.shop_id = $shop_id \n"; 
+    $sql .= "           AND \n";
+    $sql .= "               t_ware.count_flg = 't' \n";
+    $sql .= "           AND \n";
+    $sql .= "               t_stock_hand.work_day <= (CURRENT_DATE + $designated_date) \n";
+    $sql .= "           GROUP BY \n";
+    $sql .= "               t_stock_hand.goods_id \n";
+    $sql .= "       ) \n";
+    $sql .= "       AS t_stock_io \n";
+    $sql .= "       ON t_goods.goods_id=t_stock_io.goods_id \n";
+    // 引当数
+    $sql .= "       LEFT JOIN \n";
+    $sql .= "       ( \n";
+    $sql .= "           SELECT \n";
+    $sql .= "               t_stock_hand.goods_id, \n";
+    $sql .= "               SUM(t_stock_hand.num * CASE t_stock_hand.io_div WHEN 1 THEN -1 WHEN 2 THEN 1 END) AS allowance_io_num \n";
+    $sql .= "           FROM \n";
+    $sql .= "               t_stock_hand \n";
+    $sql .= "               INNER JOIN t_ware ON t_stock_hand.ware_id = t_ware.ware_id \n";
+    $sql .= "           WHERE \n";
+    $sql .= "               t_stock_hand.work_div = 1 \n";
+    $sql .= "           AND \n";
+    $sql .= "               t_stock_hand.shop_id = $shop_id \n"; 
+    $sql .= "           AND \n";
+    $sql .= "               t_ware.count_flg = 't' \n";
+    $sql .= "           AND \n";
+    $sql .= "               t_stock_hand.work_day <= (CURRENT_DATE + $designated_date) \n";
+    $sql .= "           GROUP BY \n";
+    $sql .= "               t_stock_hand.goods_id \n";
+    $sql .= "       ) \n";
+    $sql .= "       AS t_allowance_io \n";
+    $sql .= "       ON t_goods.goods_id=t_allowance_io.goods_id \n";
+    #2009-10-12 hashimoto-y
+    $sql .= "           INNER JOIN t_goods_info   ON t_goods.goods_id  = t_goods_info.goods_id \n";
+
+    $sql .= "       WHERE \n";
+    #2009-10-12 hashimoto-y
+    #$sql .= "           t_goods.stock_manage = '1' \n";
+    $sql .= "           t_goods_info.stock_manage = '1' \n";
+    $sql .= "       AND \n";
+    $sql .= "           t_goods_info.shop_id = $shop_id ";
+
+    $sql .= "       AND \n";
+    $sql .= "           (t_goods.public_flg = 't' OR t_goods.shop_id = $shop_id) \n";
+    $sql .= "       AND \n";
+    $sql .= "           t_goods.accept_flg = '1' \n";
+    $sql .= "       AND \n";
+    $sql .= "           t_goods.compose_flg = 'f' \n";
+    $sql .= "       AND \n";
+    $sql .= ($group_kind == 2) ? "   t_goods.state IN (1, 3) \n" : "   t_goods.state = 1 \n";
+    $sql .= "   ) \n";
+    $sql .= "   AS t_stock_total \n";
+    $sql .= "   INNER JOIN t_g_goods    ON t_stock_total.g_goods_id = t_g_goods.g_goods_id \n";
+    $sql .= "   INNER JOIN t_price      ON t_stock_total.goods_id = t_price.goods_id \n";
+    $sql .= "   INNER JOIN t_goods_info ON t_stock_total.goods_id = t_goods_info.goods_id \n";
+    $sql .= "   LEFT  JOIN t_client     ON t_goods_info.supplier_id = t_client.client_id \n";
+    // 抽出条件
+    $sql .= "WHERE \n";
+    $sql .= "   (\n";
+    $sql .= "       (t_stock_total.public_flg = 'f' AND t_price.rank_cd = '1') \n";
+    $sql .= "       OR\n";
+    $sql .= "       (t_stock_total.public_flg = 't' AND t_price.rank_cd = '$rank_cd') \n";
+    $sql .= "   ) \n";
+    $sql .= "AND \n";
+    $sql .= "   t_goods_info.shop_id = $shop_id \n";
+    $sql .= "AND \n";
+    $sql .= "   t_goods_info.head_fc_flg = 'f' \n";
+    $sql .= "AND \n";
+    $sql .= "   t_goods_info.order_point > t_stock_total.rack_num \n";
+    $sql .= "AND \n";
+    $sql .= "   t_goods_info.order_point is not null \n";
+    $sql .= $where_sql;
+    $sql .= "ORDER BY \n";
+    $sql .= "   t_client.client_cd1, \n";
+    $sql .= "   t_g_goods.g_goods_cd, \n";
+    $sql .= "   t_stock_total.goods_cd \n";
+    $sql .= ";";
+
+    $result = Db_Query($conn, $sql);
+    $match_count = pg_num_rows($result);
+    $page_data = Get_Data($result);
+
+}
+
+// 背景色設定
+for($i = 0; $i < count($page_data); $i++){
+
+    if($i == 0){
+        $tr[$i] = "Result1";
+    //対象項目がNULLの場合
+    }elseif($page_data[$i][0] == $page_data[$i-1][0]){
+        $tr[$i] = $tr[$i-1];
+    }else{
+        if($tr[$i-1] == "Result1"){
+            $tr[$i] = "Result2";
+        }else{
+            $tr[$i] = "Result1";
+        }
+    }
+}
+
+// 重複行を纏める
+for($i = 0; $i < count($page_data); $i++){
+    for($j = 0; $j < count($page_data); $j++){
+        if($i != $j && $page_data[$i][0] == $page_data[$j][0]){
+            $page_data[$j][0] = null;
+        }
+    }
+}
+
+// ナンバーフォーマット
+for($i = 0; $i < count($page_data); $i++){
+    $page_data[$i][4] = number_format($page_data[$i][4], 2);
+}
+
+
+/****************************/
+//チェックボックス作成
+/****************************/
+// 発注入力チェック
+$form->addElement("checkbox", "form_order_all_check", "", "発注入力", "
+    onClick=\"javascript:All_check('form_order_all_check', 'form_order_check', $match_count);\"
+");
+
+for($i = 0; $i < $match_count; $i++){
+    $form->addElement("checkbox", "form_order_check[$i]");
+}
+
+for($i = 0; $i < $match_count; $i++){
+    $clear_data["form_order_check"][$i] = "";
+}
+$clear_data["form_order_all_check"] = "";
+        
+$form->setConstants($clear_data);
+
+
+/****************************/
+// 発注ボタン押下処理
+/****************************/
+if ($_POST["order_button_flg"] == "true" && $_POST["form_show_button"] == null){
+
+    // 未チェック時
+    if (count($_POST["form_order_check"]) == 0){
+        $form->setElementError("order_err1", "発注する商品を選択してください。");
+        $err_flg = true;
+    }
+
+    // 対象商品が選択されていなかった場合
+    if ($target_goods == "3"){
+        $form->setElementError("order_err2", "対象商品を「本部商品」または「その他商品」で検索後、発注入力して下さい。");
+        $err_flg = true;
+    }
+
+    // エラーがない場合
+    if ($err_flg != true){
+
+        /****************************/
+        // 発注商品IDを取得
+        /****************************/
+        for ($i = 0; $i < $match_count; $i++){
+            if ($_POST["form_order_check"][$i] == 1){
+                $order_goods_id[] = $page_data[$i][5];
+            }       
+        }
+        //重複を纏める
+        asort($order_goods_id);
+        $order_goods_id = array_values(array_unique($order_goods_id));
+
+        /****************************/
+        //GETする値を生成
+        /****************************/
+        $j = 0;
+        for ($i = 0; $i < count($order_goods_id); $i++){
+            $get_goods_id .= "order_goods_id[$j]=".$order_goods_id[$i];
+            if ($i != count($order_goods_id)-1){
+                $get_goods_id .= "&"; 
+                $j = $j+1;
+            }else{  
+                break;  
+            }
+        }
+
+        // 発注入力へボタン押下フラグをクリア
+        $clear_hdn["order_button_flg"] = "";
+        $form->setConstants($clear_hdn);
+
+        $get_goods_id = $get_goods_id."&target_goods=".$_POST["form_target_goods"]."&designated_date=".$_POST["form_designated_date"];
+        header("Location: ".FC_DIR."buy/2-3-102.php?$get_goods_id");
+
+    }
+
+}
+
+
+#2010-05-12 hashimoto-y
+$display_flg = true;
+}
+
+
+/****************************/
+//HTMLヘッダ
+/****************************/
+$html_header = Html_Header($page_title);
+
+/****************************/
+//HTMLフッタ
+/****************************/
+$html_footer = Html_Footer();
+
+/****************************/
+//メニュー作成
+/****************************/
+$page_menu = Create_Menu_f("buy", "1");
+
+/****************************/
+//画面ヘッダー作成
+/****************************/
+$page_header = Create_Header($page_title);
+
+// Render関連の設定
+$renderer =& new HTML_QuickForm_Renderer_ArraySmarty($smarty);
+$form->accept($renderer);
+
+//form関連の変数をassign
+$smarty->assign('form',$renderer->toArray());
+
+//その他の変数をassign
+$smarty->assign('var',array(
+	'html_header'   => "$html_header",
+	'page_menu'     => "$page_menu",
+	'page_header'   => "$page_header",
+	'html_footer'   => "$html_footer",
+	'html_page'     => "$html_page",
+	'html_page2'    => "$html_page2",
+    'match_count'   => "$match_count",
+    "err_flg"       => "$err_flg",
+    'display_flg'    => "$display_flg",
+));
+
+$smarty->assign("page_data", $page_data);
+$smarty->assign("tr", $tr);
+
+//テンプレートへ値を渡す
+$smarty->display(basename($_SERVER["PHP_SELF"].".tpl"));
+
+?>

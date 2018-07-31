@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wc-entries
+   xmlns="svn:">
+<entry
+   committed-rev="1"
+   name=""
+   committed-date="2009-10-30T05:38:51.696297Z"
+   url="svn+ssh://210.196.79.251/var/svn/amenity/branches/anet-dosys-rev.1.4/anet-dosys/src/sample/updata"
+   last-author="kajioka-h"
+   kind="dir"
+   uuid="b28f2e69-2077-0410-9977-8d54750ab086"
+   revision="2"/>
+<entry
+   committed-rev="1"
+   name="amenity_client_history.csv"
+   text-time="2009-11-02T04:53:31.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="92cdfb2f14f3eb1a588b32bf3e63bb2f"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:31.000000Z"/>
+<entry
+   committed-rev="1"
+   name="amenity_product_history.csv"
+   text-time="2009-11-02T04:53:31.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="ddd72a01d289e63d7c633b57c09a1e9c"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:31.000000Z"/>
+<entry
+   committed-rev="1"
+   name="amenity_g_goods_history.csv"
+   text-time="2009-11-02T04:53:31.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="4f95babca146441320d7b932505029ad"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:31.000000Z"/>
+<entry
+   committed-rev="1"
+   name="file.fnc"
+   text-time="2009-11-02T04:53:31.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="db6993ee176e3e8253a90cdf018c7fd3"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:31.000000Z"/>
+<entry
+   committed-rev="1"
+   name="his_goods.php"
+   text-time="2009-11-02T04:53:31.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="ea8776437da9f324a78b138a3f5efd3d"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:31.000000Z"/>
+<entry
+   committed-rev="1"
+   name="db_goods.php"
+   text-time="2009-11-02T04:53:31.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="05feb1707fbbf34207b90386dc956c74"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:31.000000Z"/>
+<entry
+   committed-rev="1"
+   name="his_client.php"
+   text-time="2009-11-02T04:53:31.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="9084a3f04d41e0f2b44589ff818e7ab4"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:31.000000Z"/>
+<entry
+   committed-rev="1"
+   name="ENV_local.php"
+   text-time="2009-11-02T04:53:31.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="8987dbada4e6b6d6d15ae6bcac3bebc0"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:31.000000Z"/>
+<entry
+   committed-rev="1"
+   name="db_client.php"
+   text-time="2009-11-02T04:53:31.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="05feb1707fbbf34207b90386dc956c74"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:31.000000Z"/>
+<entry
+   committed-rev="1"
+   name="his_product.php"
+   text-time="2009-11-02T04:53:31.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="16f5f960f0689be524539d5d8c1cabfa"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:31.000000Z"/>
+<entry
+   committed-rev="1"
+   name="amenity_goods_history.csv"
+   text-time="2009-11-02T04:53:31.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="1fdd5a5a7b3c463ed7036b043b07a3fd"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:31.000000Z"/>
+</wc-entries>

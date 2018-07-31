@@ -1,0 +1,25 @@
+<?php
+/**
+ *ウィンドウオープン時の遷移先判別スクリプト
+ *
+ *
+ *
+ * 履歴
+ * ------------------------------------------
+ * 2008-06-14	渡部浩二	新規作成
+**/
+
+session_start();
+
+//本部
+if($_SESSION['group_kind'] == '1'){
+	$_SESSION['top'] = "/anet-dosys/amenity/src/head/top.php";
+//FC
+}else{
+	$_SESSION['top'] = "/anet-dosys/amenity/src/franchise/top.php";
+}
+
+
+header("Location:/anet-dosys/");
+exit;
+?>

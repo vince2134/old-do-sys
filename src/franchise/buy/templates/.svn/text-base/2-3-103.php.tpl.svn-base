@@ -1,0 +1,313 @@
+{$var.html_header}
+
+<script language="javascript">
+{$var.order_sheet}
+ </script>
+
+<body bgcolor="#D8D0C8" {$var.load}>
+<form {$form.attributes}>
+{$form.hidden}
+{*+++++++++++++++ 外枠 begin +++++++++++++++*}
+<table width="100%" height="90%" class="M_table">
+
+    {*+++++++++++++++ コンテンツ部 begin +++++++++++++++*}
+    <tr align="center" height="60">
+        <td width="100%" colspan="2" valign="top">{$var.page_header}</td>
+    </tr>
+    {*--------------- ヘッダ類 e n d ---------------*}
+
+    {*+++++++++++++++ コンテンツ部 begin +++++++++++++++*}
+	{if $var.freeze_flg == true}
+    	<tr align="center" valign="top" height="160">
+	{else}
+		<tr align="center" valign="top">
+	{/if}
+        <td>
+            <table>
+                <tr>
+                    <td>
+
+<!-- 登録確認メッセージ表示 -->
+{if $var.freeze_flg == true}
+    {if $smarty.get.output_flg == "delete"}
+    <span style="color: #ff0000; font-weight: bold; line-height: 130%;">
+     <li>伝票が削除されているため、変更できません。<br>
+    </span>
+    {elseif $smarty.get.output_flg == "finish"}
+    <span style="color: #ff0000; font-weight: bold; line-height: 130%;">
+     <li>仕入を起こしているため、変更できません。<br>
+    </span>
+    {/if}
+
+    <table width="100%" align="center">
+        {if $smarty.get.output_flg != "delete" && $smarty.get.output_flg != "finish" }
+        <tr>
+            <td align="center">
+            <span style="font: bold 16px;">発注完了しました。<br><br>
+	        {if $var.warning != null}
+            	{$var.warning}
+	        {/if}
+            </span>
+            </td>
+        </tr>
+        {/if}
+        <tr>
+	        <td align="center">{$form.order_button.html}　
+	        {if $var.warning != null || $var.offline_flg != null}
+	            {$form.ok_button.html}　
+	        {/if}
+	        {if $var.warning == null}
+	            {$form.return_button.html}
+	        {/if}
+	        </td>
+        </tr>
+    </table>
+{*
+	<span style="font: bold;"><font size="+1">発注完了しました。<br><br>
+	{if $var.warning != null}
+    	{$var.warning}
+	{/if}
+	</font></span>
+	<table width="100%">
+	    <tr>
+	        <td align="center">{$form.order_button.html}　
+	        {if $var.warning != null || $var.offline_flg != null}
+	            {$form.ok_button.html}　
+	        {/if}
+	        {if $var.warning == null}
+	            {$form.return_button.html}
+	        {/if}
+	        </td>
+	    </tr>
+	</table>
+*}
+{else}
+	{*+++++++++++++++ 画面表示１ begin +++++++++++++++*}
+	<table>
+	    <tr>
+	        <td>
+
+	{*
+	<table class="Data_Table" border="1" width="650">
+	<col width="110" style="font-weight: bold;">
+	<col>
+	<col width="110" style="font-weight: bold;">
+	<col>
+	    <tr>
+	        <td class="Title_Blue">発注番号</td>
+	        <td class="Value" colspan="3">{$form.form_ord_no.html}</td>
+	    </tr>
+	    <tr>
+	        <td class="Title_Blue">発注先</td>
+	        <td class="Value" colspan="3">{$form.form_client.html}</td>
+	    </tr>
+	    <tr>
+	        <td class="Title_Blue">発注日</td>
+	        <td class="Value">{$form.form_ord_time.html}</td>
+	        <td class="Title_Blue">希望納期</td>
+	        <td class="Value">{$form.form_hope_day.html}</td>
+	    </tr>
+	    <tr>
+	        <td class="Title_Blue">運送業者</td>
+	        <td class="Value" colspan="3">{$form.form_trans.html}</td>
+	    </tr>
+	    <tr>
+	        <td class="Title_Blue">直送先</td>
+	        <td class="Value">{$form.form_direct_name.html}</td>
+	        <td class="Title_Blue">仕入倉庫</td>
+	        <td class="Value">{$form.form_ware_name.html}</td>
+	    </tr>
+	    <tr>
+	        <td class="Title_Blue">取引区分</a></td>
+	        <td class="Value">{$form.form_trade_ord.html}</td>
+	        <td class="Title_Blue">担当者</td>
+	        <td class="Value">{$form.form_c_staff_name.html}</td>
+	    </tr>
+	    <tr>
+	        <td class="Title_Blue" >通信欄<br>（仕入先宛）</td>
+	        <td class="Value" colspan="3">{$form.form_note_my.html}</td>
+	    </tr>
+	    <tr>
+	        <td class="Title_Blue">通信欄<br>（本部宛）</td>
+	        <td class="Value" colspan="3">{$form.form_note_your.html}</td>
+	    </tr>
+	</table>
+	<br>
+	*}
+{*
+    <table class="Data_Table" border="1">
+    <col width="100" style="font-weight: bold;">
+    <col>
+        <tr>    
+            <td class="Title_Blue">発信日</td> 
+            <td class="VALUE">{$form.form_send_date.html}</td>
+        </tr>   
+    </table>
+    <br>
+*}
+	<table class="Data_Table" border="1">
+	<col width="110" style="font-weight: bold;">
+	<col>
+	<col width="60" style="font-weight: bold;">
+	<col>
+	<col width="80" style="font-weight: bold;">
+	<col>
+	    <tr>
+	        <td class="Title_Blue">発注番号</td>
+	        <td class="Value">{$form.form_ord_no.html}</td>
+	        <td class="Title_Blue">発注先</td>
+	        <td class="Value">{$form.form_client.html}</td>
+	        <td class="Title_Blue">発注日</td>
+	        <td class="Value">{$form.form_ord_time.html}</td>
+	    </tr>
+	    <tr>
+	        <td class="Title_Blue">運送業者</td>
+	        <td class="Value">{$form.form_trans.html}</td>
+	        <td class="Title_Blue">直送先</td>
+	        <td class="Value">{$form.form_direct_name.html}</td>
+	        <td class="Title_Blue">希望納期</td>
+	        <td class="Value">{$form.form_hope_day.html}</td>
+	    </tr>
+	    <tr>
+	        <td class="Title_Blue">仕入倉庫</td>
+	        <td class="Value">{$form.form_ware_name.html}</td>
+	        <td class="Title_Blue">担当者</td>
+	        <td class="Value">{$form.form_c_staff_name.html}</td>
+	        <td class="Title_Blue">取引区分</a></td>
+	        <td class="Value">{$form.form_trade_ord.html}</td>
+	    </tr>
+	    <tr>
+	        <td class="Title_Blue" >通信欄<br>（仕入先宛）</td>
+	        <td class="Value" colspan="5">{$form.form_note_my.html}</td>
+	    </tr>
+	    {**** {if $var.note_my != ''} ****}
+	    <tr>
+	        <td class="Title_Blue" >通信欄<br>（ＦＣ宛）</td>
+	        <td class="Value" colspan="5">
+            {foreach key=j from=$note_head item=note}
+                {$note_head[$j][0]}<br>
+            {/foreach}
+            </td>
+	    </tr>
+	</table>
+
+	        </td>
+	    </tr>
+	</table>
+	<br>
+	{*--------------- 画面表示１ e n d ---------------*}
+
+	                    </td>
+	                </tr>
+	                <tr>
+	                    <td>
+
+	{*+++++++++++++++ 画面表示２ begin +++++++++++++++*}
+	<table width="100%">
+	    <tr>
+	        <td>
+
+	<table class="List_Table" border="1" width="100%">
+
+	    {* 項目出力 *} 
+	    {foreach key=j from=$item item=items}
+	        <tr align="center">
+	        {foreach key=i from=$items item=item}
+	            <td class="Title_Blue"><b>{$item}</b></td>
+	        {/foreach}
+	        </tr>
+	    {/foreach}                          
+
+	    {* データ出力 *} 
+	    {foreach key=j from=$row item=items}
+	        {$row[$j][0]}
+	            {if $row[$j][1] == "合計"}
+	                <td>{$row[$j][1]}</td>
+	                <td>{$row[$j][2]}</td>
+	            {else}
+	                <td align="right">{$j+1}</td>
+	                <td>{$row[$j][1]}<br>{$row[$j][2]}</td>
+	            {/if}
+	            <td align="right">{$row[$j][3]}</td>
+	            <td align="right">{$row[$j][4]}</td>
+	            <td align="right">{$row[$j][5]}</td>
+	            {if $row[$j][6] != null}
+	                {if $row[$j][6]|regex_replace:"/.*-.*/":"-"}
+	                    <td align="right">{$row[$j][6]}</td>
+	                {else}
+	                    <td align="right">{$row[$j][6]}</td>
+	                {/if}
+	            {/if}
+	            {if $row[$j][7] != null}
+	                <td align="right">{$row[$j][7]}</td>
+	            {/if}
+	            {if $row[$j][8] != null}
+	                {if $row[$j][9] != null}
+	                    <td align="right">{$row[$j][8]}</td>
+	                {else}
+	                    <td>{$row[$j][8]}</td>
+	                {/if}
+	            {/if}
+	            {if $row[$j][9] != null}
+	                <td>{$row[$j][9]}</td>
+	            {/if}
+	        </tr>                                                                                             
+	    {/foreach}                            
+	</table>
+
+	        </td>
+	    </tr>
+	    <tr>
+	        <td>
+
+	<table width="100%">
+	    <tr>
+	        <td align="right">
+	        <table class="List_Table" border="1">
+	            <tr>
+	            <td class="Title_Pink" width="70" align="center"><b>税抜金額</b></td>
+	            <td class="Value" align="right">{$form.form_buy_total.html}</td>
+	            <td class="Title_Pink" width="70" align="center"><b>消費税</b></td>
+	            <td class="Value" align="right">{$form.form_buy_tax.html}</td>
+	            <td class="Title_Pink" width="70" align="center"><b>税込金額</b></td>
+	            <td class="Value" align="right">{$form.form_buy_money.html}</td>
+	            </tr>
+	        </table>
+	        </td>
+	    </tr>
+	</table>
+
+	        </td>
+	    </tr>
+	    <tr>
+	        <td>
+
+	<table width="100%">
+	    <tr>
+	        <td align="right">{$form.order_button.html}　
+	        {if $var.warning != null || $var.offline_flg != null}
+	            {$form.ok_button.html}　
+	        {/if}
+	        {if $var.warning == null}
+	            {$form.return_button.html}
+	        {/if}
+	        </td>
+	    </tr>
+	</table>
+
+	        </td>
+	    </tr>
+	</table>
+	{*--------------- 画面表示２ e n d ---------------*}
+{/if}
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+    {*--------------- コンテンツ部 e n d ---------------*}
+
+</table>
+{*--------------- 外枠 e n d ---------------*}
+
+{$var.html_footer}

@@ -1,0 +1,193 @@
+{$var.html_header}
+
+<body bgcolor="#D8D0C8">
+<form {$form.attributes}>
+
+{*+++++++++++++++ 外枠 begin +++++++++++++++*}
+<table width="100%" height="90%" class="M_table">
+
+    {*+++++++++++++++ ヘッダ類 begin +++++++++++++++*}
+    <tr align="center" height="60">
+        <td width="100%" colspan="2" valign="top">{$var.page_header}</td>
+    </tr>
+{*--------------- ヘッダ類 e n d ---------------*}
+
+{*+++++++++++++++ コンテンツ部 begin +++++++++++++++*}
+    <tr align="center" valign="top">
+        <td>
+            <table>
+                <tr>
+                    <td>
+
+{*+++++++++++++++ 画面表示１ begin +++++++++++++++*}
+<table width="800">
+    <tr>
+        <td>
+
+<table class="Data_Table" border="1" width="100%">
+<col width="110" style="font-weight: bold;">
+<col>
+<col width="120" style="font-weight: bold;">
+    <tr>
+        <td class="Title_Purple">出力形式</td>
+        <td class="Value">{$form.form_output_type.html}</td>
+        <td class="Title_Purple">表示件数</td>
+        <td class="Value">{$form.form_show_page.html}</td>
+    </tr>
+    <tr>
+        <td class="Title_Purple">ショップコード</td>
+        <td class="Value">{$form.form_shop.html}</td>
+        <td class="Title_Purple">ショップ名</td>
+        <td class="Value">{$form.form_shop_name.html}</td>
+    </tr>
+    <tr>
+        <td class="Title_Purple">FC・取引先区分</td>
+        <td class="Value">{$form.form_rank.html}</td>
+        <td class="Title_Purple">ショップ 状態</td>
+        <td class="Value" >{$form.form_state_type_s.html}</td>
+    </tr>
+
+    <tr>
+        <td class="Title_Purple">得意先コード</td>
+        <td class="Value">{$form.form_client.html}</td>
+        <td class="Title_Purple" width="115">得意先名・略称</td>
+        <td class="Value">{$form.form_client_name.html}</td>
+    </tr>
+    <tr>
+        <td class="Title_Purple">地区</td>
+        <td class="Value">{$form.form_area_id.html}</td>
+        <td class="Title_Purple">TEL</td>
+        <td class="Value">{$form.form_tel.html}</td>
+    </tr>
+    <tr>
+        <td class="Title_Purple">業種</td>
+        <td class="Value">{$form.form_btype.html}</td>
+        <td class="Title_Purple">得意先 状態</td>
+        <td class="Value">{$form.form_state_type.html}</td>
+
+    </tr>
+
+</table>
+
+<table align="right">
+    <tr>
+        <td>{$form.form_button.show_button.html}　　{$form.form_button.clear_button.html}</td>
+    </tr>
+</table>
+
+        </td>
+    </tr>
+</table>
+{*{/if}*}
+<br>
+{*--------------- 画面表示１ e n d ---------------*}
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+
+{*+++++++++++++++ 画面表示２ begin +++++++++++++++*}
+{$form.hidden}
+
+<table width="100%">
+    <tr>
+        <td>
+{*
+{if $smarty.post.form_show_page == 2 && $smarty.post.form_button.show_button == "表　示" }
+
+       <b style="font-size: 15px; color: #555555;"> 【得意先 状態： {$var.state_type}】</b><br>全<b>{$var.match_count}</b>件
+{else}*}
+    <b style="font-size: 15px; color: #555555;">【得意先 状態： {$var.state_type}】</b>
+    {$var.html_page}
+{*{/if}*}
+
+<table class="List_Table" border="1" width="100%">
+    <tr align="center" style="font-weight: bold;" nowrap>
+        <td class="Title_Purple">No.</td>
+        <td class="Title_Purple">{Make_Sort_Link_Tpl form=$form f_name="sl_rank"}</td>
+        <td class="Title_Purple">
+            {Make_Sort_Link_Tpl form=$form f_name="sl_shop_cd"}<br>
+            <br style="font-size: 4px;">
+            {Make_Sort_Link_Tpl form=$form f_name="sl_shop_name"}<br>
+        </td>
+        <td class="Title_Purple">
+            {Make_Sort_Link_Tpl form=$form f_name="sl_client_cd"}<br>
+            <br style="font-size: 4px;">
+            {Make_Sort_Link_Tpl form=$form f_name="sl_client_name"}<br>
+        </td>
+        <td class="Title_Purple">略称</td>
+        <td class="Title_Purple">地区</td>
+        <td class="Title_Purple">TEL</td>
+        {if $smarty.post.form_state_type == '4'}
+        <td class="Title_Purple">状態</td>
+        {/if}
+        <td class="Title_Purple">請求先コード<br>請求先</td>
+{*
+        <td class="Title_Purple">お客様カード</td>
+        <td class="Title_Purple">契約内容</td>
+*}
+    </tr>
+    {foreach key=j from=$row item=items}
+    <tr class={$tr[$j]}> 
+        <td align="right">
+			{if $smarty.post.form_button.show_button == "表　示"}
+            　  {$j+1}
+            {elseif $smarty.post.form_show_page != 2 && $smarty.post.f_page1 != ""}
+                {$smarty.post.f_page1*100+$j-99}
+            {else if}
+            　  {$j+1}
+            {/if}
+        </td>
+        <td align="center">{$row[$j][20]}</td>
+        <td align="left">{$row[$j][12]}-{$row[$j][13]}<br>{$row[$j][9]}</td>
+        <td align="left">
+            {$row[$j][1]}-{$row[$j][2]}<br>
+            <a href = "1-1-115.php?client_id={$row[$j][0]}">{$row[$j][3]}</a></td>
+        </td>
+        <td align="left">{$row[$j][4]}</td>
+        <td align="center">{$row[$j][5]}</td>
+        <td align="left">{$row[$j][6]}</td>
+        {if $smarty.post.form_state_type == '4'}
+        <td align="center">
+        {if $row[$j][7] == 1}
+            取引中
+        {else if}
+            休止中
+        {/if}
+        </td>
+        {/if}
+        <td>{$row[$j][14]}-{$row[$j][15]}<br>{$row[$j][10]}<br>
+        {if $row[$j][16] != ''}
+            {$row[$j][16]}-{$row[$j][17]}<br>{$row[$j][18]}
+        {/if}
+        </td>
+{*
+        <td align="center"><a href="javascript:WindowOpen('1-1-114.php?id={$row[$j][0]}',1024,768,'output');">印刷</a></td>
+        <td align="center"><a href="1-1-123.php?id={$row[$j][0]}">変更</a></td>
+*}
+    </tr>
+    {/foreach}
+
+</table>
+{if $smarty.post.form_show_page != 2 }
+{$var.html_page2}
+{/if}
+
+        </td>
+    </tr>
+</table>
+{*--------------- 画面表示２ e n d ---------------*}
+
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+    {*--------------- コンテンツ部 e n d ---------------*}
+
+</table>
+{*--------------- 外枠 e n d ---------------*}
+
+{$var.html_footer}

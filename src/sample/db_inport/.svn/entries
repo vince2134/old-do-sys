@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wc-entries
+   xmlns="svn:">
+<entry
+   committed-rev="1"
+   name=""
+   committed-date="2009-10-30T05:38:51.696297Z"
+   url="svn+ssh://210.196.79.251/var/svn/amenity/branches/anet-dosys-rev.1.4/anet-dosys/src/sample/db_inport"
+   last-author="kajioka-h"
+   kind="dir"
+   uuid="b28f2e69-2077-0410-9977-8d54750ab086"
+   revision="2"/>
+<entry
+   committed-rev="1"
+   name="db_claim.php"
+   text-time="2009-11-02T04:53:31.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="463c95140f37eb77aaaa9f0a5ba13cff"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:31.000000Z"/>
+<entry
+   committed-rev="1"
+   name="strpad.php"
+   text-time="2009-11-02T04:53:31.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="7935f1e1936659089ee15b92570908ee"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:31.000000Z"/>
+<entry
+   committed-rev="1"
+   name="db_fc.php"
+   text-time="2009-11-02T04:53:31.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="a37507777c5a41a4b845218a566fbee1"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:31.000000Z"/>
+<entry
+   committed-rev="1"
+   name="db_count.php"
+   text-time="2009-11-02T04:53:31.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="c7429fbbae5bd905511f0a238688c7b9"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:31.000000Z"/>
+<entry
+   committed-rev="1"
+   name="db_medispo_client.php"
+   text-time="2009-11-02T04:53:31.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="eadcc7b0391673388b600a1e5818b68d"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:31.000000Z"/>
+<entry
+   committed-rev="1"
+   name="db_price.php"
+   text-time="2009-11-02T04:53:31.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="51b2bef36539cbc75f2633507ca66019"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:31.000000Z"/>
+<entry
+   committed-rev="1"
+   name="db_supplier.php"
+   text-time="2009-11-02T04:53:31.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="6dc242a17caa2a6c92b490ae0eeed329"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:31.000000Z"/>
+<entry
+   committed-rev="1"
+   name="db_staff.php"
+   text-time="2009-11-02T04:53:31.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="a746f637cb63f750f5453ce157ab056b"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:31.000000Z"/>
+<entry
+   committed-rev="1"
+   name="insert_claim.php"
+   text-time="2009-11-02T04:53:31.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="c1364c4cc01f57ad2ca65b8018bda31f"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:31.000000Z"/>
+<entry
+   name="tmp"
+   kind="dir"/>
+<entry
+   committed-rev="1"
+   name="bank.php"
+   text-time="2009-11-02T04:53:31.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="0209e5b5801dc51b6a9a03df65b11f36"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:31.000000Z"/>
+<entry
+   committed-rev="1"
+   name="shop_gname.php"
+   text-time="2009-11-02T04:53:31.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="1d5e1822cc2a3a160fb98aafc21e0c2f"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:31.000000Z"/>
+<entry
+   committed-rev="1"
+   name="db_goods.php"
+   text-time="2009-11-02T04:53:31.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="f6d5e0ac22fd14ebafe5d0c32cf60ad3"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:31.000000Z"/>
+<entry
+   committed-rev="1"
+   name="db.php"
+   text-time="2009-11-02T04:53:31.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="9c7752af5ae83148e0bba0b8e7bcd98c"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:31.000000Z"/>
+<entry
+   committed-rev="1"
+   name="update_claim.php"
+   text-time="2009-11-02T04:53:31.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="b857daab186c6fa54cd2187c9e479f4e"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:31.000000Z"/>
+</wc-entries>

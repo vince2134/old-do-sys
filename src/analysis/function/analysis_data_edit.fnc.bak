@@ -1,0 +1,113 @@
+<?php
+
+
+/*
+ *  概要: 得意先別・仕入先別のクライアント毎の金額・合計・平均を集計
+ *  
+ *
+ *  @param:     変数名      型          内容
+ *              $result     resource    クエリの実行結果
+ *              $div        string      売上の場合="sale"
+ *      
+ *  @return:    $disp_data  array       得意先毎の月金額,合計,平均
+ *                                      総合計・平均を返す。
+ *                                      
+ */
+function Edit_Query_Data( $result , $div=NULL) {
+
+    //クライアントの件数を取得
+    $count  = pg_num_rows( $result );
+
+    //-----------------------//
+    // 得意先毎にループ
+    //-----------------------// 
+    for ( $i=0 ; $i < $count ; $i++ ) {
+        
+        //各行の合計算出用変数の初期化
+        $sum_net_amount = 0; 
+    
+        //行番号
+        $disp_data[$i]["no"] = $i + 1;
+        //得意先コード1を格納    
+        $client_cd1     = pg_fetch_result($result, $i , "client_cd1"); 
+        $client_cd2     = pg_fetch_result($result, $i , "client_cd2");
+        $client_cname   = pg_fetch_result($result, $i , "client_cname");
+        // 仕入でFCの場合
+        if ( $div == NULL AND $group_kind == "2" ) {
+            $disp_data[$i]["client_cd"] = $client_cd1;
+        } else {
+            $disp_data[$i]["client_cd"] = $client_cd1."-".$client_cd2;
+        }
+        //得意先名（略称）
+        $disp_data[$i]["client_cname"]  = htmlspecialchars($client_cname);
+        
+        //------------------------------------------//
+        // 12ヶ月分ループ（得意先ごとの合計を算出）
+        //------------------------------------------//
+        for ( $j=1 ; $j<=12 ; $j++ ) {
+            //金額
+            $str        = "net_amount".(string)$j;
+            $net_amount = pg_fetch_result($result, $i, $str);
+            $disp_data[$i][$str] = Minus_Numformat($net_amount);
+            $sum_net_amount += $net_amount;
+            $total_net_amount[$j] += $net_amount;
+        
+            //売上の場合
+            if ( $div == "sale" ) {
+                //粗利額
+                $str        = "arari_gaku".(string)$j;
+                $arari_gaku = pg_fetch_result($result, $i, $str);
+                $disp_data[$i][$str] = Minus_Numformat($arari_gaku);
+                $sum_arari_gaku += $arari_gaku;
+                $total_arari_gaku[$j] += $arari_gaku;
+            }
+        }
+
+        //金額
+        $disp_data[$i]["sum_net_amount"] = Minus_Numformat($sum_net_amount);
+        $disp_data[$i]["ave_net_amount"] = Minus_Numformat(bcdiv($sum_net_amount, 12, 2));
+
+        //売上の場合
+        if ( $div == "sale" ) {
+            //粗利額
+            $disp_data[$i]["sum_arari_gaku"] = Minus_Numformat($sum_arari_gaku);
+            $disp_data[$i]["ave_arari_gaku"] = Minus_Numformat(bcdiv($summ_arari_gaku, 12, 2));
+        }
+     }
+    
+    //---------------------------------------//
+    // 最終行の合計($disp_dataの最後に追加)
+    //---------------------------------------//
+    //出力されるクライアントの数を格納
+    $disp_data[$i]["total_client_count"] = $i;
+
+    for ( $j=1 ; $j<=12 ; $j++ ){
+        //金額 
+        $disp_data[$i]["net_amount".(string)$j] = Minus_Numformat($total_net_amount[$j]);
+        $sum_total_net_amount += $total_net_amount[$j];
+
+        // 売上の場合
+        if ( $div == "sale" ) {
+            //粗利額
+            $disp_data[$i]["arari_gaku".(string)$j] = Minus_Numformat($total_arari_gaku[$j]);
+            $sum_total_arari_gaku += $total_arari_gaku[$j];
+        }
+    }
+   
+    //合計行の月合計
+    $disp_data[$i]["sum_net_amount"] = Minus_Numformat($sum_total_net_amount);
+    //合計行の月平均
+    $disp_data[$i]["ave_net_amount"] = Minus_Numformat(bcdiv($sum_total_net_amount, 12, 2));
+ 
+    //売上の場合
+    if ( $div == "sale" ) {
+        $disp_data[$i]["sum_arari_gaku"] = Minus_Numformat($sum_total_arari_gaku);
+        $disp_data[$i]["ave_arari_gaku"] = Minus_Numformat(bcdiv($sum_total_arari_gaku, 12, 2));
+    }
+    
+    //print_array( $disp_data);
+    //戻り値
+    return $disp_data;
+}
+
+?>

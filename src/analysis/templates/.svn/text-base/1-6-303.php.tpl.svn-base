@@ -1,0 +1,59 @@
+{$var.html_header}
+
+<body bgcolor="#D8D0C8">
+<form name="dateForm" method="post">
+
+{*+++++++++++++++ 外枠 begin +++++++++++++++*}
+<table width="100%" height="90%" class="M_Table">
+
+    {*+++++++++++++++ ヘッダ類 begin +++++++++++++++*}
+    <tr align="center" height="60">
+        <td width="100%" colspan="2" valign="top">{$var.page_header}</td>
+    </tr>
+    {*--------------- ヘッダ類 e n d ---------------*}
+
+    {*+++++++++++++++ コンテンツ部 begin +++++++++++++++*}
+    <tr align="center" valign="top">
+        <td>
+            <table>
+                <tr>
+                    <td>
+
+{*+++++++++++++++ メッセージ類 begin +++++++++++++++*}
+
+{*--------------- メッセージ類 e n d ---------------*}
+
+{*+++++++++++++++ 画面表示１ begin +++++++++++++++*}
+<table width="200">
+    <tr>
+        <td>
+
+<table class="Data_Table" border="1" width="100%">
+    <tr>
+        <td class="Title_Gray" width="60"><b>対象月</b></td>
+        <td class="Value">{$form.form_donw_month.html}</td>
+    </tr>
+</table>
+
+<table align="right">
+    <tr>
+        <td>{$form.form_btn_down.html}</td>
+    </tr>
+</table>
+
+        </td>
+    </tr>
+</table>
+{*--------------- 画面表示１ e n d ---------------*}
+
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+    {*--------------- コンテンツ部 e n d ---------------*}
+
+</table>
+{*--------------- 外枠 e n d ---------------*}
+
+{$var.html_footer}

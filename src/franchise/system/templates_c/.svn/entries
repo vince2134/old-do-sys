@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wc-entries
+   xmlns="svn:">
+<entry
+   committed-rev="5"
+   name=""
+   committed-date="2009-11-06T06:23:46.671417Z"
+   url="svn+ssh://210.196.79.251/var/svn/amenity/branches/anet-dosys-rev.1.4/anet-dosys/src/franchise/system/templates_c"
+   last-author="root"
+   kind="dir"
+   uuid="b28f2e69-2077-0410-9977-8d54750ab086"
+   prop-time="2009-11-06T06:21:29.000000Z"
+   revision="5"/>
+</wc-entries>

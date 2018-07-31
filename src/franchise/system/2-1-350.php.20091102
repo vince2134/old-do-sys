@@ -1,0 +1,230 @@
+<?php
+
+$page_title = "休日設定";
+
+//環境設定ファイル
+require_once("ENV_local.php");
+
+//DB接続
+$db_con = Db_Connect();
+	
+//HTML_QuickFormを作成
+$form =& new HTML_QuickForm("dateForm", "POST", "$_SERVER[PHP_SELF]");
+
+// 権限チェック
+$auth       = Auth_Check($db_con);
+// ボタンDisabled
+$disabled   = ($auth[0] == "r") ? "disabled" : null;
+
+if($_POST["form_all_clear"] != "全クリア"){
+	/****************************/
+	//デフォルト値
+	/****************************/
+	$sql  = "SELECT ";
+	$sql .= "    holiday ";
+	$sql .= "FROM ";
+	$sql .= "    t_holiday ";
+	$sql .= "WHERE ";
+	$sql .= "    shop_id = $_SESSION[client_id] ";
+
+	$result = Db_Query($db_con,$sql);
+	//DBの値を配列に保存
+	$holiday = Get_Data($result,2);
+
+	for($i=0;$i<count($holiday);$i++){
+		$today_date = "holiday[".date($holiday[$i][0])."]";
+		$def_data[$today_date] = 1;
+	}
+	$form->setDefaults($def_data);
+}else{
+	/****************************/
+	//デフォルト値
+	/****************************/
+	$sql  = "SELECT ";
+	$sql .= "    holiday ";
+	$sql .= "FROM ";
+	$sql .= "    t_holiday ";
+	$sql .= "WHERE ";
+	$sql .= "    shop_id = $_SESSION[client_id] ";
+
+	$result = Db_Query($db_con,$sql);
+	//DBの値を配列に保存
+	$holiday = Get_Data($result,2);
+
+	for($i=0;$i<count($holiday);$i++){
+		$today_date = "holiday[".date($holiday[$i][0])."]";
+		$def_data[$today_date] = "";
+	}
+	$form->setDefaults($def_data);
+}
+
+/****************************/
+//部品定義
+/****************************/
+//登録ボタン
+$form->addElement(
+    "submit","form_set","設　定",
+    "onClick=\"javascript:return Dialogue('設定します。','#')\" $disabled"
+);
+
+$form->addElement(
+	"button","form_clear","クリア",
+	"onClick=\"location.href='$_SERVER[PHP_SELF]'\""
+);
+
+//定数の定義(ソースコードを見やすくするために定義)
+define('YEAR', 0);
+define('MONTH', 1);
+define('DAY', 2);
+
+//今日の日付(年、月、日)を$dateへ配列として代入
+$date = date('Y n d');
+$date = explode(' ', $date);
+$date[MONTH] = (int) $date[MONTH]-1;
+
+for($m2=1;$m2<7;$m2++){
+	$calendar .= '<table cellpadding="15"><tr><td valign="top">'."\n";
+
+	for($m1=1;$m1<5;$m1++){
+		//明示的に変数を整数型へ変換
+		if($date_flg1!=true){
+			$date[MONTH] = 0;
+			$date_flg1=true;
+		}
+		$date[YEAR] = (int) $date[YEAR];
+		$date[DAY] = (int) $date[DAY];
+		//月が12月だったら次の月は1月
+		if($date[MONTH] == 12){
+			$date[MONTH] = 1;
+			$date[YEAR] = $date[YEAR]+1;
+		//12月以外だったら＋１月
+		}else{
+			$date[MONTH] = $date[MONTH]+1;
+		}
+
+		//今月の日数、最初の日、最後の日の曜日を得る
+		$days = date('d', mktime(0, 0, 0, $date[MONTH]+1, 0, $date[YEAR]));
+		$first_day = date('w', mktime(0, 0, 0, $date[MONTH], 1, $date[YEAR]));
+		$last_day = date('w', mktime(0, 0, 0, $date[MONTH], $days, $date[YEAR]));
+
+		if($first_day == 0){
+			$first_day = 6;
+		}else{
+			$first_day = $first_day-1;
+		}
+		
+		if($last_day == 0){
+			$last_day = 6;
+		}else{
+			$last_day = $last_day-1;
+		}
+		
+		//最後の週の曜日を得る
+		$last_week_days = ($days + $first_day) % 7;
+		if ($last_week_days == 0){
+			$weeks = ($days + $first_day) / 7;
+		}else{
+			$weeks = ceil(($days + $first_day) / 7);
+		}
+		//カレンダーを表として出力する
+		$calendar .= '<table class=\'List_Table\' border=\'1\' width=\'200\'>'."\n";
+		$calendar .= '<caption><b><font size="+1">【'.$date[YEAR].'年'.$date[MONTH].'月】</font></b></caption>';
+
+		$calendar .= '<tr><th class=\'Title_Purple\'>月</th><th class=\'Title_Purple\'>火</th><th class=\'Title_Purple\'>水</th><th class=\'Title_Purple\'>木</th><th class=\'Title_Purple\'>金</th><th class=\'Title_Purple\'>土</th><th class=\'Title_Purple\'>日</th></tr>';
+
+		$i=$j=$day=0;
+		while($i<$weeks){
+			$calendar .= '<tr class=\'Result1\' align=\'center\'>'."\n";
+			$j=0;
+			while($j<7){
+				$calendar .= '<td';
+				if(($i==0 && $j<$first_day) || ($i==$weeks-1 && $j>$last_day)){
+					$calendar .= '> '."\n";
+				}else{
+					$calendar .= '>'."\n";
+					++$day;
+					//チェックボックス定義
+					$today = "holiday[".$date[YEAR]."-".str_pad($date[MONTH], 2, 0, STR_PAD_LEFT)."-".str_pad($day, 2, 0, STR_PAD_LEFT)."]";
+					$form->addElement('checkbox',$today, 'チェックボックス', "<br>"." $day");
+					$calendar .= $form->_elements[$form->_elementIndex[$today]]->toHtml();
+				}
+				$calendar .= '</td>'."\n";
+				$j++;
+			}
+			$calendar .= '</tr>'."\n";
+			$i++;
+		}
+		$calendar .= '</table></td><td valign="top">'."\n";
+	}
+	$calendar .= '</tr>'."\n";
+}
+
+//設定ボタン押下時
+if($_POST["form_set"] == "設　定"){
+	//登録完了メッセージ
+	$fin_msg = "登録しました。";
+	//日付を配列にする
+	$holiday = array_keys($_POST[holiday]);
+
+	Db_Query($db_con, "BEGIN;");
+	$sql = "DELETE FROM ";
+	$sql .= "t_holiday ";
+	$sql .= "WHERE ";
+	$sql .= "shop_id = $_SESSION[client_id];";
+
+	for($i = 0;$i<count($holiday);$i++){
+		$sql .= "INSERT INTO ";
+		$sql .= "t_holiday( ";
+		$sql .= "holiday,";
+		$sql .= "shop_id";
+		$sql .= ")VALUES(";
+		$sql .= "'$holiday[$i]',";
+		$sql .= "'$_SESSION[client_id]');";
+	}
+	$result = Db_Query($db_con,$sql);
+	if($result == false){
+		Db_Query($db_con,"ROLLBACK;");
+		exit;
+	}else{
+		Db_Query($db_con,"COMMIT;");
+	}
+}
+
+
+/****************************/
+//HTMLヘッダ
+/****************************/
+$html_header = Html_Header($page_title);
+
+/****************************/
+//HTMLフッタ
+/****************************/
+$html_footer = Html_Footer();
+
+/****************************/
+//画面ヘッダー作成
+/****************************/
+$page_header = Create_Header($page_title);
+
+// Render関連の設定
+$renderer =& new HTML_QuickForm_Renderer_ArraySmarty($smarty);
+$form->accept($renderer);
+
+//form関連の変数をassign
+$smarty->assign('form',$renderer->toArray());
+
+//その他の変数をassign
+$smarty->assign('var',array(
+	'html_header'   => "$html_header",
+//	'page_menu'     => "$page_menu",
+	'page_header'   => "$page_header",
+//	'html_footer'   => "$html_footer",
+	'calendar'   => "$calendar",
+	'onload'     => "$onload",
+	'fin_msg'   	=> "$fin_msg",
+));
+
+//テンプレートへ値を渡す
+$smarty->display(basename($_SERVER[PHP_SELF] .".tpl"));
+
+?>

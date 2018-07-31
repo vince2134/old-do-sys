@@ -1,0 +1,4 @@
+<Files ENV_local.php>
+order deny,allow
+deny from all
+</Files>

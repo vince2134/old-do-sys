@@ -1,0 +1,22 @@
+<?php
+// 変更しないで下さい
+
+// パスの定義
+define(PATH , "../../../");
+
+// 関数ファイルの読込み
+require_once(PATH ."function/INCLUDE.php");
+
+//セッションのチェック
+Session_Check_h();
+
+// Smarty+QuickForm
+require_once("Smarty/Smarty.class.php");
+require_once("HTML/QuickForm.php");
+require_once 'HTML/QuickForm/Renderer/ArraySmarty.php';
+
+$smarty = new Smarty();   // Smartyオブジェクトを生成
+$smarty->template_dir = "templates";
+$smarty->compile_dir = "templates_c";
+
+?>

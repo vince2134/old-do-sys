@@ -1,0 +1,600 @@
+create table t_test (
+id int2 primary key,
+goods varchar(30),
+person varchar(15) NOT NULL,
+section varchar(10) NOT NULL,
+sale_amount int8 NOT NULL,
+request_money int8 NOT NULL,
+price_money int8 NOT NULL,
+receipt_money int8 NOT NULL,
+stock_money int8 NOT NULL);
+
+create table t_test2 (
+id int2 primary key,
+shop_name varchar(15),
+date date,
+rental varchar(15),
+goods varchar(30),
+rental_money numeric(11,2),
+rental_num varchar(3),
+rental_amount numeric(11,2),
+note varchar(15));
+
+create table t_test3 (
+id int2 primary key,
+post varchar(8),
+add1 varchar(15),
+add2 varchar(15),
+shop varchar(15),
+staff varchar(10));
+
+create table t_test4 (
+id int2 primary key,
+num varchar(10),
+date varchar(11),
+shop_name varchar(15),
+name varchar(10),
+name_e varchar(30),
+shop_name2 varchar(15),
+add varchar(25));
+
+--注文書コメントテーブル
+create table t_order_sheet (
+fax varchar(13),
+tel varchar(13),
+memo1 varchar(62),
+memo2 varchar(62),
+memo3 varchar(62),
+memo4 varchar(62),
+memo5 varchar(62),
+memo6 varchar(62));
+
+--入金テーブル
+create table t_payin (
+id int2 primary key,
+trade varchar(15),
+bank varchar(10),
+pay_no varchar(10),
+shop_name varchar(15),
+pay_date date,
+pay_money numeric(11,2),
+pay_money2 numeric(11,2),
+pay_date2 date,
+payable int4,
+note varchar(20));
+
+--売掛残高一覧表
+create table t_sale (
+id int2 primary key,
+date date,
+shop_name varchar(15),
+money1 numeric(11,2),
+money2 numeric(11,2),
+money3 numeric(11,2),
+money4 numeric(11,2),
+money5 numeric(11,2),
+money6 numeric(11,2),
+money7 numeric(11,2),
+money8 numeric(11,2),
+part varchar(15),
+staff varchar(15));
+
+--棚卸調査表
+create table t_invent (
+id int2 primary key,
+invent_num varchar(10),
+warehouse varchar(10),
+stock_date date,
+goods varchar(15),
+product varchar(10),
+goods_no varchar(10),
+goods_name varchar(15),
+num1 numeric(11,2),
+num2 numeric(11,2));
+
+--アクセス権限を与える
+grant all on t_test4 to public;
+
+--ログイン
+create table t_login (
+staff_id int4 primary key,
+login_id varchar(20) NOT NULL UNIQUE,
+password varchar(35) NOT NULL);
+
+--棚卸差異明細一覧表
+create table t_diff (
+id int2 primary key,
+invent_num varchar(10),
+stock_date date,
+warehouse varchar(10),
+goods varchar(15),
+goods_name varchar(15),
+num1 numeric(11,2),
+num2 numeric(11,2),
+num3 numeric(11,2),
+person varchar(10),
+note varchar(10));
+
+--保留伝票一覧表
+create table t_reser (
+id int2 primary key,
+person varchar(10),
+person1 varchar(10),
+sale_num varchar(10),
+sale_date date,
+goods varchar(15),
+division varchar(10),
+num1 numeric(11,2),
+num2 numeric(11,2),
+num3 numeric(11,2),
+note1 varchar(10),
+decision varchar(10),
+note2 varchar(10));
+
+--在庫明細一覧表
+create table t_stock (
+id int2 primary key,
+stock_date date,
+goods varchar(15),
+goods_name varchar(30),
+stock varchar(15),
+num1 numeric(11,2),
+num2 numeric(11,2),
+num3 numeric(11,2));
+
+--棚卸差異明細一覧表
+create table t_shelf (
+id int2 primary key,
+invent_num varchar(10),
+stock_date date,
+warehouse varchar(10),
+goods varchar(15),
+goods_name varchar(15),
+num1 numeric(11,2),
+num2 numeric(11,2),
+num3 numeric(11,2),
+num4 numeric(11,2),
+num5 numeric(11,2),
+num6 numeric(11,2),
+num7 numeric(11,2));
+
+--確定伝票一覧表
+create table t_decision (
+id int2 primary key,
+person1 varchar(10),
+sale_num varchar(10),
+sale_date date,
+person2 varchar(10),
+goods varchar(15),
+division varchar(10),
+num1 numeric(11,2),
+num2 numeric(11,2),
+num3 numeric(11,2),
+note varchar(10));
+
+--長期在庫一覧表
+create table t_long (
+id int2 primary key,
+stock_date date,
+goods varchar(15),
+goods_name varchar(30),
+house varchar(15),
+num1 numeric(11,2),
+num2 numeric(11,2),
+num3 numeric(11,2),
+num4 numeric(11,2),
+num5 numeric(11,2),
+day numeric(11,2),
+date date);
+
+--担当者別ルート予定表
+create table t_person (
+id int2 primary key,
+stock_date date,
+person varchar(10),
+course varchar(10),
+talk varchar(10),
+num1 numeric(11,2),
+num2 numeric(11,2),
+num3 numeric(11,2),
+num4 numeric(11,2),
+num5 numeric(11,2));
+
+--商品出荷確認表
+create table t_article (
+id int2 primary key,
+person varchar(10),
+goods_num varchar(8),
+goods varchar(30),
+num1 numeric(11,2));
+
+--担当者別配送コース順確認表
+create table t_deli(
+id int2 primary key,
+client varchar(10),
+stock_date date,
+course_name varchar(10),
+course varchar(10),
+sale_num varchar(10),
+person varchar(10),
+business varchar(10),
+goods varchar(10),
+sale varchar(10),
+num1 numeric(11,2),
+num2 numeric(11,2),
+num3 numeric(11,2),
+num4 numeric(11,2),
+note varchar(10));
+
+--商品マスタ設定
+create table t_goods_group (
+id int2 primary key,
+code varchar(8),
+name varchar(30));
+
+--グループ設定
+create table t_goods_gr (
+goods_gid int4,
+goods_gname varchar(10) NOT NULL,
+note varchar(50) NOT NULL,
+goods_id int4 references t_goods(goods_id),
+shop_id int4  NOT NULL references t_shop(shop_id),
+primary key (goods_gid, goods_id));
+
+create table t_restock (
+no int2 primary key,
+ware varchar(8),
+stock_date date,
+goods varchar(10),
+re_num numeric(11,2),
+re_man numeric(9,0));
+
+--請求一覧表
+create table t_request (
+id int2 primary key,
+num varchar(10),
+date date,
+shop varchar(15),
+date2 date,
+name varchar(15),
+money1 numeric(11,2),
+money2 numeric(11,2),
+money3 numeric(11,2),
+money4 numeric(11,2),
+money5 numeric(11,2),
+money6 numeric(11,2),
+money7 numeric(11,2),
+money8 numeric(11,2));
+
+--オペレータ入力情報
+create table t_op (
+id int2 primary key,
+staff_id int4,
+person varchar(10),
+section varchar(10),
+person2 varchar(10),
+date date,
+money1 numeric(11,2),
+money2 numeric(11,2),
+money3 numeric(11,2),
+money4 numeric(11,2),
+money5 numeric(11,2),
+money6 numeric(11,2),
+money7 numeric(11,2),
+money8 numeric(11,2),
+money9 numeric(11,2));
+
+--入金日情報
+create table t_op_maney (
+person varchar(10),
+date date,
+money1 numeric(11,2),
+money2 numeric(11,2),
+money3 numeric(11,2),
+money4 numeric(11,2),
+money5 numeric(11,2));
+
+--レンタル料テーブル
+create table t_rental (
+rental_id int4 primary key,
+shop_id int4 references t_shop(shop_id),
+rental_client varchar(15) NOT NULL,
+goods_id int4 references t_goods(goods_id),
+rental_price int2,
+rental_num varchar(10),
+rental_amount int2,
+note varchar(15));
+
+--売上元帳
+create table t_ledger (
+stock_name varchar(10),
+stock_code varchar(11),
+date date,
+slip varchar(8),
+invent varchar(4),
+goods varchar(10),
+person varchar(10),
+num1 numeric(11,2),
+num2 numeric(11,2),
+num3 numeric(11,2),
+num4 numeric(11,2));
+
+--仕入元帳
+create table t_client (
+client_name varchar(10),
+client_code varchar(11),
+date date,
+slip varchar(8),
+invent varchar(4),
+goods varchar(10),
+num1 numeric(11,2),
+num2 numeric(11,2),
+num3 numeric(11,2),
+num4 numeric(11,2));
+
+--仕入明細一覧
+create table t_s_details (
+id int2 primary key,
+shop varchar(10),
+buy_num varchar(10),
+buy_date date,
+goods varchar(15),
+num1 numeric(11,2),
+num2 numeric(11,2),
+num3 numeric(11,2),
+note varchar(10));
+
+--発注ヘッダテーブル(仮)
+CREATE TABLE t_test (
+client_cd1 varchar(6),
+client_name varchar(15),
+ord_id int8,
+ord_no varchar(8),
+ord_time timestamp DEFAULT LOCALTIMESTAMP(0),
+arrival_day1 date,
+arrival_day2 date,
+goods_cd varchar(8),
+goods_name varchar(30),
+order_num varchar(15),
+buy_num varchar(10),
+inventory_num varchar(10),
+ware_name varchar(10),
+ord_d_id int8
+);
+
+--取引区分マスタ
+create table t_trade (
+trade_id varchar(2) primary key,
+trade_name varchar(10) NOT NULL,
+kind varchar(1) NOT NULL
+);
+
+--マスタログテーブル
+create table t_mst_log (
+log_id int8 primary key,
+work_time timestamp DEFAULT LOCALTIMESTAMP(0),
+staff_id int4,
+mst_name varchar(20),
+work_div varchar(1),
+data_cd varchar(15),
+data_name varchar(40),
+shop_id int4 NOT NULL
+);
+
+--直送先マスタ
+create table t_direct (
+direct_id int4 primary key,
+direct_cd varchar(4) NOT NULL,
+direct_name varchar(15) NOT NULL,
+direct_cname varchar(10) NOT NULL,
+post_no1 varchar(3),
+post_no2 varchar(4),
+address1 varchar(15) NOT NULL,
+address2 varchar(15),
+tel varchar(13),
+fax varchar(13),
+note varchar(30),
+client_id int4,
+shop_gid int4 NOT NULL,
+UNIQUE (direct_cd,shop_gid)
+);
+
+--発注ヘッダテーブル
+CREATE TABLE t_order_h (
+ord_id int8 primary key,
+ord_no varchar(8),
+ord_time timestamp DEFAULT LOCALTIMESTAMP(0),
+client_id int4,
+direct_id int4,
+trade_id varchar(2),
+trans_id int4,
+arrival_day date,
+hope_day date,
+note_my varchar(50),
+note_your varchar(50),
+c_staff_id int4,
+ware_id int4,
+online_flg boolean DEFAULT 'f',
+ord_staff_id int4,
+ord_stat varchar(1),
+can_staff_id int4,
+ord_sheet_flg boolean DEFAULT 'f',
+ps_stat varchar(1),
+finish_flg boolean DEFAULT 'f',
+green_flg boolean DEFAULT 'f',
+shop_aid int4,
+client_name varchar(15),
+client_cd1 varchar(6),
+direct_name varchar(15),
+trans_name varchar(15),
+c_staff_name varchar(10),
+ware_name varchar(10),
+ord_staff_name varchar(10),
+can_staff_name varchar(10)
+);
+
+--帳票コメントテーブル
+create table t_ledger_sheet (
+shop_aid int4 primary key,
+h_memo1_1 varchar(3),
+h_memo1_2 varchar(4),
+h_memo2 varchar(32),
+h_memo3 varchar(32),
+h_memo4 varchar(32),
+h_memo5 varchar(32),
+h_memo6 varchar(32),
+h_memo7 varchar(92),
+h_memo8 varchar(92),
+h_memo9 varchar(92),
+h_memo10 varchar(92),
+h_memo11 varchar(92),
+h_memo12 varchar(92),
+c_memo1 varchar(46),
+c_memo2 varchar(46),
+c_memo3 varchar(46),
+c_memo4 varchar(46),
+c_memo5 varchar(62),
+c_memo6 varchar(62),
+c_memo7 varchar(62),
+c_memo8 varchar(62),
+c_memo9 varchar(62),
+c_memo10 varchar(62),
+c_memo11 varchar(62),
+c_memo12 varchar(62),
+c_memo13 varchar(110),
+s_memo1 varchar(46),
+s_memo2 varchar(46),
+s_memo3 varchar(46),
+s_memo4 varchar(46),
+s_memo5 varchar(46),
+s_memo6 varchar(46),
+s_memo7 varchar(290)
+);
+
+--本部帳票コメントテーブル
+create table t_h_ledger_sheet (
+o_memo1 varchar(13),
+o_memo2 varchar(13),
+o_memo3 varchar(124),
+o_memo4 varchar(124),
+o_memo5 varchar(124),
+o_memo6 varchar(124),
+o_memo7 varchar(124),
+o_memo8 varchar(124),
+d_memo1 varchar(46),
+d_memo2 varchar(46),
+d_memo3 varchar(46)
+);
+
+--仕入ヘッダテーブル
+CREATE TABLE t_buy_h (
+buy_id int8 primary key,
+buy_no varchar(8),
+ord_id int8,
+buy_day date,
+arrival_day date,
+client_id int4,
+direct_id int4,
+trade_id varchar(2),
+note varchar(20),
+c_staff_id int4,
+ware_id int4,
+e_staff_id int4,
+renew_flg boolean DEFAULT 'f',
+shop_aid int4 NOT NULL,
+client_name varchar(15),
+client_cd1 varchar(6),
+direct_name varchar(15),
+c_staff_name varchar(10),
+ware_name varchar(10),
+e_staff_name varchar(10)
+);
+
+--仕入データテーブル
+CREATE TABLE t_buy_d (
+buy_d_id int8 primary key,
+buy_id int8,
+line int4,
+goods_id int4,
+goods_name varchar(30) NOT NULL,
+num int4 NOT NULL,
+buy_price numeric(11,2) NOT NULL,
+buy_amount numeric(11,2) NOT NULL,
+b_tax_amount numeric(11,2) NOT NULL,
+tax_amount numeric(11,2) NOT NULL,
+ord_d_id int8,
+goods_cd varchar(8),
+UNIQUE (buy_id,line)
+);
+
+--受注ヘッダテーブル
+CREATE TABLE t_aorder_h (
+aord_id int8 primary key,
+ord_no varchar(8),
+fc_ord_id int8,
+ord_time timestamp DEFAULT LOCALTIMESTAMP(0),
+client_id int4,
+direct_id int4,
+trade_id varchar(2),
+trans_id int4,
+hope_day date,
+arrival_day date,
+note_my varchar(50),
+note_your varchar(50),
+c_staff_id int4,
+ware_id int4,
+online_flg boolean DEFAULT 'f',
+ord_staff_id int4,
+cancel_flg boolean DEFAULT 'f',
+can_staff_id int4,
+check_flg boolean DEFAULT 'f',
+check_staff_id int4,
+ord_sheet_flg boolean DEFAULT 'f',
+ps_stat varchar(1),
+shop_aid int4,
+route varchar(4),
+reason varchar(2),
+reason_staff_id int4,
+finish_flg boolean DEFAULT 'f',
+green_flg boolean DEFAULT 'f',
+client_name varchar(15),
+direct_name varchar(15),
+trans_name varchar(15),
+c_staff_name varchar(10),
+ware_name varchar(10),
+ord_staff_name varchar(10),
+cancel_user_name varchar(10),
+check_user_name varchar(10),
+reason_user_name varchar(10)
+);
+
+--受注データテーブル
+CREATE TABLE t_aorder_d (
+aord_d_id int8 primary key,
+aord_id int8,
+line int4,
+sale_div_cd varchar(2) NOT NULL,
+goods_id int4,
+goods_name varchar(30) NOT NULL,
+num int4 NOT NULL,
+cost_price numeric(11,2) NOT NULL,
+sale_price numeric(11,2) NOT NULL,
+cost_amount numeric(11,2) NOT NULL,
+sale_amount numeric(11,2) NOT NULL,
+b_tax_amount numeric(11,2) NOT NULL,
+tax_amount numeric(11,2) NOT NULL,
+rest_flg boolean DEFAULT 'f',
+finish_flg boolean DEFAULT 'f',
+reason varchar(15),
+ord_d_id int8,
+goods_cd varchar(8),
+UNIQUE (aord_id,line)
+);
+
+--権限マスタ亜
+CREATE TABLE t_permit (
+staff_id int4 primary key,
+del_flg boolean DEFAULT 'f',
+part_permit varchar(1),
+direct_permit varchar(1)
+);

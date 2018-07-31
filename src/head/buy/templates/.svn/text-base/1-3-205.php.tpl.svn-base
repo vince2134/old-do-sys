@@ -1,0 +1,231 @@
+{$var.html_header}
+
+<body bgcolor="#D8D0C8">
+<form name="dateForm" method="post">
+{$form.hidden}
+
+{*+++++++++++++++ 外枠 begin +++++++++++++++*}
+<table width="100%" height="90%" class="M_table">
+
+    {*+++++++++++++++ ヘッダ類 begin +++++++++++++++*}
+    <tr align="center" height="60">
+        <td width="100%" colspan="2" valign="top">{$var.page_header}</td>
+    </tr>
+    {*--------------- ヘッダ類 e n d ---------------*}
+
+    {*+++++++++++++++ コンテンツ部 begin +++++++++++++++*}
+    {if $var.freeze_flg == true}
+    	<tr align="center" valign="top" height="160">
+	{else}
+		<tr align="center" valign="top">
+	{/if}
+        <td>
+            <table>
+                <tr>
+                    <td>
+
+<!-- 登録確認メッセージ表示 -->
+{if $var.freeze_flg == true}
+    {if $smarty.get.del_buy_flg == true}
+    <span style="color: #ff0000; font-weight: bold; line-height: 130%;">
+        <li>伝票が削除されているため、変更できませんでした。<br>
+    </span>
+	<table width="100%">
+	    <tr>
+	        <td align="center">{$form.ok_button.html}</td>
+	    </tr>
+	</table>
+    {elseif $smarty.get.del_ord_flg == true}
+    <span style="color: #ff0000; font-weight: bold; line-height: 130%;">
+    <li>発注が削除されているため、登録できませんでした。<br>
+    <span>  
+	<table width="100%">
+	    <tr>
+	        <td align="center">{$form.ok_button.html}</td>
+	    </tr>
+	</table>
+    {elseif $smarty.get.change_ord_flg == true}
+    <span style="color: #ff0000; font-weight: bold; line-height: 130%;">
+    <li>発注が変更されたため、仕入入力できませんでした。<br>
+    <span>  
+	<table width="100%">
+	    <tr>
+	        <td align="center">{$form.ok_button.html}</td>
+	    </tr>
+	</table>
+    {elseif $smarty.get.inst_err == true}
+    <span style="color: #ff0000; font-weight: bold; line-height: 130%;">
+    <li>仕入が変更されたため、割賦設定が行えませんでした。<br>
+    <span>  
+	<table width="100%">
+	    <tr>
+	        <td align="center">{$form.ok_button.html}</td>
+	    </tr>
+	</table>
+    {elseif $smarty.get.ps_stat == true}
+    <span style="color: #ff0000; font-weight: bold; line-height: 130%;">
+    <li>仕入が既に完了しているため、登録できません。<br>
+    <span>  
+	<table width="100%">
+	    <tr>
+	        <td align="center">{$form.ok_button.html}</td>
+	    </tr>
+	</table>
+    {else}
+	<span style="font: bold;"><font size="+1">仕入完了しました。<br><br>
+	</font></span>
+	<table width="100%">
+	    <tr>
+	        <td align="center">{$form.ok_button.html}　{$form.form_split_button.html}　{$form.return_button.html}</td>
+	    </tr>
+	</table>
+    {/if}
+{else}
+
+	{*+++++++++++++++ 画面表示１ begin +++++++++++++++*}
+	<table>
+	    <tr>
+	        <td>
+
+	<table class="Data_Table" border="1">
+	<col width="80" style="font-weight: bold;">
+	<col>
+	<col width="60" style="font-weight: bold;">
+	<col>
+	<col width="80" style="font-weight: bold;">
+	<col>
+	    <tr>
+	        <td class="Title_Blue">伝票番号</td>
+	        <td class="Value">{$form.form_buy_no.html}</td>
+	        <td class="Title_Blue">仕入先</td>
+	        <td class="Value">{$form.form_client.html}　{$var.client_state_print}</td>
+	        <td class="Title_Blue">発注番号</td>
+	        <td class="Value">{$form.form_ord_no.html}</td>
+	    </tr>
+	    <tr>
+	        <td class="Title_Blue">入荷日</td>
+	        <td class="Value">{$form.form_arrival_day.html}</td>
+	        <td class="Title_Blue">取引区分</td>
+	        <td class="Value">{$form.form_trade_buy.html}</td>
+	        <td class="Title_Blue">仕入日</td>
+	        <td class="Value">{$form.form_buy_day.html}</td>
+	    </tr>
+	    <tr>
+	        <td class="Title_Blue">仕入倉庫</td>
+	        <td class="Value">{$form.form_ware_name.html}</td>
+	        <td class="Title_Blue">直送先</td>
+	        <td class="Value">{$form.form_direct_name.html}</td>
+	        <td class="Title_Blue">発注担当者</td>
+	        <td class="Value">{$form.form_oc_staff_name.html}</td>
+	    </tr>
+	    <tr>
+	        <td class="Title_Blue">仕入担当者</td>
+	        <td class="Value">{$form.form_c_staff_name.html}</td>
+	        <td class="Title_Blue">備考</td>
+	        <td class="Value" colspan="3">{$form.form_note.html}</td>
+	    </tr>
+	</table>
+
+	        </td>
+	    </tr>
+	</table>
+	<br>
+	{*--------------- 画面表示１ e n d ---------------*}
+
+	                    </td>
+	                </tr>
+	                <tr>
+	                    <td>
+
+	{*+++++++++++++++ 画面表示２ begin +++++++++++++++*}
+	<table width="100%">
+	    <tr>
+	        <td>
+
+	<table class="List_Table" border="1" width="100%">
+	    <tr align="center" style="font-weight: bold;">
+	        <td class="Title_Blue">No.</td>
+	        <td class="Title_Blue">商品コード<br>商品名</td>
+	        <td class="Title_Blue">仕入数</td>
+	        <td class="Title_Blue">仕入単価</td>
+	        <td class="Title_Blue">仕入金額</td>    
+	    </tr>
+	    {foreach key=j from=$row item=items}
+        {* aoyama-n 2009-09-18 *}
+        {if $row[$j][5] === 't' || 
+            $form.form_trade_buy.html == '掛返品' || $form.form_trade_buy.html == '掛値引' || 
+            $form.form_trade_buy.html == '現金返品' || $form.form_trade_buy.html == '現金値引'}
+	    <tr class="Result1" style="color: red">
+        {else}
+	    <tr class="Result1">
+        {/if}
+	        <td align="right">{$j+1}</td>
+	        <td>{$row[$j][0]}<br>{$row[$j][1]}</td>
+	        <td align="right">{$row[$j][2]}</td>
+	        <td align="right">{$row[$j][3]}</td>
+	        <td align="right">{$row[$j][4]}</td>
+	    </tr>                                                                           
+	    {/foreach}                                   
+	</table>
+
+	        </td>
+	    </tr>
+	    <tr>
+	        <td>
+
+	<table class="List_Table" border="1" align="right">
+	    <tr>
+	        <td class="Title_Blue" width="80" align="center"><b>税抜金額</b></td>
+	        <td class="Value" align="right">{$form.form_buy_total.html}</td>
+	        <td class="Title_Blue" width="80" align="center"><b>消費税</b></td>
+	        <td class="Value" align="right">{$form.form_buy_tax.html}</td>
+	        <td class="Title_Blue" width="80" align="center"><b>税込金額</b></td>
+	        <td class="Value" align="right">{$form.form_buy_money.html}</td>
+	    </tr>
+	</table>
+
+	        </td>
+	    </tr>
+	    <tr>
+	        <td>
+
+    {if $var.act_sale_flg == true}
+	<table class="List_Table" border="1" align="right">
+	    <tr>
+	        <td width="80" align="center" bgcolor="#FDFD88"><b>売上番号</b></td>
+	        <td class="Value" align="right">{$form.form_act_sale_no.html}</td>
+	        <td width="80" align="center" bgcolor="#FDFD88"><b>代行売上額</b></td>
+	        <td class="Value" align="right">{$form.form_act_sale_amount.html}</td>
+	    </tr>
+	</table>
+
+	        </td>
+	    </tr>
+	    <tr>
+	        <td>
+    {/if}
+
+	<table width="100%">
+	    <tr>
+	        <td align="right">
+	        {if $var.input_flg != null}{$form.ok_button.html}　{/if}　{$form.form_split_button.html}　{$form.return_button.html}</td>
+	    </tr>
+	</table>
+
+	        </td>
+	    </tr>
+	</table>
+{/if}
+{*--------------- 画面表示２ e n d ---------------*}
+
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+    {*--------------- コンテンツ部 e n d ---------------*}
+
+</table>
+{*--------------- 外枠 e n d ---------------*}
+
+{$var.html_footer}

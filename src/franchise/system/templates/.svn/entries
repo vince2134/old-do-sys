@@ -1,0 +1,751 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wc-entries
+   xmlns="svn:">
+<entry
+   committed-rev="1"
+   name=""
+   committed-date="2009-10-30T05:38:51.696297Z"
+   url="svn+ssh://210.196.79.251/var/svn/amenity/branches/anet-dosys-rev.1.4/anet-dosys/src/franchise/system/templates"
+   last-author="kajioka-h"
+   kind="dir"
+   uuid="b28f2e69-2077-0410-9977-8d54750ab086"
+   revision="2"/>
+<entry
+   committed-rev="1"
+   name="2-1-101.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="2a364ab851c0c971751e4d47c6167011"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-301.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="858eb355f57680508343173a57840806"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-103.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="0ffd1618ae03a5dd26a84d4192455135"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-220.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="fcbac6713c7c97fe328003ec1abec6ea"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-302.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="9092fa12245df159cca871944f6cf5a1"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-104.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="889c7ea756e170f993e6d932edde4557"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-221.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="cfd9c1c9a887c42bd932a467fdca0d2f"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-221.php.tpl.091008"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="be046ff75c916caa977099952178e6d3"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-303.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="1557290e01d485938121567ba4cafa17"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-141.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="9ecdc5fd9a93dc17882f6eb726e76ea0"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-105.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="59e773aed0eded40042ab24ca1088e54"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-222.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="aee03b3b25aafb402d3e6cd7ea994130"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-304.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="58d93c2532b70aab9afba26fcf35ca2e"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-142.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="2b767e155a99c5ed7475e64516804582"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-106.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="e4ba8e038fe0b69bdd5003556816d297"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-107.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="5de5eee4868bd2d519111a4061f4262e"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-115_sample.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="b4d74a5af7cca40dc3b16fc306bfcf91"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-143.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="e11a682bdc667ac0a44fd720c92e577d"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-305.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="00b4fa3b19a6996bacf1953e609a9c8b"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-225.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="6fb2a7c832f13e2e9952355a7ee21638"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-108.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="ac1f11df88c8a8bcfce0380172dfc290"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-306.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="d8986f1f786b2bfbd2314d3a29cdd84d"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-227-2.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="e9c9afd83e9d08e0dcec23d80ef7a79e"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-307.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="da8d366ef5d7f62a5fc874501e889ef4"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-237_test.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="4175c8e821d8d4442d9e50ffc8f7364c"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-229-1.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="7ba14e213e27d80dc323422eab4ee33d"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-227.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="3ac83f8b93ec88ba41b5787b0cf2d739"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-308.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="3dad9390d5ba9eb72ceee2d5db8d8ed7"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-228.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="9884c94cd5fef4b6141c4847d22a7891"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-229.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="9b206e576522ba1af981ff816995178a"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-111.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="e2a62d3b77c2a6bf29aa7672fa815f74"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-112.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="30475a847106db32f271e860df871dfd"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-113.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="5d11dd25975b7a1df7c331d7521ad9b2"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-230.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="f2d75bc6281502b30207e9f47fb02a3a"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-104_sample.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="4d523e87e974971bab98f13ceb2cab28"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-114.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="49b45cab2e9a996684e0a875e0c6fdec"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-231.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="aaddad0c79178dde8d961dc9036d4a19"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-115.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="e7878945c8c3e22812432fcd2250cf05"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-232.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="d4c387e373f396b62c27a7f2c728b262"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-350.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="79230c934072189a20ef0bd12ed4deb6"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-117-2.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="75362d4bc625b74adcca3cb0ddfd5bba"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-116.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="b75389dd51e51c276e8d236ec0b38d28"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-233.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="1bbdf401fe3e4482acc51a3d20c85120"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-117.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="f8e6057f716f643de3836897c732e4b7"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-234.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="1f5264d4fdd0d932d2e77e2a6026ecff"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-119-2.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="1e877fa74b3b97e30549799c692379db"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-118.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="30bb2d6ca979939da0e6f06b376818d6"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-119.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="df4adcb54ca20580f0835413698cc886"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-237.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="b49a4658a90043426e9fc6dd773ddec4"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-238.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="57d635f21c7fbb2a2fc0d79751535aa8"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-239.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="f437e23e9e6b7d94f2cd6883bdf46ce2"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-239.php.tpl.090922"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="fe5c6090cf4dcbaf189c75d562b70d06"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-120-2.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="fc311976157dc02637da16084f3ace2a"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-103-1.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="37144262ee3eda74c113ed9f1daf39bb"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-200.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="671af5ac800aa9a1fb0691ab700b1e4e"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-301-2.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="c1fbc9d6dd4ce2700fddcf85e47a9f72"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-120.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="d59c23eb92aff66fd31c5acb221dd790"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-201.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="cd61c460af7c8de7669ad94a644d7474"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-141-2.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="c68169279653ef2d077f46ca517bae91"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-203.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="01acede7833f7fed2b1a93289d1c538c"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-240.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="7b7513d9b49aea05210a6440c5b61cab"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-241.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="d417bbfb08feb8c2c650b67e6619910d"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-125.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="e034430a521d7b48254b16f09d30adf8"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-242.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="17278e90a32e50bcb9f71fceb46603a1"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-207.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="5e52b78479101a5ccde5c653fd45e474"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-208.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="ef5d00d0c17ba4e397cc23ba2ae1c6c9"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-240.php.tpl.090922"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="5a224a49355487e1d77efe5246c63c24"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-209.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="0c548663e510f661c42c3b18fbb7bd05"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-115.php.tpl.090909"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="317757e6462dd9f726b7468686a13136"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-210.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="c8240fff5f9812bc3920ebd50e043f0c"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-231-1.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="4db3114ad2bdba261d083b8c3db7c800"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-211.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="4ba39e2d39538b9a67d6dc9317c59849"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-213.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="1b9bbc264c2bf15c01eba747dbc403c8"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-215.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="ecce751e14d7c516fea253210c147622"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-216.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="4254ab8c9fc99395549fc6017d168776"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-118-2.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="7004daa3a34265eba718ebdc5dd7242d"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-217.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="bdac2b6ef8ff440cdd503f0f58779bfc"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-218.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="8175ccc30eb4c299237e1064b09cc9a0"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-219.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="5b49a2621fdc3a5f191120f7e7048f6d"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="team_mst.php.tpl"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="9b2fdce910f007a3a6af60d4b22a08cd"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-112.php.tpl_0608"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="81cd29b01d7f22d8143fc9828e42bbc1"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+<entry
+   committed-rev="1"
+   name="2-1-108.php.tpl_0608"
+   text-time="2009-11-02T04:53:35.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="d6ef5e20b957ca9c8f819c89a78454c1"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:35.000000Z"/>
+</wc-entries>

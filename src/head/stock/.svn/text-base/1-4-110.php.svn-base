@@ -1,0 +1,605 @@
+<?php
+/********************
+ * 滞留在庫一覧
+ *
+ *
+ * 変更履歴
+ *    2006/07/10 (kaji)
+ *      ・shop_gidをなくす
+ *    2006/08/03 (watanab-k)
+ *      ・商品を略称から正式名称へ変更
+ ********************/
+
+/*
+ * 履歴：
+ *  日付            B票No.      担当者      内容
+ *  -----------------------------------------------------------
+ *  2006/12/06      ban_0014    suzuki      日付のゼロ埋め追加
+ *  2007/02/22                  watanabe-k  不要機能の削除
+ *  2007/04/17      B0702-044   kajioka-h   ウィンドウタイトルに画面切替ボタンのHTMLが出力されていたのを修正
+ *  2009/07/23                  aoyama-n    在庫管理しない商品が表示される不具合修正
+ *  2009/10/12                  hashimoto-y 在庫管理フラグをショップ別商品情報テーブルに変更
+ *  2009/10/19      rev.1.3     kajioka-h   検索条件に受払なしを追加（組立の受払がなし：t_stock_hand.work_div = '7'）
+ *                  rev.1.3     kajioka-h   在庫数0のものは表示しない
+ *
+ *
+*/
+
+$page_title = "滞留在庫一覧";
+
+//環境設定ファイル
+require_once("ENV_local.php");
+
+//HTML_QuickFormを作成
+$form =& new HTML_QuickForm("dateForm", "POST", "$_SERVER[PHP_SELF]");
+
+//DB接続
+$db_con = Db_Connect();
+
+// 権限チェック
+$auth       = Auth_Check($db_con);
+
+/****************************/
+//外部変数取得
+/****************************/
+$shop_id  = $_SESSION["client_id"];
+//$shop_gid = $_SESSION["shop_gid"];
+
+/****************************/
+//初期値設定
+/****************************/
+//$def_data["form_output_type"] = "1";                                        //表示形式
+$def_data["form_io_type"]     = "1";                                        //入出庫区分
+
+$form->setDefaults($def_data);
+
+/****************************/
+//フォーム作成
+/****************************/
+//表示形式
+//$form_output_type[] =& $form->createElement( "radio",NULL,NULL, "画面","1");
+//$form_output_type[] =& $form->createElement( "radio",NULL,NULL, "帳票","2");
+//$form->addGroup($form_output_type, "form_output_type", "出力形式");
+
+//対象在庫
+$form_base_date[] =& $form->createElement(
+    "text","y","","size=\"4\" maxLength=\"4\" style=\"$g_form_style\"
+    onkeyup=\"changeText(this.form,'form_base_date[y]','form_base_date[m]',4)\" 
+    onFocus=\"onForm_today(this,this.form,'form_base_date[y]','form_base_date[m]','form_base_date[d]')\"
+    onBlur=\"blurForm(this)\""
+);
+$form_base_date[] =& $form->createElement("static","","","-");
+$form_base_date[] =& $form->createElement(
+    "text","m","","size=\"1\" maxLength=\"2\" style=\"$g_form_style\"
+    onkeyup=\"changeText(this.form,'form_base_date[m]','form_base_date[d]',2)\" 
+    onFocus=\"onForm_today(this,this.form,'form_base_date[y]','form_base_date[m]','form_base_date[d]')\"
+    onBlur=\"blurForm(this)\""
+);
+$form_base_date[] =& $form->createElement("static","","","-");
+$form_base_date[] =& $form->createElement(
+    "text","d","","size=\"1\" maxLength=\"2\" style=\"$g_form_style\"
+    onFocus=\"onForm_today(this,this.form,'form_base_date[y]','form_base_date[m]','form_base_date[d]')\"
+    onBlur=\"blurForm(this)\""
+); 
+$form->addGroup( $form_base_date,"form_base_date","");
+
+$form->addElement(
+    "text","form_object_day","","size=\"4\" maxLength=\"4\" style=\"$g_form_style\" $g_form_option"
+);
+$form_io_type[] =& $form->createElement( "radio",NULL,NULL, "売上・仕入なし","1");
+$form_io_type[] =& $form->createElement( "radio",NULL,NULL, "売上なし","2");
+$form_io_type[] =& $form->createElement( "radio",NULL,NULL, "仕入なし","4");
+$form_io_type[] =& $form->createElement( "radio",NULL,NULL, "受払なし","0");	//rev.1.3 受払なし追加
+$form->addGroup($form_io_type, "form_io_type", "滞留在庫");
+
+//Ｍ区分
+$select_value = Select_Get($db_con,'g_goods');
+$form->addElement('select', 'form_g_goods', '', $select_value,$g_form_option_select);
+
+//製品区分
+$select_value = Select_Get($db_con,'product');
+$form->addElement('select', 'form_product', '', $select_value,$g_form_option_select);
+
+//商品コード
+$form->addElement(
+    "text","form_goods_cd","","size=\"10\" maxLength=\"8\" style=\"$g_form_style\" $g_form_option"
+);
+
+//商品名
+$form->addElement(
+    "text","form_goods_cname","","size=\"34\" maxLength=\"30\" $g_form_option"
+);
+
+//倉庫
+$select_value = Select_Get($db_con,'ware');
+$form->addElement('select', 'form_ware', '', $select_value,$g_form_option_select);
+
+//表示ボタン
+//$form->addElement("submit","form_show_button","表　示","onClick=\"javascript:Which_Type('form_output_type','1-4-111.php','# ');\"");
+$form->addElement("submit","form_show_button","表　示","");
+
+//クリアボタン
+$form->addElement("button","form_clear_button","クリア","
+    onClick=\"javascript:location.href('$_SERVER[PHP_SELF]');\""
+);
+
+// 在庫照会リンクボタン
+$form->addElement("button", "4_101_button", "在庫照会", "onClick=\"location.href('./1-4-101.php');\"");
+
+// 在庫受払リンクボタン
+$form->addElement("button", "4_105_button", "在庫受払", "onClick=\"location.href('./1-4-105.php');\"");
+
+// 滞留在庫一覧リンクボタン
+$form->addElement("button", "4_110_button", "滞留在庫一覧", "$g_button_color onClick=\"javascript:location.href('".$_SERVER["PHP_SELF"]."')\"");
+
+
+/****************************/
+//表示ボタン押下処理
+/****************************/
+if($_POST["form_show_button"] == "表　示"){
+    /*****************************/
+    //POST情報取得
+    /*****************************/
+//    $output_type                = $_POST["form_output_type"];               //表示形式
+
+    $base_date_y                = $_POST["form_base_date"]["y"];            //対象日付(年)
+    $base_date_m                = $_POST["form_base_date"]["m"];            //対象日付(月)
+    $base_date_d                = $_POST["form_base_date"]["d"];            //対象日付(日)
+	$base_date_y = str_pad($base_date_y,4, 0, STR_PAD_LEFT);  
+	$base_date_m = str_pad($base_date_m,2, 0, STR_PAD_LEFT); 
+	$base_date_d = str_pad($base_date_d,2, 0, STR_PAD_LEFT); 
+
+    $object_day                 = $_POST["form_object_day"] ;            //対象期間
+    $io_type                    = $_POST["form_io_type"];                   //入出庫区分
+    $g_goods                    = $_POST["form_g_goods"];                   //Ｍ区分
+    $product                    = $_POST["form_product"];                   //製品区分
+    $goods_cd                   = $_POST["form_goods_cd"];                  //Ｍ区分
+    $goods_cname                = $_POST["form_goods_cname"];                //商品名
+    $ware                       = $_POST["form_ware"];                      //倉庫
+
+    /****************************/    
+    //ルール作成
+    /****************************/
+    //■対象日
+    //日付妥当性チェック
+    if((!checkdate((int)$base_date_m, (int)$base_date_d, (int)$base_date_y))){
+            $form->setElementError("form_base_date","対象日の日付は妥当ではありません。");
+    }
+
+    //■対象期間
+    //必須チェック
+    $form->addRule("form_object_day","対象日(日数)は必須入力です。","required"); 
+    $form->addRule("form_object_day","対象日(日数)は必須入力です。","numeric"); 
+
+    /**************************/
+    //検証
+    /**************************/
+    if($form->validate()){
+        //日付を結合
+        $base_date = $base_date_y."-".$base_date_m."-".$base_date_d;  
+
+        /****************************/
+        //WHERE_SQL作成
+        /****************************/
+        //Ｍ区分が指定された場合
+        if($g_goods != null){
+            $g_goods_sql    = " AND t_g_goods.g_goods_id = $g_goods";
+        }
+
+        //商品名が指定された場合
+        if($product != null){
+            $product_sql    = " AND t_product.product_id = $product";
+        }
+
+        //倉庫が選択された場合
+        if($ware != null){
+            $ware_sql       = " AND t_ware.ware_id = $ware";
+        }
+
+        //商品コードが指定された場合
+        if($goods_cd != null){
+            $goods_cd_sql   = " AND t_goods.goods_cd LIKE '$goods_cd%'";
+        }
+
+        //商品名が指定された場合
+        if($goods_cname != null){
+            $goods_cname_sql = " AND t_goods.goods_name LIKE '%$goods_cname%'";
+        }
+
+        $where_sql  = $g_goods_sql;
+        $where_sql .= $product_sql;
+        $where_sql .= $ware_sql;
+        $where_sql .= $goods_cd_sql;
+        $where_sql .= $goods_cname_sql;
+
+        /****************************/
+        //SQL作成
+        /****************************/
+        //if($io_type == '1'){
+		//rev.1.3 受払なし追加
+        if($io_type == '1' || $io_type == '0'){
+            $sql  = "SELECT \n";
+            $sql .= "   t_g_goods.g_goods_name,\n";
+            $sql .= "   t_product.product_name,\n";
+            $sql .= "   t_goods.goods_name,\n";
+            $sql .= "   t_ware.ware_name,\n";
+            $sql .= "   stock.stock_num,\n";
+            $sql .= "   t_price.r_price,\n";
+            $sql .= "   (stock.stock_num * t_price.r_price) AS stock_amount,\n";
+            $sql .= "   long_stock.inventory_days,\n";
+            $sql .= "   long_stock.max_sales_day,\n";
+            $sql .= "   long_stock.max_purchase_day,\n";
+            $sql .= "   t_goods.goods_cd\n";
+            $sql .= " FROM\n";
+            $sql .= " (\n";
+            $sql .= "   SELECT\n";
+            $sql .= "       inventory_day.goods_id,\n";
+            $sql .= "       inventory_day.ware_id,\n";
+            $sql .= "       inventory_day.goods_id || '-' || inventory_day.ware_id AS goods_ware_id,\n";
+            $sql .= "       inventory_day.inventory_days,\n";
+            $sql .= "       sales_day.max_sales_day,\n";
+            $sql .= "       purchase_day.max_purchase_day\n";
+            $sql .= "   FROM\n";
+            $sql .= "       (\n";
+            $sql .= "           SELECT\n";
+            $sql .= "               t_stock_hand2.goods_id,\n";
+            $sql .= "               t_stock_hand2.ware_id,\n";
+            $sql .= "               goods_id || '-' || ware_id AS goods_ware_id,\n";
+            $sql .= "               date'$base_date' - max(t_stock_hand2.work_day) AS inventory_days\n";
+            $sql .= "           FROM\n";
+            $sql .= "               (\n";
+            $sql .= "                   SELECT\n";
+            $sql .= "                       goods_id , ware_id , work_day , work_div,\n";
+            $sql .= "                       goods_id || '-' || ware_id AS goods_ware_id\n";
+            $sql .= "                   FROM t_stock_hand\n";
+            $sql .= "                   WHERE\n";
+			//rev.1.3 売上・仕入なしと受払なしで分岐
+			if($io_type == '1'){
+            $sql .= "                       (work_div = '2' OR work_div = '4') AND\n";
+			}else{
+            $sql .= "                       work_div IN ('2', '4', '5', '7') AND\n";
+			}
+            $sql .= "                       shop_id = $shop_id\n";
+            $sql .= "               ) AS t_stock_hand2\n";
+            $sql .= "           WHERE t_stock_hand2.goods_ware_id NOT IN\n";
+            $sql .= "               (\n";
+            $sql .= "                   SELECT\n";
+            $sql .= "                       goods_id || '-' || ware_id AS goods_ware_id\n";
+            $sql .= "                   FROM t_stock_hand\n";
+            $sql .= "                   WHERE\n";
+			//rev.1.3 売上・仕入なしと受払なしで分岐
+			if($io_type == '1'){
+            $sql .= "                       (work_div = '2' OR work_div = '4') AND\n";
+			}else{
+            $sql .= "                       work_div IN ('2', '4', '5', '7') AND\n";
+			}
+            $sql .= "                       shop_id = $shop_id AND\n";
+            $sql .= "                       (\n";
+            $sql .= "                       (date '$base_date' - interval '($object_day -1) day') <= work_day AND\n";
+            $sql .= "                       work_day < (date '$base_date' + interval '1 day')\n";
+            $sql .= "                       )\n";
+            $sql .= "                   GROUP BY goods_id , ware_id\n";
+            $sql .= "               )\n";
+            $sql .= "               AND t_stock_hand2.work_day < (date '$base_date' - interval '($object_day -1) day')\n";
+            $sql .= "           GROUP BY\n";
+            $sql .= "               t_stock_hand2.goods_id,\n";
+            $sql .= "               t_stock_hand2.ware_id\n";
+            $sql .= "       ) AS inventory_day\n";
+            $sql .= "       LEFT JOIN\n";
+            $sql .= "       (\n";
+            $sql .= "           SELECT\n";
+            $sql .= "               t_stock_hand2.goods_id,\n";
+            $sql .= "               t_stock_hand2.ware_id,\n";
+            $sql .= "               goods_id || '-' || ware_id AS goods_ware_id,\n";
+            $sql .= "               max(t_stock_hand2.work_day) AS max_sales_day\n";
+            $sql .= "           FROM\n";
+            $sql .= "               (\n";
+            $sql .= "                   SELECT\n";
+            $sql .= "                       goods_id , ware_id , work_day , work_div,\n";
+            $sql .= "                       goods_id || '-' || ware_id AS goods_ware_id\n";
+            $sql .= "                   FROM t_stock_hand\n";
+            $sql .= "                   WHERE\n";
+            $sql .= "                       work_div = '4' AND\n";
+            $sql .= "                       shop_id = $shop_id\n";
+            $sql .= "               ) AS t_stock_hand2\n";
+            $sql .= "           WHERE t_stock_hand2.goods_ware_id NOT IN\n";
+            $sql .= "               (\n";
+            $sql .= "                   SELECT\n";
+            $sql .= "                       goods_id || '-' || ware_id AS goods_ware_id\n";
+            $sql .= "                   FROM t_stock_hand\n";
+            $sql .= "                   WHERE\n";
+			//rev.1.3 売上・仕入なしと受払なしで分岐
+			if($io_type == '1'){
+            $sql .= "                       (work_div = '2' OR work_div = '4') AND\n";
+			}else{
+            $sql .= "                       work_div IN ('2', '4', '5', '7') AND\n";
+			}
+            $sql .= "                       shop_id = $shop_id AND\n";
+            $sql .= "                       (\n";
+            $sql .= "                       (date '$base_date' - interval '($object_day -1) day') <= work_day AND \n";
+            $sql .= "                       work_day < (date '$base_date' + interval '1 day')\n";
+            $sql .= "                       )\n";
+            $sql .= "                   GROUP BY goods_id , ware_id\n";
+            $sql .= "               )\n";
+            $sql .= "               AND t_stock_hand2.work_day < (date '$base_date' - interval '($object_day -1) day')\n";
+            $sql .= "           GROUP BY\n";
+            $sql .= "               t_stock_hand2.goods_id,\n";
+            $sql .= "               t_stock_hand2.ware_id\n";
+            $sql .= "       ) AS sales_day\n";
+            $sql .= "       ON\n";
+            $sql .= "       inventory_day.goods_ware_id = sales_day.goods_ware_id\n";
+            $sql .= "       LEFT JOIN\n";
+            $sql .= "       (\n";
+            $sql .= "           SELECT\n";
+            $sql .= "               t_stock_hand2.goods_id,\n";
+            $sql .= "               t_stock_hand2.ware_id,\n";
+            $sql .= "               goods_id || '-' || ware_id AS goods_ware_id,\n";
+            $sql .= "               max(t_stock_hand2.work_day) AS max_purchase_day\n";
+            $sql .= "           FROM\n";
+            $sql .= "               (\n";
+            $sql .= "                   SELECT\n";
+            $sql .= "                       goods_id , ware_id , work_day , work_div,\n";
+            $sql .= "                       goods_id || '-' || ware_id AS goods_ware_id\n";
+            $sql .= "                   FROM t_stock_hand\n";
+            $sql .= "                   WHERE\n";
+            $sql .= "                       work_div = 2 AND\n";
+            $sql .= "                       shop_id = $shop_id\n";
+            $sql .= "               ) AS t_stock_hand2\n";
+            $sql .= "           WHERE t_stock_hand2.goods_ware_id NOT IN\n";
+            $sql .= "               (\n";
+            $sql .= "                   SELECT\n";
+            $sql .= "                       goods_id || '-' || ware_id AS goods_ware_id\n";
+            $sql .= "                   FROM t_stock_hand\n";
+            $sql .= "                   WHERE\n";
+			//rev.1.3 売上・仕入なしと受払なしで分岐
+			if($io_type == '1'){
+            $sql .= "                       (work_div = '2' OR work_div = '4') AND\n";
+			}else{
+            $sql .= "                       work_div IN ('2', '4', '5', '7') AND\n";
+			}
+            $sql .= "                       shop_id = $shop_id AND\n";
+            $sql .= "                       (\n";
+            $sql .= "                       (date '$base_date' - interval '($object_day -1) day') <= work_day AND\n";
+            $sql .= "                       work_day < (date '$base_date' + interval '1 day')\n";
+            $sql .= "                       )\n";
+            $sql .= "                   GROUP BY goods_id , ware_id\n";
+            $sql .= "               )\n";
+            $sql .= "               AND t_stock_hand2.work_day < (date '$base_date' - interval '($object_day -1) day')\n";
+            $sql .= "           GROUP BY\n";
+            $sql .= "               t_stock_hand2.goods_id,\n";
+            $sql .= "               t_stock_hand2.ware_id\n";
+            $sql .= "       ) AS purchase_day\n";
+            $sql .= "       ON\n";
+            $sql .= "       inventory_day.goods_ware_id = purchase_day.goods_ware_id\n";
+            $sql .= " ) AS long_stock,\n";
+            $sql .= " (\n";
+            $sql .= "   SELECT\n";
+            $sql .= "       goods_id || '-' || ware_id AS goods_ware_id,\n";
+            $sql .= "       stock_num\n";
+            $sql .= "   FROM t_stock\n";
+            $sql .= " )AS stock,\n";
+            #2009-10-12 hashimoto-y
+            #$sql .= " t_goods , t_ware , t_g_goods , t_price , t_product\n";
+            $sql .= " t_goods , t_ware , t_g_goods , t_price , t_product , t_goods_info\n";
+
+            $sql .= " WHERE\n";
+            $sql .= "   long_stock.goods_id = t_goods.goods_id\n";
+            $sql .= "   AND\n";
+            $sql .= "   long_stock.ware_id = t_ware.ware_id\n";
+            $sql .= "   AND\n";
+            $sql .= "   long_stock.goods_ware_id = stock.goods_ware_id\n";
+            $sql .= "   AND\n";
+            $sql .= "   t_goods.g_goods_id = t_g_goods.g_goods_id\n";
+            $sql .= "   AND\n";
+            $sql .= "   t_goods.goods_id = t_price.goods_id\n";
+            $sql .= "   AND\n";
+            $sql .= "   t_goods.product_id = t_product.product_id\n";
+            $sql .= "   AND\n";
+            #2009-10-12 hashimoto-y
+            $sql .= "   t_goods.goods_id  = t_goods_info.goods_id\n";
+            $sql .= "   AND\n";
+            $sql .= "   t_price.rank_cd = '1'\n";
+
+            //aoyama-n 2009-07-23
+            $sql .= "   AND\n";
+            #2009-10-12 hashimoto-y
+            #$sql .= "   t_goods.stock_manage = '1'\n";
+            $sql .= "   t_goods_info.stock_manage = '1' \n";
+            $sql .= "   AND \n";
+            $sql .= "   t_goods_info.shop_id = $shop_id ";
+
+            $sql .= "   AND\n";
+            //$sql .= "   t_price.shop_gid = $shop_gid\n";
+            $sql .= "   t_price.shop_id = $shop_id\n";
+			//rev.1.3 在庫数0ははぶく
+            $sql .= "   AND \n";
+            $sql .= "   stock.stock_num != 0 \n";
+            $sql .=     $where_sql;
+            $sql .= " ORDER BY t_g_goods.g_goods_cd , t_product.product_cd , t_goods.goods_cd , t_ware.ware_cd\n";
+            $sql .= ";\n";        
+        }else{
+            $sql  = " SELECT\n";
+            $sql .= "   t_g_goods.g_goods_name ,\n";
+            $sql .= "   t_product.product_name ,\n";
+            $sql .= "   t_goods.goods_name ,\n";
+            $sql .= "   t_ware.ware_name ,\n";
+            $sql .= "   stock.stock_num ,\n";
+            $sql .= "   t_price.r_price ,\n";
+            $sql .= "   (stock.stock_num * t_price.r_price) AS stock_amount ,\n";
+            $sql .= "   long_stock.inventory_days ,\n";
+            $sql .= "   long_stock.max_workday,\n";
+            $sql .= "   t_goods.goods_cd,\n";
+            $sql .= "   t_goods.goods_cd\n";
+            $sql .= " FROM\n";
+            $sql .= " (\n";
+            $sql .= "   SELECT\n";
+            $sql .= "       t_stock_hand2.goods_id ,\n";
+            $sql .= "       t_stock_hand2.ware_id ,\n";
+            $sql .= "       goods_id || '-' || ware_id AS goods_ware_id,\n";
+            $sql .= "       date'$base_date' - max(t_stock_hand2.work_day) AS inventory_days ,\n";
+            $sql .= "       max(t_stock_hand2.work_day) AS max_workday\n";
+            $sql .= "   FROM\n";
+            $sql .= "       (\n";
+            $sql .= "           SELECT\n";
+            $sql .= "           goods_id , ware_id , work_day , work_div ,\n";
+            $sql .= "           goods_id || '-' || ware_id AS goods_ware_id\n";
+            $sql .= "       FROM t_stock_hand\n";
+            $sql .= "       WHERE\n";
+            $sql .= "           work_div = '$io_type' AND\n";
+            $sql .= "           shop_id = $shop_id\n";
+            $sql .= "       ) AS t_stock_hand2\n";
+            $sql .= "   WHERE t_stock_hand2.goods_ware_id NOT IN\n";
+            $sql .= "       (\n";
+            $sql .= "       SELECT\n";
+            $sql .= "           goods_id || '-' || ware_id AS goods_ware_id\n";
+            $sql .= "       FROM t_stock_hand\n";
+            $sql .= "       WHERE\n";
+            $sql .= "           work_div = '$io_type' AND\n";
+            $sql .= "           shop_id = $shop_id AND\n";
+            $sql .= "           (\n";
+            $sql .= "           (date '$base_date' - interval '($object_day -1) day') <= work_day AND\n";
+            $sql .= "           work_day < (date '$base_date' + interval '1 day')\n";
+            $sql .= "           )\n";
+            $sql .= "       GROUP BY goods_id , ware_id\n";
+            $sql .= "       )\n";
+            $sql .= "       AND t_stock_hand2.work_day < (date '$base_date' - interval '($object_day -1) day')\n";
+            $sql .= "   GROUP BY\n";
+            $sql .= "       t_stock_hand2.goods_id ,\n";
+            $sql .= "       t_stock_hand2.ware_id\n";
+            $sql .= " ) AS long_stock ,\n";
+            $sql .= " (\n";
+            $sql .= "   SELECT\n";
+            $sql .= "       goods_id || '-' || ware_id AS goods_ware_id ,\n";
+            $sql .= "       stock_num\n";
+            $sql .= "   FROM t_stock\n";
+            $sql .= "   WHERE\n";
+            $sql .= "       shop_id = $shop_id\n";
+            $sql .= " )AS stock ,\n";
+            #2009-10-12 hashimoto-y
+            #$sql .= " t_goods , t_ware , t_g_goods , t_price , t_product\n";
+            $sql .= " t_goods , t_ware , t_g_goods , t_price , t_product , t_goods_info\n";
+
+            $sql .= " WHERE\n";
+            $sql .= "   long_stock.goods_id = t_goods.goods_id AND\n";
+            $sql .= "   long_stock.ware_id = t_ware.ware_id AND\n";
+            $sql .= "   long_stock.goods_ware_id = stock.goods_ware_id AND\n";
+            $sql .= "   t_goods.g_goods_id = t_g_goods.g_goods_id AND\n";
+            $sql .= "   t_goods.goods_id = t_price.goods_id AND\n";
+            $sql .= "   t_goods.product_id = t_product.product_id AND\n";
+            #2009-10-12 hashimoto-y
+            $sql .= "   t_goods.goods_id  = t_goods_info.goods_id\n";
+            $sql .= "   AND\n";
+            $sql .= "   t_price.rank_cd = '1' AND \n";
+
+            #2009-10-12 hashimoto-y
+            //aoyama-n 2009-07-23
+            #$sql .= "   t_goods.stock_manage = '1' AND \n";
+            $sql .= "   t_goods_info.stock_manage = '1' \n";
+            $sql .= "   AND \n";
+            $sql .= "   t_goods_info.shop_id = $shop_id ";
+            $sql .= "   AND \n";
+
+            //$sql .= "   t_price.shop_gid = $shop_gid \n";
+            $sql .= "   t_price.shop_id = $shop_id \n";
+			//rev.1.3 在庫数0ははぶく
+            $sql .= "   AND\n";
+            $sql .= "   stock.stock_num != 0 \n";
+            $sql .=     $where_sql;
+            $sql .= " ORDER BY t_g_goods.g_goods_cd , t_product.product_cd , t_goods.goods_cd , t_ware.ware_cd\n";
+            $sql .= ";\n";
+        }
+//print_array($sql);
+
+        /****************************/
+        //表示データ作成
+        /****************************/
+        $result     = Db_Query($db_con, $sql);
+        $match_count   = pg_num_rows($result);
+        $page_data  = Get_Data($result);
+
+        //Ｍ区分計を求める
+        for($i = 0; $i <= $match_count; $i++){
+            if($i != 0 && $page_data[$i][0] != $page_data[$i-1][0]){
+                if($page_data[$i-2][0] != $page_data[$i-1][0]){
+                    $g_goods_total[$i-1] = $page_data[$i-1][6];
+                }else{
+                    $total_amount    = bcadd($total_amount, $page_data[$i-1][6]);
+                    $g_goods_total[$i-1] = $total_amount;
+                }
+
+                $total_amount    = 0;
+            }else{
+                $total_amount    = bcadd($total_amount, $page_data[$i-1][6],2);
+            }
+        }
+
+        //総合計を求める
+        $total_amount = number_format(@array_sum($g_goods_total),2);
+
+        //ナンバーフォーマット
+        for($i = 0; $i < $match_count; $i++){
+            if($g_goods_total[$i] != null){
+                $g_goods_total[$i] = number_format($g_goods_total[$i],2);
+            }
+            $page_data[$i][5]  = number_format($page_data[$i][5],2);
+            $page_data[$i][6]  = number_format($page_data[$i][6],2);
+        }
+
+        //重複を削除
+        for($i = 0; $i < $match_count; $i++){
+            for($j = 0; $j < $match_count; $j++){
+                if($i != $j && $page_data[$i][0] == $page_data[$j][0]){
+                    $page_data[$j][0] = null;
+                }
+            }
+        }
+    }
+}
+
+/****************************/
+//HTMLヘッダ
+/****************************/
+$html_header = Html_Header($page_title);
+
+/****************************/
+//HTMLフッタ
+/****************************/
+$html_footer = Html_Footer();
+
+/****************************/
+//メニュー作成
+/****************************/
+//$page_menu = Create_Menu_h('stock','1');
+/****************************/
+//画面ヘッダー作成
+/****************************/
+$page_title .= "　".$form->_elements[$form->_elementIndex["4_101_button"]]->toHtml();
+$page_title .= "　".$form->_elements[$form->_elementIndex["4_105_button"]]->toHtml();
+$page_title .= "　".$form->_elements[$form->_elementIndex["4_110_button"]]->toHtml();
+$page_header = Create_Header($page_title);
+
+// Render関連の設定
+$renderer =& new HTML_QuickForm_Renderer_ArraySmarty($smarty);
+$form->accept($renderer);
+
+//form関連の変数をassign
+$smarty->assign('form',$renderer->toArray());
+
+//その他の変数をassign
+$smarty->assign('var',array(
+	'html_header'   => "$html_header",
+	//'page_menu'     => "$page_menu",
+	'page_header'   => "$page_header",
+	'html_footer'   => "$html_footer",
+	'html_page'     => "$html_page",
+	'html_page2'    => "$html_page2",
+    'total_amount'  => "$total_amount",
+    'match_count'   => "$match_count",
+));
+$smarty->assign("row",$page_data);
+$smarty->assign("g_goods_total",$g_goods_total);
+
+//テンプレートへ値を渡す
+$smarty->display(basename($_SERVER[PHP_SELF] .".tpl"));
+
+?>
