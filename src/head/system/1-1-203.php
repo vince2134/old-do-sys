@@ -20,24 +20,24 @@
 
 $page_title = "倉庫マスタ";
 
-//環境設定ファイル
+//Environment setting file 環境設定ファイル
 require_once("ENV_local.php");
 
-//HTML_QuickFormを作成
+//Create HTML_QuickForm　HTML_QuickForm作成
 $form =& new HTML_QuickForm("dateForm", "POST", "$_SERVER[PHP_SELF]",null,"onSubmit=return confirm(true)");
 
-//DB接続
+//Connect database　DB接続
 $conn = Db_Connect();
 
-// 権限チェック
+// Check authorization 権限チェック
 $auth       = Auth_Check($conn);
-// 入力・変更権限無しメッセージ
+// Message for no authorization to Input・Change 入力・変更権限無しメッセージ
 $auth_r_msg = ($auth[0] == "r") ? $auth[3] : null;
 // ボタンDisabled
 $disabled   = ($auth[0] == "r") ? "disabled" : null;
 
 /****************************/
-//acquire outside variable
+//acquire outside variable　外部変数取得
 /****************************/
 $client_id   = $_SESSION["client_id"];
 
