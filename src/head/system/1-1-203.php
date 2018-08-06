@@ -37,19 +37,19 @@ $auth_r_msg = ($auth[0] == "r") ? $auth[3] : null;
 $disabled   = ($auth[0] == "r") ? "disabled" : null;
 
 /****************************/
-//外部変数取得
+//acquire outside variable
 /****************************/
 $client_id   = $_SESSION["client_id"];
 
 $get_ware_id = $_GET["ware_id"];
 
-/* GETしたIDの正当性チェック */
+/* check the gotten ID's legitimacy */
 if ($_GET["ware_id"] != null && Get_Id_Check_Db($conn, $_GET["ware_id"], "ware_id", "t_ware", "num", " shop_id = 1 ") != true){
     header("Location: ../top.php");
 }
 
 /****************************/
-//初期値を抽出
+//extract the initial value
 /****************************/
 $def_data["form_count_flg"]     = 't';
 $form->setDefaults($def_data);
@@ -82,25 +82,25 @@ if($get_ware_id != null){
 }
 
 /*****************************/
-//オブジェクト作成
+//create object
 /*****************************/
-//テキスト
+//text
 $form->addElement("text","form_ware_cd","","size=\"3\" maxLength=\"3\" style=\"text-align: left;$g_form_style\"".$g_form_option."\"");
 $form->addElement("text","form_ware_name","","size=\"22\" maxLength=\"10\"".$g_form_option."\"");
 
-//備考
+//remarks
 $form->addElement("text","form_ware_note","","size=\"34\" maxLength=\"30\" ".$g_form_option."\"");
 
-//発注点カウント
-//ラヂオボタン
+//order point count
+//radio button
 $form_count_flg[] =& $form->createElement( "radio",NULL,NULL, "する","t");
 $form_count_flg[] =& $form->createElement( "radio",NULL,NULL, "しない","f");
 $form->addGroup($form_count_flg, "form_count_flg", "");
 
-//非表示
+//do not display
 $form->addElement('checkbox', 'form_nondisp_flg', '', '');
 
-//ボタン
+//button
 $form->addElement("submit","form_entry_button","登　録","onClick=\"return Dialogue('登録します。','#', this)\" $disabled");
 $form->addElement("button","form_clear_button","クリア","onClick=\"location.href='$_SERVER[PHP_SELF]'\"");
 $form->addElement("button","form_csv_button","CSV出力","onClick=\"javascript:Button_Submit('csv_button_flg', '#', 'true', this);\"");
@@ -110,40 +110,40 @@ $form->addElement("hidden","csv_button_flg");
 $form->addElement("hidden","update_flg");
 
 /****************************/
-//ルール作成
+//create rules ルール作成
 /****************************/
-//倉庫コード
+//warehosue code 倉庫コード
 $form->addRule("form_ware_cd", "倉庫コードは半角数字のみ3桁です。","required");
 $form->addRule("form_ware_cd", "倉庫コードは半角数字のみ3桁です。","regex", "/^[0-9]+$/");
 
-//倉庫名
+//warehouse name 倉庫名
 $form->addRule("form_ware_name", "倉庫名は1文字以上10文字以下です。","required");
-// 全角/半角スペースのみチェック
+//only check full width/half wifth space 全角/半角スペースのみチェック
 $form->registerRule("no_sp_name", "function", "No_Sp_Name");
 $form->addRule("form_ware_name", "倉庫名に スペースのみの登録はできません。", "no_sp_name");
 
 /****************************/
-//登録ボタン押下処理
+//process when registration button is pressed 登録ボタン押下処理
 /****************************/
 if($_POST["form_entry_button"] == "登　録"){
 
     /****************************/
-    //POST情報取得
+    //acquire POST informationPOST 情報取得
     /****************************/
-    $ware_cd        = $_POST["form_ware_cd"];                                   //倉庫CD
-    $ware_name      = $_POST["form_ware_name"];                                 //倉庫名
-    $count_flg      = $_POST["form_count_flg"];                                 //発注点カウントフラグ
-    $nondisp_flg    = ($_POST["form_nondisp_flg"] == '1')? 't' : 'f';           //非表示
-    $ware_note      = $_POST["form_ware_note"];                                 //備考
+    $ware_cd        = $_POST["form_ware_cd"];                                   //warehouse CD 倉庫CD
+    $ware_name      = $_POST["form_ware_name"];                                 //Warehouse name 倉庫名
+    $count_flg      = $_POST["form_count_flg"];                                 //order point count flag 発注点カウントフラグ
+    $nondisp_flg    = ($_POST["form_nondisp_flg"] == '1')? 't' : 'f';           //do not display 非表示
+    $ware_note      = $_POST["form_ware_note"];                                 //remarks 備考
     $update_flg     = $_POST["update_flg"];
 
     /***************************/
-    //倉庫コード整形
+    //formatting warehouse code 倉庫コード整形
     /***************************/
     $ware_cd = str_pad($ware_cd, 3, 0, STR_PAD_LEFT);
 
-    //□倉庫コード
-    //重複チェック
+    //□warehouse code □倉庫コード
+    //duplicate/redundancy check 重複チェック
     $sql  = "SELECT";
     $sql .= "   ware_cd";
     $sql .= " FROM";
@@ -159,8 +159,8 @@ if($_POST["form_entry_button"] == "登　録"){
         $form->setElementError("form_ware_cd","既に使用されている 倉庫コード です。");
     }
 
-    //非表示
-    //在庫数チェック
+    //do not display 非表示
+    //check inventory 在庫数チェック
     if($nondisp_flg == 't'){
        $sql  = "SELECT ";
        $sql .= "DISTINCT ";
@@ -194,14 +194,14 @@ if($_POST["form_entry_button"] == "登　録"){
     }
 
     /***************************/
-    //検証
+    //validate 検証
     /***************************/
     if($form->validate()){
 
         Db_Query($conn, "BEGIN");
 
         /*****************************/
-        //登録処理
+        //registration process 登録処理
         /*****************************/
         if($update_flg != true){
 
@@ -227,14 +227,14 @@ if($_POST["form_entry_button"] == "登　録"){
 
             $result = Db_Query($conn, $insert_sql);
 
-            //失敗した場合はロールバック
+            //rollback if failed 失敗した場合はロールバック
             if($result === false){
                 Db_Query($conn, "ROLLBACK");
                 exit;
             }
-            //登録した情報をログに残す
+            //leave the registration information in the log 登録した情報をログに残す
             $result = Log_Save( $conn, "ware", "1", $ware_cd, $ware_name);
-            //失敗した場合はロールバック
+            //rollback if failed 失敗した場合はロールバック
             if($result === false){
                 Db_Query($conn, "ROLLBACK");
                 exit;
@@ -242,7 +242,7 @@ if($_POST["form_entry_button"] == "登　録"){
 
             $message = "登録しました。";
         /*******************************/
-        //変更処理
+        //change/revise process変更処理
         /*******************************/
         }elseif($update_flg == true){
             $insert_sql  = "UPDATE ";
@@ -263,9 +263,9 @@ if($_POST["form_entry_button"] == "登　録"){
                 exit;
             }
 
-            //登録した情報をログに残す
+            //leve the registrtion information in the log 登録した情報をログに残す
             $result = Log_Save( $conn, "ware", "2", $ware_cd, $ware_name);
-            //失敗した場合はロールバック
+            //rollback if failed 失敗した場合はロールバック
             if($result === false){
                 Db_Query($conn, "ROLLBACK");
                 exit;
@@ -274,11 +274,11 @@ if($_POST["form_entry_button"] == "登　録"){
         }
         Db_Query($conn, "COMMIT");
 
-        $set_data["form_ware_cd"]      = "";               //倉庫CD
-        $set_data["form_ware_name"]    = "";               //倉庫名
-        $set_data["form_count_flg"]    = "t";              //発注点カウントフラグ
-        $set_data["form_nondisp_flg"]  = "";               //非表示
-        $set_data["form_ware_note"]    = "";               //備考  
+        $set_data["form_ware_cd"]      = "";               //warehouseCD 倉庫CD
+        $set_data["form_ware_name"]    = "";               //warehouse name 倉庫名
+        $set_data["form_count_flg"]    = "t";              //order point count flag 発注点カウントフラグ
+        $set_data["form_nondisp_flg"]  = "";               //do not display 非表示
+        $set_data["form_ware_note"]    = "";               //remarks 備考  
         $set_data["update_flg"]        = "";
 
         $form->setConstants($set_data);
@@ -286,7 +286,7 @@ if($_POST["form_entry_button"] == "登　録"){
 }
 
 /*****************************
-//一覧作成
+//create list 一覧作成
 /*****************************/
 $sql  = "SELECT";
 $sql .= "   t_ware.ware_cd,";
@@ -320,7 +320,7 @@ $total_count = pg_num_rows($result);
 $page_data = Get_Data($result);
 
 /****************************/
-//CSVボタン押下処理
+//process when CSV button is pressed CSVボタン押下処理
 /****************************/
 if($_POST["csv_button_flg"] == true && $_POST["form_entry_button"] != "登　録"){
 
@@ -355,7 +355,7 @@ if($_POST["csv_button_flg"] == true && $_POST["form_entry_button"] != "登　録"){
 	$total_count = pg_num_rows($result);
 	$page_data = Get_Data($result,2);
 
-    //CSV作成
+    //create CSV CSV作成
     for($i = 0; $i < $total_count; $i++){
         $csv_page_data[$i][0] = $page_data[$i][0];
         $csv_page_data[$i][1] = $page_data[$i][2];
@@ -387,36 +387,36 @@ if($_POST["csv_button_flg"] == true && $_POST["form_entry_button"] != "登　録"){
 
 
 /****************************e
-//HTMLヘッダ
+//HTML header HTMLヘッダ
 /****************************/
 $html_header = Html_Header($page_title);
 
 /****************************/
-//HTMLフッタ
+//HTML footer HTMLフッタ
 /****************************/
 $html_footer = Html_Footer();
 
 /****************************/
-//メニュー作成
+//create menu メニュー作成
 /****************************/
 $page_menu = Create_Menu_h('system','1');
 
 /****************************/
-//画面ヘッダー作成
+//create screen header 画面ヘッダー作成
 /****************************/
 $page_title .= "(全".$total_count."件)";
 $page_header = Create_Header($page_title);
 
 
 
-// Render関連の設定
+// setting related to Render Render関連の設定
 $renderer =& new HTML_QuickForm_Renderer_ArraySmarty($smarty);
 $form->accept($renderer);
 
-//form関連の変数をassign
+//assign form related functions variable form関連の変数をassign
 $smarty->assign('form',$renderer->toArray());
 
-//その他の変数をassign
+//assign other variables その他の変数をassign
 $smarty->assign('var',array(
     'html_header'   => "$html_header",
     'page_menu'     => "$page_menu",
@@ -429,7 +429,7 @@ $smarty->assign('var',array(
 
 $smarty->assign('page_data', $page_data);
 
-//テンプレートへ値を渡す
+//pass the value to the template テンプレートへ値を渡す
 $smarty->display(basename($_SERVER[PHP_SELF] .".tpl"));
 
 ?>
