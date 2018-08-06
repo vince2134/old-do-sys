@@ -1,4 +1,4 @@
-//DONE TRANSLATION
+//DONE TRANSLATION.
 
 <?php
 /*
