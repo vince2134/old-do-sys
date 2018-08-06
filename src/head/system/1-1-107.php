@@ -1,16 +1,16 @@
 <?php
 /*
- * 変更履歴
- * 1.0.0 (2006/03/16) 所属マスタの追加(suzuki-t)
- * 1.1.0 (2006/03/21) 検索処理の修正(suzuki-t)
- * 1.1.1 (2006/05/08) 検索フォーム表示処理追加（watanabe-k）
+ * revisions and update history
+ * 1.0.0 (2006/03/16) Added Affiliation master(suzuki-t)
+ * 1.1.0 (2006/03/21) Fixed search process(suzuki-t)
+ * 1.1.1 (2006/05/08) Added search form view process（watanabe-k）
  * @author		suzuki-t <suzuki-t@bhsk.co.jp>
  *
  * @version		1.1.0 (2006/03/21)
 */
 
 /*
- * 履歴：
+ * History (will not translate this anymore since its just a history of revisions)：
  *  日付            B票No.      担当者      内容
  *  -----------------------------------------------------------
  *  2006-12-07      ban_0093    suzuki      検索フォーム表示ボタン押下時に在職中のスタッフのみ表示
@@ -25,25 +25,25 @@
 
 $page_title = "スタッフマスタ";
 
-//環境設定ファイル
+//Envirionment setting file
 require_once("ENV_local.php");
 
-//HTML_QuickFormを作成
+//Create HTML_QuickForm
 $form =& new HTML_QuickForm("dateForm", "POST", "$_SERVER[PHP_SELF]");
 
-//DB接続
+//Connect to DataBase 
 $db_con = Db_Connect();
 
-// 権限チェック
+// Checking of Authority
 $auth       = Auth_Check($db_con);
 
 /****************************/
-//外部変数取得
+//Acquire Variables from outside
 /****************************/
 $shop_id  = $_SESSION[client_id];
 
 /****************************/
-//デフォルト値設定
+//Set up default value
 /****************************/
 $def_date = array(
     "form_output_type"    => "1",
@@ -53,34 +53,34 @@ $def_date = array(
 $form->setDefaults($def_date);
 
 /****************************/
-//部品定義
+//Definition of components
 /****************************/
-//登録
+//Registre
 $form->addElement("button","new_button","登録画面","onClick=\"javascript:Referer('1-1-109.php')\"");
-//変更・一覧
+//Changes・List
 //$form->addElement("button","change_button","変更・一覧","style=\"color: #ff0000;\" onClick=\"location.href='$_SERVER[PHP_SELF]'\"");
 $form->addElement("button","change_button","変更・一覧",$g_button_color." onClick=\"location.href='$_SERVER[PHP_SELF]'\"");
 
-//表示
+//View
 $form->addElement("submit","show_button","表　示");
-//クリア
+//Clear
 $form->addElement("button","clear_button","クリア","onClick=\"javascript:location.href('$_SERVER[PHP_SELF]');\"");
-//検索ボタン
+//Search button
 $form->addElement("submit","form_search_button","検索フォームを表示",
                   "onClick=\"javascript:Button_Submit_1('search_button_flg', '#', 'true', this)\""); 
 
-//出力形式
+//Output format
 $radio[] =& $form->createElement( "radio",NULL,NULL, "画面","1");
 $radio[] =& $form->createElement( "radio",NULL,NULL, "CSV","2");
 $form->addGroup($radio, "form_output_type", "出力形式");
-//在職識別
+//Tenure Classification
 $radio = "";
 $radio[] =& $form->createElement( "radio",NULL,NULL, "在職中","在職中");
 $radio[] =& $form->createElement( "radio",NULL,NULL, "退職","退職");
 $radio[] =& $form->createElement( "radio",NULL,NULL, "休業","休業");
 $radio[] =& $form->createElement( "radio",NULL,NULL, "全て","全て");
 $form->addGroup($radio, "form_state", "在職");
-//トイレ資格診断士
+//Toilet consultant license
 $radio = "";
 $radio[] =& $form->createElement( "radio",NULL,NULL, "全て","4");
 $radio[] =& $form->createElement( "radio",NULL,NULL, "１級トイレ診断士","1");
@@ -88,19 +88,19 @@ $radio[] =& $form->createElement( "radio",NULL,NULL, "２級トイレ診断士","2");
 $radio[] =& $form->createElement( "radio",NULL,NULL, "無","3");
 $form->addGroup($radio, "form_toilet_license", "トイレ診断資格");
 
-//ショップコード
+//Shop code
 $text[] =& $form->createElement("text","cd1","テキストフォーム","size=\"7\" maxLength=\"6\" style=\"$g_form_style\"  onkeyup=\"changeText(this.form,'form_client_cd[cd1]','form_client_cd[cd2]',6)\"".$g_form_option."\"");
 $text[] =& $form->createElement("static","","","-");
 $text[] =& $form->createElement("text","cd2","テキストフォーム","size=\"4\" maxLength=\"4\" style=\"$g_form_style\"  ".$g_form_option."\"");
 $form->addGroup( $text, "form_client_cd", "form_client_cd");
-//スタッフコード
+//staff code
 $text = "";
 $text[] =& $form->createElement("text","cd1","テキストフォーム","size=\"7\" maxLength=\"6\" style=\"$g_form_style\"  onkeyup=\"changeText(this.form,'form_staff_cd[cd1]','form_staff_cd[cd2]',6)\"".$g_form_option."\"");
 $text[] =& $form->createElement("static","","","-");
 $text[] =& $form->createElement("text","cd2","テキストフォーム","size=\"3\" maxLength=\"3\" style=\"$g_form_style\"  ".$g_form_option."\"");
 $form->addGroup( $text, "form_staff_cd", "form_staff_cd");
 
-//発行日
+//issue date
 $text="";
 $text[] =& $form->createElement("text", "y", "",
         "size=\"4\" maxLength=\"4\" style=\"$g_form_style\"
@@ -122,23 +122,23 @@ $text[] =& $form->createElement("text", "d", "",
 
 $form->addGroup($text, "form_issue_date", "form_issue_date", "-");
 
-//ショップ名
+//shop name
 $form->addElement("text","form_client_name","テキストフォーム","size=\"34\" maxLength=\"15\" ".$g_form_option."\"");
-//スタッフ名
+//staff name
 $form->addElement("text","form_staff_name","テキストフォーム","size=\"22\" maxLength=\"10\" ".$g_form_option."\"");
-//担当者コード
+//person in charge code
 $form->addElement("text","form_charge_cd","テキストフォーム","size=\"4\" maxLength=\"4\" style=\"$g_form_style\" ".$g_form_option."\"");
-//取得資格
+//acquired license
 $form->addElement("text","form_license","テキストフォーム","size=\"34\" maxLength=\"50\" ".$g_form_option."\"");
-//役職
+//position
 $form->addElement("text","form_position","テキストフォーム","size=\"15\" maxLength=\"7\" ".$g_form_option."\"");
-//所属部署
+//belonged department
 /*
 $select_value = Select_Get($db_con,'part');
 $form->addElement('select', 'form_part', 'セレクトボックス', $select_value,$g_form_option_select);
 */
 
-//職種
+//Occupation
 $select_value="";
 $select_value = array(
     ""         =>  "",
@@ -149,7 +149,7 @@ $select_value = array(
 );
 $form->addElement('select', 'form_job_type', 'セレクトボックス', $select_value,$g_form_option_select);
 
-//スタッフ種別
+//Staff classification
 $select_value = array(
 	"",
 	"FCスタッフ",
@@ -165,40 +165,40 @@ $form->addElement("hidden", "search_button_flg");
 
 
 /****************************/
-//表示ボタン押下処理
+//Process of view/display button when pressed
 /****************************/
 #2010-09-04 aoyama-n
-#if($_POST["show_button"]=="表　示"){
+#if($_POST["show_button"]=="表　示　Display"){
 
 
     /******************************/
-    //ヘッダーに表示させる全件数
+    //number of all items that will be displayed in the header
     /*****************************/
-    /** スタッフマスタ取得SQL作成 **/
+    /** Createa SQL that will acquire the staff master **/
     $sql = "SELECT \n";
-    $sql .= "   CASE t_rank.group_kind\n";                //スタッフ種別
+    $sql .= "   CASE t_rank.group_kind\n";                //スタッフ種別 Staff classification
     //$sql .= "       WHEN '1' THEN '○'\n";
     $sql .= "       WHEN '2' THEN '○'\n";
     $sql .= "       WHEN '3' THEN NULL\n";
     $sql .= "   END,\n";
-    $sql .= "   t_client_union.client_cd1,\n";            //ショップコード1
-    $sql .= "   t_client_union.client_cd2,\n";            //ショップコード2
-    $sql .= "   t_client_union.client_name,\n";           //ショップ名
-    $sql .= "   charge_cd,\n";                            //担当者コード
-    $sql .= "   t_staff.staff_id, \n";                    //スタッフID
-    $sql .= "   staff_cd1, \n";                           //スタッフコード１
-    $sql .= "   staff_cd2, \n";                           //スタッフコード２
-    $sql .= "   staff_name, \n";                          //スタッフ名
-    $sql .= "   t_part.part_name, \n";                    //部署名
-    $sql .= "   position, \n";                            //役職
-    $sql .= "   job_type, \n";                            //職種
-    $sql .= "   state, \n";                               //在職識別
-    $sql .= "   CASE t_staff.toilet_license\n";           //トイレ診断士資格
+    $sql .= "   t_client_union.client_cd1,\n";            //shop code1
+    $sql .= "   t_client_union.client_cd2,\n";            //shop code2
+    $sql .= "   t_client_union.client_name,\n";           //Shop name
+    $sql .= "   charge_cd,\n";                            //person in charge code
+    $sql .= "   t_staff.staff_id, \n";                    //Staff ID
+    $sql .= "   staff_cd1, \n";                           //shop code1
+    $sql .= "   staff_cd2, \n";                           //shop code2
+    $sql .= "   staff_name, \n";                          //Staff name
+    $sql .= "   t_part.part_name, \n";                    //Department name
+    $sql .= "   position, \n";                            //position
+    $sql .= "   job_type, \n";                            //occupation
+    $sql .= "   state, \n";                               //tenure classification
+    $sql .= "   CASE t_staff.toilet_license\n";           //Toilet consultant license
     $sql .= "       WHEN '1' THEN '１級トイレ診断士'\n";
     $sql .= "       WHEN '2' THEN '２級トイレ診断士'\n";
     $sql .= "       WHEN '3' THEN '無'\n";
     $sql .= "   END,\n";
-    $sql .= "   t_staff.license, \n";                     //取得資格
+    $sql .= "   t_staff.license, \n";                     //Acquired license
     $sql .= "   t_branch.branch_name \n";
     $sql .= "FROM \n";
     $sql .= "   (SELECT \n";
@@ -217,7 +217,7 @@ $form->addElement("hidden", "search_button_flg");
     $sql .= "       INNER JOIN \n";
     $sql .= "   t_rank\n";
     $sql .= "   ON t_rank.rank_cd = t_client_union.rank_cd \n";
-    $sql .= "   AND t_rank.group_kind != '1' \n"; // 本部スタッフは取得しない（直営スタッフ＝本部スタッフのため）
+    $sql .= "   AND t_rank.group_kind != '1' \n"; // will not acquire the HQ staff（because direcatly managed store's staff = HQ staff）
     $sql .= "       INNER JOIN \n";
     $sql .= "   t_attach \n";
     $sql .= "   ON t_attach.shop_id = t_client_union.client_id \n";
@@ -237,93 +237,93 @@ $form->addElement("hidden", "search_button_flg");
 
 
     #2010-05-12 hashimoto-y
-    #//初期表示時、在職中のスタッフのみ表示
+    #//Initial display/view Only display staff that are currently in tenure
     #if(($_POST["search_button_flg"]==true && $_POST["show_button"]!="表　示") || count($_POST) == 0){
-    #    $sql .= "AND state = '在職中' ";
+    #    $sql .= "AND state = '在職中 in tenure' ";
     #    $cons_data["search_button_flg"] = "";
     #    $form->setConstants($cons_data);
     #}
 
     #2010-09-04 aoyama-n
-    //初期表示時、在職中のスタッフのみ表示
-    if(($_POST["search_button_flg"]==true && $_POST["show_button"]!="表　示") || count($_POST) == 0){
-        $sql .= "AND state = '在職中' ";
+    //Initial display/view Only display staff that are currently in tenure
+    if(($_POST["search_button_flg"]==true && $_POST["show_button"]!="表　示 display") || count($_POST) == 0){
+        $sql .= "AND state = '在職中 in tenure' ";
         $cons_data["search_button_flg"] = "";
         $form->setConstants($cons_data);
         $display_flg = true;
     }
 
 /****************************/
-//表示ボタン押下処理
+//process when pressed the view/display button
 /****************************/
 #2010-09-04 aoyama-n
 if($_POST["show_button"]=="表　示"){
 
-    $output_type = $_POST["form_output_type"];        //出力形式
-	$staff_kind  = $_POST["form_staff_kind"];         //スタッフ種別
-    $state       = $_POST["form_state"];              //在職識別
-    $job_type    = $_POST["form_job_type"];           //職種
-    $client_cd1  = $_POST["form_client_cd"]["cd1"];   //ショップコード１
-    $client_cd2  = $_POST["form_client_cd"]["cd2"];   //ショップコード２
-    $staff_cd1   = $_POST["form_staff_cd"]["cd1"];    //スタッフコード１
-    $staff_cd2   = $_POST["form_staff_cd"]["cd2"];    //スタッフコード２
-    $client_name = $_POST["form_client_name"];        //ショップ名
-    $staff_name  = $_POST["form_staff_name"];         //スタッフ名
-    $charge_cd   = $_POST["form_charge_cd"];          //担当者コード
-    $license     = $_POST["form_license"];            //取得資格
-    $position    = $_POST["form_position"];           //役職
-    $part        = $_POST["form_part"];               //部署名
-    $toilet      = $_POST["form_toilet_license"];     //トイレ診断士資格
+    $output_type = $_POST["form_output_type"];        //Ouput format
+	$staff_kind  = $_POST["form_staff_kind"];         //staff classification
+    $state       = $_POST["form_state"];              //tenure classifcation
+    $job_type    = $_POST["form_job_type"];           //occupation
+    $client_cd1  = $_POST["form_client_cd"]["cd1"];   //shop code1
+    $client_cd2  = $_POST["form_client_cd"]["cd2"];   //shop code２
+    $staff_cd1   = $_POST["form_staff_cd"]["cd1"];    //staff code１
+    $staff_cd2   = $_POST["form_staff_cd"]["cd2"];    //staff code２
+    $client_name = $_POST["form_client_name"];        //shop name
+    $staff_name  = $_POST["form_staff_name"];         //staff name
+    $charge_cd   = $_POST["form_charge_cd"];          //person in charge code
+    $license     = $_POST["form_license"];            //acquired license
+    $position    = $_POST["form_position"];           //position
+    $part        = $_POST["form_part"];               //department name
+    $toilet      = $_POST["form_toilet_license"];     //toilet consultant license
 
-    //CSV・画面判定
+    //CSV・画面判定 CSV・Decision of which screen
     if($output_type == 1 || $output_type == null){
-        //画面表示処理
+        //Screen view/display process
         
-        /** 条件指定 **/
-		//スタッフ種別指定の有無
+        /** Condition specification **/
+		//Necessity of Staff occupation specification
         if($staff_kind != null && $staff_kind != '0'){
 			if($staff_kind == 4){
-				//本部・直営
+				//HQ・Dicrectly managed store
 				$sql .= "AND t_attach.sys_flg = 't' ";
 			}else{
-				//DBに形式合わせる
+				//Match the Database format
 				if($staff_kind == 1){
 					//ＦＣ
 					$staff_kind = 3;
 				}else if($staff_kind == 3){
-					//本部
+					//HQ
 					$staff_kind = 1;
 				}
 	            $sql .= "AND t_rank.group_kind = '$staff_kind' ";
 			}
         }
-        //ショップコード１指定の有無
+        //Necessity of shop code 1 specification
         if($client_cd1 != null){
             $sql .= "AND t_client_union.client_cd1 LIKE '$client_cd1%' ";
         }
-        //ショップコード２指定の有無
+        //Necessity of shop code 2 specification
         if($client_cd2 != null){
             $sql .= "AND t_client_union.client_cd2 LIKE '$client_cd2%' ";
         }
-        //ショップ名指定の有無
+        //Necessity of shop name specification
         if($client_name != null){
             $sql .= "AND t_client_union.client_name LIKE '%$client_name%' ";
         }
-        //スタッフコード１指定の有無
+        //Necessity of staff code 1 specification
         if($staff_cd1 != null){
             $sql .= "AND staff_cd1 LIKE '$staff_cd1%' ";
         }
-        //スタッフコード２指定の有無
+        //Necessity of staff code 2 specification
         if($staff_cd2 != null){
             $sql .= "AND staff_cd2 LIKE '$staff_cd2%' ";
         }
-        //スタッフ名指定の有無
+        //Necessity of staff name specification
         if($staff_name != null){
             $sql .= "AND staff_name LIKE '%$staff_name%' ";
         }
-        //担当者コード指定の有無
+        //Necessity of person in charge code specification
         if($charge_cd != null){
-			//00も000も値は一緒の為、文字を代入して判定
+			//00 and 000 is the same so replace it with a string and determine
 			$str = str_pad($charge_cd, 4, 'A', STR_POS_LEFT);
 			if($str == 'A000'){
 				$sql .= "AND charge_cd BETWEEN 0 AND 9 ";
@@ -339,59 +339,59 @@ if($_POST["show_button"]=="表　示"){
 				}
 			}
         }
-        //部署名指定の有無
+        //Necessity of department name specification
         if($part != null){
             $sql .= "AND t_part.part_id = $part ";
         }
-        //役職指定の有無
+        //Necessity of position specification
         if($position != null){
             $sql .= "AND position LIKE '%$position%' ";
         }
-        //職種指定の有無
+        //Necessity of occupation specification
         if($job_type != null){
             $sql .= "AND job_type = '$job_type' ";
         }
-        //在職識別指定の有無
+        //Necessity of tenurship classification specification
         if($state != '全て'){
             $sql .= "AND state = '$state' ";
         }
-        //トイレ診断士資格指定の有無
+        //Necessity of specificing if toilet consultant license was acquired or not
         if($toilet!='4'){
             $sql .= "AND t_staff.toilet_license = '$toilet' ";
         }
-        //取得資格指定の有無
+        //Necessity of acquired license specification
         if($license != null){
             $sql .= "AND t_staff.license LIKE '%$license%' ";
         }
     
     }else{
-        //CSV表示処理
+        //CSV view/display process
 
-        /** スタッフマスタ取得SQL作成 **/
+        /** Create sql that acquire staff master **/
         $sql = "SELECT \n";
-        $sql .= "   CASE t_rank.group_kind\n";                //スタッフ種別
+        $sql .= "   CASE t_rank.group_kind\n";                //Staff classification
         //$sql .= "       WHEN '1' THEN '○'\n";
         $sql .= "       WHEN '2' THEN '○'\n";
         $sql .= "       WHEN '3' THEN NULL\n";
         $sql .= "   END,\n";
-        $sql .= "   t_client_union.client_cd1,\n";            //ショップコード1
-        $sql .= "   t_client_union.client_cd2,\n";            //ショップコード2
-        $sql .= "   t_client_union.client_name,\n";           //ショップ名
-        $sql .= "   charge_cd,\n";                            //担当者コード
-        $sql .= "   t_staff.staff_id, \n";                    //スタッフID
-        $sql .= "   staff_cd1, \n";                           //スタッフコード１
-        $sql .= "   staff_cd2, \n";                           //スタッフコード２
-        $sql .= "   staff_name, \n";                          //スタッフ名
-        $sql .= "   t_part.part_name, \n";                    //部署名
-        $sql .= "   position, \n";                            //役職
-        $sql .= "   job_type, \n";                            //職種
-        $sql .= "   state, \n";                               //在職識別
-        $sql .= "   CASE t_staff.toilet_license\n";           //トイレ診断士資格
+        $sql .= "   t_client_union.client_cd1,\n";            //Shop code 1
+        $sql .= "   t_client_union.client_cd2,\n";            //Shop code 2
+        $sql .= "   t_client_union.client_name,\n";           //Shop name
+        $sql .= "   charge_cd,\n";                            //Person in charge code
+        $sql .= "   t_staff.staff_id, \n";                    //Staff ID
+        $sql .= "   staff_cd1, \n";                           //Staff code １
+        $sql .= "   staff_cd2, \n";                           //Staff code ２
+        $sql .= "   staff_name, \n";                          //Staff nam
+        $sql .= "   t_part.part_name, \n";                    //Department name
+        $sql .= "   position, \n";                            //Position
+        $sql .= "   job_type, \n";                            //Occupation
+        $sql .= "   state, \n";                               //Tenureship classification
+        $sql .= "   CASE t_staff.toilet_license\n";           //Toilet consultant license
         $sql .= "       WHEN '1' THEN '１級トイレ診断士'\n";
         $sql .= "       WHEN '2' THEN '２級トイレ診断士'\n";
         $sql .= "       WHEN '3' THEN '無'\n";
         $sql .= "   END,\n";
-        $sql .= "   t_staff.license, \n";                     //取得資格
+        $sql .= "   t_staff.license, \n";                     //Acquired license
         $sql .= "   t_branch.branch_name \n";
         $sql .= "FROM \n";
         $sql .= "   (SELECT \n";
@@ -410,7 +410,7 @@ if($_POST["show_button"]=="表　示"){
         $sql .= "       INNER JOIN \n";
         $sql .= "   t_rank\n";
         $sql .= "   ON t_rank.rank_cd = t_client_union.rank_cd \n";
-        $sql .= "   AND t_rank.group_kind != '1' \n"; // 本部スタッフは取得しない（直営スタッフ＝本部スタッフのため）
+        $sql .= "   AND t_rank.group_kind != '1' \n"; // do not acuire the HQ staff（Because directly manageed staff = HQ Staff）
         $sql .= "       INNER JOIN \n";
         $sql .= "   t_attach \n";
         $sql .= "   ON t_attach.shop_id = t_client_union.client_id \n";
@@ -428,42 +428,42 @@ if($_POST["show_button"]=="表　示"){
         //$sql .= "   t_attach.shop_id = t_client_union.client_id ";
         $sql .= "   t_rank.rank_cd IS NOT NULL \n";
 
-        /** CSV作成SQL **/
+        /** SQL that creates CSV **/
         $sql = "SELECT \n";
-        $sql .= " t_client_union.client_cd1,";    //ショップコード1
-        $sql .= " t_client_union.client_cd2,";    //ショップコード2
-        $sql .= " t_client_union.client_name,";   //ショップ名
-		$sql .= " t_staff.charge_cd,";            //担当者コード
-		$sql .= " CASE t_rank.group_kind";        //スタッフ種別
+        $sql .= " t_client_union.client_cd1,";    //Shop code 1
+        $sql .= " t_client_union.client_cd2,";    //Shop code 2
+        $sql .= " t_client_union.client_name,";   //Shop name
+		$sql .= " t_staff.charge_cd,";            //person in charge code 
+		$sql .= " CASE t_rank.group_kind";        //Staff classification
 //		$sql .= "     WHEN '1' THEN '○'";
 		$sql .= "     WHEN '2' THEN '○'";
 		$sql .= "     WHEN '3' THEN NULL";
 		$sql .= " END,";
-        $sql .= " t_staff.staff_cd1, ";           //スタッフコード１
-        $sql .= " t_staff.staff_cd2, ";           //スタッフコード２
-        $sql .= " t_staff.staff_name, ";          //スタッフ名
-        $sql .= " t_staff.staff_read, ";          //スタッフ名(フリガナ)
-        $sql .= " t_staff.staff_ascii, ";         //スタッフ名(ローマ字)
-        $sql .= " t_staff.sex, ";                 //性別
-        $sql .= " t_staff.birth_day, ";           //生年月日
-        $sql .= " t_staff.state, ";               //在職識別
-        $sql .= " t_staff.join_day, ";            //入社年月日
-        $sql .= " t_staff.retire_day, ";          //退職日
-        $sql .= " t_staff.employ_type , ";        //雇用形態
-        $sql .= " t_part.part_cd, ";              //部署コード
-        $sql .= " t_part.part_name, ";            //所属部署名
-        $sql .= " t_attach.section, ";            //所属部署（課）
-        $sql .= " t_staff.position, ";            //役職
-        $sql .= " t_staff.job_type, ";            //職種
-        $sql .= " t_staff.study, ";               //研修履歴
-        $sql .= " t_staff.toilet_license, ";      //トイレ診断士資格
-        $sql .= " t_staff.license, ";             //取得資格
-        $sql .= " t_staff.note, ";                //備考
-        $sql .= " t_ware.ware_cd, ";              //担当倉庫コード
-        $sql .= " t_ware.ware_name, ";            //担当倉庫名
-        $sql .= " change_flg, ";                  //変更不可能フラグ
-        $sql .= " branch_cd, ";                   //支店コード
-        $sql .= " branch_name ";                  //支店名
+        $sql .= " t_staff.staff_cd1, ";           //Staff code １
+        $sql .= " t_staff.staff_cd2, ";           //staff code ２
+        $sql .= " t_staff.staff_name, ";          //staff name 
+        $sql .= " t_staff.staff_read, ";          //Staff name ("Furigana" (spelling of the name in a japanese alphabet called katakana))
+        $sql .= " t_staff.staff_ascii, ";         //Staff name ("Roman-ji" (spelling of the name in english alphabet))
+        $sql .= " t_staff.sex, ";                 //Sex :D
+        $sql .= " t_staff.birth_day, ";           //date of birth
+        $sql .= " t_staff.state, ";               //tenureship classification
+        $sql .= " t_staff.join_day, ";            //date of joining the company
+        $sql .= " t_staff.retire_day, ";          //date of retirement
+        $sql .= " t_staff.employ_type , ";        //employment type
+        $sql .= " t_part.part_cd, ";              //department code
+        $sql .= " t_part.part_name, ";            //belonged department name
+        $sql .= " t_attach.section, ";            //belonged department division name
+        $sql .= " t_staff.position, ";            //position
+        $sql .= " t_staff.job_type, ";            //occupatin
+        $sql .= " t_staff.study, ";               //history of training 
+        $sql .= " t_staff.toilet_license, ";      //toilet consultant license
+        $sql .= " t_staff.license, ";             //acquired license
+        $sql .= " t_staff.note, ";                //remarks
+        $sql .= " t_ware.ware_cd, ";              //assigned warehouse code
+        $sql .= " t_ware.ware_name, ";            //assigned warehouse name
+        $sql .= " change_flg, ";                  //change not allowed flag
+        $sql .= " branch_cd, ";                   //branch code
+        $sql .= " branch_name ";                  //branch name
         $sql .= "FROM ";
         $sql .= " (SELECT ";
 		$sql .= "   client_id,";
@@ -501,52 +501,52 @@ if($_POST["show_button"]=="表　示"){
         $sql .= "WHERE ";
         $sql .= " t_attach.shop_id = t_client_union.client_id ";
 
-        /** 条件指定 **/
-		//スタッフ種別指定の有無
+        /** condition specification **/
+		//necessity of staff classification specification
         if($staff_kind != null && $staff_kind != '0'){
 			if($staff_kind == 4){
-				//本部・直営
+				//HQ・Directly managed store 
 				$sql .= "AND t_attach.sys_flg = 't' ";
 			}else{
-				//DBに形式合わせる
+				//match the Database format
 				if($staff_kind == 1){
 					//ＦＣ
 					$staff_kind = 3;
 				}else if($staff_kind == 3){
-					//本部
+					//HQ
 					$staff_kind = 1;
 				}
 	            $sql .= "AND t_rank.group_kind = '$staff_kind' ";
 			}
         }
-        //ショップコード１指定の有無
+        //necessity of shop code 1 specification
         if($client_cd1 != null){
             $sql .= "AND t_client_union.client_cd1 LIKE '$client_cd1%' ";
         }
-        //ショップコード２指定の有無
+        //necessity of shop code 2 specification
         if($client_cd2 != null){
             $sql .= "AND t_client_union.client_cd2 LIKE '$client_cd2%' ";
         }
-        //ショップ名指定の有無
+        //necessity of shop name specification
         if($client_name != null){
             $sql .= "AND t_client_union.client_name LIKE '%$client_name%' ";
         }
-        //スタッフコード１指定の有無
+        //necessity of staff code 1 specification
         if($staff_cd1 != null){
             $sql .= "AND staff_cd1 LIKE '$staff_cd1%' ";
         }
-        //スタッフコード２指定の有無
+        //necessity of staff code 2 specification
         if($staff_cd2 != null){
             $sql .= "AND staff_cd2 LIKE '$staff_cd2%' ";
         }
-        //スタッフ名指定の有無
+        //necessity of staff name specification
         if($staff_name != null){
             $sql .= "AND staff_name LIKE '%$staff_name%' ";
         }
 
-        //担当者コード指定の有無
+        //necessity of person in charge code specification
         if($charge_cd != null){
-			//00も000も値は一緒の為、文字を代入して判定
+			//00 and 000 is the same so replace it with a string and determine
 			$str = str_pad($charge_cd, 4, 'A', STR_POS_LEFT);
 			if($str == 'A000'){
 				$sql .= "AND charge_cd BETWEEN 0 AND 9 ";
@@ -562,27 +562,27 @@ if($_POST["show_button"]=="表　示"){
 				}
 			}
         }
-        //部署名指定の有無
+        //necessity of department name specification
         if($part != null){
             $sql .= "AND t_part.part_id = $part ";
         }
-        //役職指定の有無
+        //necessity of position specification
         if($position != null){
             $sql .= "AND position LIKE '%$position%' ";
         }
-        //職種指定の有無
+        //necessity of occupation specification
         if($job_type != null){
             $sql .= "AND job_type = '$job_type' ";
         }
-        //在職識別指定の有無
+        //necessity of tenureship classification specification
         if($state!='全て'){
             $sql .= "AND state = '$state' ";
         }
-        //トイレ診断士資格指定の有無
+        //necessity of toilet consultant classifcation specification
         if($toilet!='4'){
             $sql .= "AND t_staff.toilet_license = '$toilet' ";
         }
-        //取得資格指定の有無
+        //necessity of acquired license specification
         if($license != null){
             $sql .= "AND t_staff.license LIKE '%$license%' ";
         }
@@ -590,38 +590,38 @@ if($_POST["show_button"]=="表　示"){
         $sql .= "t_client_union.client_cd1, t_client_union.client_cd2, charge_cd;";
 
         $result = Db_Query($db_con,$sql);
-        //CSVデータ取得
+        //Acquire CSV data
         $i=0;
         while($data_list = pg_fetch_array($result)){
 
-            $staff_data[$i][0]  = $data_list[0]."-".$data_list[1];  //ショップコード
-            $staff_data[$i][1]  = $data_list[2];                    //ショップ名
-            $staff_data[$i][2]  = str_pad($data_list[3], 4, "0", STR_PAD_LEFT);                    //担当者コード
-			$staff_data[$i][3]  = $data_list[4];                    //スタッフ種別
-			$staff_data[$i][4]  = str_pad($data_list[5], 6, "0", STR_PAD_LEFT)."-".str_pad($data_list[6], 4, "0", STR_PAD_LEFT);  //スタッフコード
-            $staff_data[$i][5]  = $data_list[7];                    //スタッフ名
-            $staff_data[$i][6]  = $data_list[8];                    //スタッフ名(フリガナ)
-            $staff_data[$i][7]  = $data_list[9];                    //スタッフ名(ローマ字)
-            //性別判定（1:男 2:女）
+            $staff_data[$i][0]  = $data_list[0]."-".$data_list[1];  //Shop code 
+            $staff_data[$i][1]  = $data_list[2];                    //Shop name
+            $staff_data[$i][2]  = str_pad($data_list[3], 4, "0", STR_PAD_LEFT);                    //person in charge code
+			$staff_data[$i][3]  = $data_list[4];                    //staff classfication
+			$staff_data[$i][4]  = str_pad($data_list[5], 6, "0", STR_PAD_LEFT)."-".str_pad($data_list[6], 4, "0", STR_PAD_LEFT);  //staff code
+            $staff_data[$i][5]  = $data_list[7];                    //staff name
+            $staff_data[$i][6]  = $data_list[8];                    ////Staff name ("Furigana" (spelling of the name in a japanese alphabet called katakana))
+            $staff_data[$i][7]  = $data_list[9];                    //Staff name ("Roman-ji" (spelling of the name in english alphabet))
+            //determine sex（1:男male 2:女female）
             if($data_list[10]==1){
                 $staff_data[$i][8]  = "男";
             }else{
                 $staff_data[$i][8]  = "女";
             }                    
-            $staff_data[$i][9]  = $data_list[11];                    //生年月日
-            $staff_data[$i][10] = $data_list[12];                    //在職識別
-            $staff_data[$i][11] = $data_list[13];                    //入社年月日
-            $staff_data[$i][12] = $data_list[14];                    //退職日
-            $staff_data[$i][13] = $data_list[15];                    //雇用形態
-            $staff_data[$i][14] = $data_list[branch_cd];             //支店コード
-            $staff_data[$i][15] = $data_list[branch_name];           //支店名
-            $staff_data[$i][16] = $data_list[16];                    //所属部署コード
-            $staff_data[$i][17] = $data_list[17];                    //所属部署名
-            $staff_data[$i][18] = $data_list[18];                    //所属部署（課）
-            $staff_data[$i][19] = $data_list[19];                    //役職
-            $staff_data[$i][20] = $data_list[20];                    //職種
-            $staff_data[$i][21] = $data_list[21];                    //研修履歴
-            //トイレ診断士資格判定(1:１級 2:２級 3:無)
+            $staff_data[$i][9]  = $data_list[11];                    //date of birth
+            $staff_data[$i][10] = $data_list[12];                    //occupation classification
+            $staff_data[$i][11] = $data_list[13];                    //date of joining the company
+            $staff_data[$i][12] = $data_list[14];                    //date of retirement/leaving the company
+            $staff_data[$i][13] = $data_list[15];                    //employment type
+            $staff_data[$i][14] = $data_list[branch_cd];             //branch code
+            $staff_data[$i][15] = $data_list[branch_name];           //branch name
+            $staff_data[$i][16] = $data_list[16];                    //belonged department code
+            $staff_data[$i][17] = $data_list[17];                    //belonged department name
+            $staff_data[$i][18] = $data_list[18];                    //belonged department division name
+            $staff_data[$i][19] = $data_list[19];                    //position
+            $staff_data[$i][20] = $data_list[20];                    //occupation
+            $staff_data[$i][21] = $data_list[21];                    //training history
+            //determine toilet counsltant license(1:１級(first class) 2:２級(second class) 3:無(none))
             if($data_list[22]=='1'){
                 $staff_data[$i][22] = "１級トイレ診断士";    
             }else if($data_list[22]=='2'){
@@ -629,11 +629,11 @@ if($_POST["show_button"]=="表　示"){
             }else{
                 $staff_data[$i][22] = "無";    
             }
-            $staff_data[$i][23] = $data_list[23];                    //取得資格
-            $staff_data[$i][24] = $data_list[24];                    //備考
-            $staff_data[$i][25] = $data_list[25];                    //担当倉庫コード
-            $staff_data[$i][26] = $data_list[26];                    //担当倉庫名
-            //変更不可能フラグ判定(t:変更不可 f:変更可)
+            $staff_data[$i][23] = $data_list[23];                    //acquired license
+            $staff_data[$i][24] = $data_list[24];                    //remarks
+            $staff_data[$i][25] = $data_list[25];                    //assigned warehouse code
+            $staff_data[$i][26] = $data_list[26];                    //assigned warehouse name
+            //determine *change not allowed flag*(t:変更不可change not allowed f:変更可change allowed)
             if($data_list[27]==true){
                 $staff_data[$i][27] = "変更不可";
             }else{
@@ -642,9 +642,9 @@ if($_POST["show_button"]=="表　示"){
             $i++;
         }
 
-        //CSVファイル名
+        //csv file name
         $csv_file_name = "スタッフマスタ".date("Ymd").".csv";
-        //CSVヘッダ作成
+        //create csv header CSVヘッダ作成
         $csv_header = array(
             "ショップコード", 
             "ショップ名", 
@@ -689,19 +689,19 @@ $display_flg = true;
 
     $result = Db_Query($db_con,$sql." ORDER BY t_client_union.client_cd1, t_client_union.client_cd2, charge_cd;");
 
-    //全件数取得(データ)
+    //Acquire all items (data)
     $total_count = pg_num_rows($result);
 
-    //行データ部品を作成
+    //create row data component
     $row = Get_Data($result,$output_type);
 
 
-    //担当者コードを0埋めする
+    //fill person in charge code with 0
     for($i=0;$i<count($row);$i++){
         $row[$i][4] = str_pad($row[$i][4], 4, 0, STR_POS_LEFT);
     }
 
-    //重複を削除
+    //delete duplicates/redundancy
     for($i = 0; $i < count($row); $i++){
         for($j = 0; $j < count($row); $j++){
             if($i != $j && $row[$i][1] == $row[$j][1] && $row[$i][2] == $row[$j][2]){
@@ -712,7 +712,7 @@ $display_flg = true;
         }
     }
 
-    //TRの色を変更
+    //change TR color
     for($i = 0; $i < count($row); $i++){
         if($i == 0){
             $tr[$i] = "Result1";
@@ -734,30 +734,30 @@ $display_flg = true;
 
 
 /******************************/
-// CSV作成関数（スタッフマスタ用）
+// function for creating CSV (for staff master)
 /*****************************/
 function Make_Csv_Staff($row ,$header){
 
-    //レコードが無い場合は、CSVデータにNULLを表示させる
+    //If there is no record, display NULL in CSV data
     if(count($row)==0){
         $row[] = array("","");
     }
 
-    // 配列にヘッダ行を追加
+    // add a header row in array
     $count = array_unshift($row, $header);
 
-    // 整形 
+    // formatiing 
     for($i = 0; $i < $count; $i++){
         for($j = 0; $j < count($row[$i]); $j++){
             $row[$i][$j] = str_replace("\r\n", "　", $row[$i][$j]);
             $row[$i][$j] = str_replace("\"", "\"\"", $row[$i][$j]);
             $row[$i][$j] = "\"".$row[$i][$j]."\"";
         }       
-        // 配列をカンマ区切りで結合
+        // combine array with comma separation
         $data_csv[$i] = implode(",", $row[$i]);
     }
     $data_csv = implode("\n", $data_csv);
-    // エンコーディング
+    // encoding 
     $data_csv = mb_convert_encoding($data_csv, "SJIS", "EUC-JP");
     return $data_csv;
 
@@ -765,7 +765,7 @@ function Make_Csv_Staff($row ,$header){
 
 
 /******************************/
-// 発行リンク用js
+// JS for issuance link 
 /*****************************/
 $js  = "function Print_Link(staff_id){\n";
 $js .= "    var form_y = \"form_issue_date[y]\";\n";
@@ -779,35 +779,35 @@ $js .= "}\n";
 
 
 /******************************/
-//ヘッダーに表示させる全件数
+//all items that will be displayed in the header
 /*****************************/
-/** スタッフマスタ取得SQL作成 **/
+/** create sql that will acquire staff master **/
 $sql = "SELECT ";
-$sql .= "count(staff_id) ";                    //スタッフID
+$sql .= "count(staff_id) ";                    //staff ID
 $sql .= "FROM ";
 $sql .= "t_attach ";
 $sql .= "WHERE shop_id != 1 ";
 $sql .= ";";
 $result = Db_Query($db_con,$sql.";");
-//全件数取得(ヘッダー)
+//number of all items aquired(header)
 $total_count_h = pg_fetch_result($result,0,0);
 
 /****************************/
-//HTMLヘッダ
+//HTMLheader
 /****************************/
 $html_header = Html_Header($page_title);
 
 /****************************/
-//HTMLフッタ
+//HTMLfooter
 /****************************/
 $html_footer = Html_Footer();
 
 /****************************/
-//メニュー作成
+//create menu
 /****************************/
 $page_menu = Create_Menu_h('system','1');
 /****************************/
-//画面ヘッダー作成
+//screem header creation
 /****************************/
 $page_title .= "(全".$total_count_h."件)";
 $page_title .= "　".$form->_elements[$form->_elementIndex[new_button]]->toHtml();
@@ -815,14 +815,14 @@ $page_title .= "　".$form->_elements[$form->_elementIndex[change_button]]->toHtm
 $page_header = Create_Header($page_title);
 
 
-// Render関連の設定
+// settings related to Render
 $renderer =& new HTML_QuickForm_Renderer_ArraySmarty($smarty);
 $form->accept($renderer);
 
-//form関連の変数をassign
+//assign form related variable
 $smarty->assign('form',$renderer->toArray());
 
-//その他の変数をassign
+//assign other variables
 $smarty->assign('var',array(
     'html_header'   => "$html_header",
     'page_menu'     => "$page_menu",
@@ -834,7 +834,7 @@ $smarty->assign('var',array(
 $smarty->assign('row',$row);
 $smarty->assign('tr',$tr);
 $smarty->assign('js',$js);
-//テンプレートへ値を渡す
+//pass the value to the template
 $smarty->display(basename($_SERVER[PHP_SELF] .".tpl"));
 
 ?>
