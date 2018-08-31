@@ -12,36 +12,36 @@
 
 $page_title = "地区マスタ";
 
-//環境設定ファイル
+//environment setting file 環境設定ファイル
 require_once("ENV_local.php");
 
-//HTML_QuickFormを作成
+//HTML_QuickFormを作成 Create HTML_QuickForm 
 $form =& new HTML_QuickForm("dateForm", "POST", "$_SERVER[PHP_SELF]",null,"onSubmit=return confirm(true)");
 
-//DB接続
+//DB接続 connect to database
 $conn = Db_Connect();
 
-// 権限チェック
+// 権限チェック check authorization
 $auth       = Auth_Check($conn);
-// 入力・変更権限無しメッセージ
+// 入力・変更権限無しメッセージ no input/revision authorization message
 $auth_r_msg = ($auth[0] == "r") ? $auth[3] : null;
-// ボタンDisabled
+// ボタンDisabled button disabled
 $disabled   = ($auth[0] == "r") ? "disabled" : null;
 
 /****************************/
-//外部変数取得
+//外部変数取得 Acquire outside variable
 /****************************/
 $shop_id    = $_SESSION["client_id"];
 
 $get_area_id = $_GET["area_id"];
 
-/* GETしたIDの正当性チェック */
+/* GETしたIDの正当性チェック Check the validity of the ID that was GET */ 
 if ($_GET["area_id"] != null && Get_Id_Check_Db($conn, $_GET["area_id"], "area_id", "t_area", "num", " shop_id = 1 ") != true){
     header("Location: ../top.php");
 }
 
 /****************************/
-//初期値を抽出
+//初期値を抽出 Extract the initial value
 /****************************/
 if($get_area_id != null){
     $sql  = "SELECT";
@@ -67,51 +67,51 @@ if($get_area_id != null){
 }
 
 /*****************************/
-//オブジェクト作成
+//オブジェクト作成 create object
 /*****************************/
-//地区コード
+//地区コード district code
 $form->addElement("text","form_area_cd","","size=\"4\" maxLength=\"4\" style=\"$g_form_style\" ".$g_form_option."\"");
-//地区名
+//地区名 district name
 $form->addElement("text","form_area_name","","size=\"22\" maxLength=\"10\"".$g_form_option."\"");
-//ボタン
+//ボタン button
 $form->addElement("submit","form_entry_button","登　録","onClick=\"return Dialogue('登録します。', '#', this)\" $disabled");
 $form->addElement("button","form_clear_button","クリア","onClick=\"location.href='$_SERVER[PHP_SELF]'\"");
 $form->addElement("button","form_csv_button","CSV出力","onClick=\"javascript:Button_Submit('csv_button_flg', '#', 'true', this);\"");
 
-//備考
+//備考 remarks
 $form->addElement("text","form_area_note","","size=\"34\" maxLength=\"30\" ".$g_form_option."\"");
 
-//hidden
+//hidden 
 $form->addElement("hidden","csv_button_flg");
 $form->addElement("hidden","update_flg");
 /****************************/
-//ルール作成
+//ルール作成 crete rules
 /****************************/
-//地区コード
+//地区コード district code
 $form->addRule("form_area_cd", "地区コードは半角数字のみ4桁です。","required");
 $form->addRule("form_area_cd", "地区コードは半角数字のみ4桁です。", "regex", "/^[0-9]+$/");
 
-//地区名
+//地区名 district name
 $form->addRule("form_area_name", "地区名は1文字以上10文字以下です。","required");
-// 全角/半角スペースのみチェック
+// 全角/半角スペースのみチェック only check half-width/full-width space
 $form->registerRule("no_sp_name", "function", "No_Sp_Name");
 $form->addRule("form_area_name", "地区名 にスペースのみの登録はできません。", "no_sp_name");
 
 /****************************/
-//登録ボタン押下処理
+//登録ボタン押下処理 process when register button is pressed 
 /****************************/
 if($_POST["form_entry_button"] == "登　録"){
 
     /****************************/
-    //POST情報取得
+    //POST情報取得 acquire POST info
     /****************************/
-    $area_cd        = $_POST["form_area_cd"];                                   //地区CD
-    $area_name      = $_POST["form_area_name"];                                 //地区名
-    $area_note      = $_POST["form_area_note"];                                 //備考
+    $area_cd        = $_POST["form_area_cd"];                                   //地区CD districtCD
+    $area_name      = $_POST["form_area_name"];                                 //地区名 district name
+    $area_note      = $_POST["form_area_note"];                                 //備考 remarks
     $update_flg     = $_POST["update_flg"];
 
     /***************************/
-    //地区コード整形
+    //地区コード整形 arrange district code
     /***************************/
     $area_cd = str_pad($area_cd, 4, 0, STR_PAD_LEFT);
 
@@ -128,20 +128,20 @@ if($_POST["form_entry_button"] == "登　録"){
     $result = Db_Query($conn, $sql);
     $num = pg_num_rows($result);
 
-    //使用済みエラー
+    //使用済みエラー "already used" error
     if($num > 0 && ($update_flg != true || ($update_flg == true && $def_area_cd != $area_cd))){
         $form->setElementError("form_area_cd","既に使用されている 地区コード です。");
     }
 
     /***************************/
-    //検証  
+    //検証  verify
     /***************************/
     if($form->validate()){
 
         Db_Query($conn, "BEGIN");
 
         /*****************************/
-        //登録処理
+        //登録処理 registration process
         /*****************************/
         if($update_flg != true){
 
@@ -163,22 +163,22 @@ if($_POST["form_entry_button"] == "登　録"){
 
             $result = Db_Query($conn, $insert_sql);
 
-            //失敗した場合はロールバック
+            //失敗した場合はロールバック rollback when failed
             if($result === false){
                 Db_Query($conn, "ROLLBACK");
                 exit;
             }
 
-            //登録した情報をログに残す
+            //登録した情報をログに残す leave the register info in log
             $result = Log_Save( $conn, "area", "1", $area_cd, $area_name);
-            //失敗した場合はロールバック
+            //失敗した場合はロールバック rollback when failed 
             if($result === false){
                 Db_Query($conn, "ROLLBACK");
                 exit;
             }
 
         /*******************************/
-        //変更処理
+        //変更処理 revision process
         /*******************************/
         }elseif($update_flg == true){
             $message = "変更しました。";
@@ -199,9 +199,9 @@ if($_POST["form_entry_button"] == "登　録"){
                 exit;
             }
    
-            //登録した情報をログに残す
+            //登録した情報をログに残す leave the register info in log
             $result = Log_Save( $conn, "area", "2", $area_cd, $area_name);
-            //失敗した場合はロールバック
+            //失敗した場合はロールバック rollback when failed 
             if($result === false){
                 Db_Query($conn, "ROLLBACK");
                 exit;
@@ -209,9 +209,9 @@ if($_POST["form_entry_button"] == "登　録"){
         }
         Db_Query($conn, "COMMIT");
 
-        $set_data["form_area_cd"]       = "";                                   //地区CD
-        $set_data["form_area_name"]     = "";                                 //地区名
-        $set_data["form_area_note"]     = "";                                 //備考
+        $set_data["form_area_cd"]       = "";                                   //地区CD districtCD
+        $set_data["form_area_name"]     = "";                                 //地区名 distric name
+        $set_data["form_area_note"]     = "";                                 //備考 remarks 
         $set_data["update_flg"]         = "";
 
         $form->setConstants($set_data);
@@ -220,7 +220,7 @@ if($_POST["form_entry_button"] == "登　録"){
 }
 
 /*****************************
-//一覧作成
+//一覧作成 create list
 /*****************************/
 $sql  = "SELECT";
 $sql .= "   area_cd,";
@@ -239,7 +239,7 @@ $total_count = pg_num_rows($result);
 $page_data = Get_Data($result);
 
 /*****************************/
-//CSVボタン押下処理
+//CSVボタン押下処理 process when CSV button is pressed 
 /*****************************/
 if($_POST["csv_button_flg"] == true && $_POST["form_entry_button"] != "登　録"){
 
@@ -259,7 +259,7 @@ if($_POST["csv_button_flg"] == true && $_POST["form_entry_button"] != "登　録"){
 	$total_count = pg_num_rows($result);
 	$page_data = Get_Data($result,2);
 
-    //CSV作成
+    //CSV作成 create csv
     for($i = 0; $i < $total_count; $i++){
         $csv_page_data[$i][0] = $page_data[$i][0];
         $csv_page_data[$i][1] = $page_data[$i][2];
@@ -282,35 +282,35 @@ if($_POST["csv_button_flg"] == true && $_POST["form_entry_button"] != "登　録"){
 }
 
 /****************************/
-//HTMLヘッダ
+//HTMLヘッダ HTML Header
 /****************************/
 $html_header = Html_Header($page_title);
 
 /****************************/
-//HTMLフッタ
+//HTMLフッタ HTML footer
 /****************************/
 $html_footer = Html_Footer();
 
 /****************************/
-//メニュー作成
+//メニュー作成 create menu
 /****************************/
 $page_menu = Create_Menu_h('system','1');
 
 /****************************/
-//画面ヘッダー作成
+//画面ヘッダー作成 create display header
 /****************************/
 $page_title .= "(全".$total_count."件)";
 $page_header = Create_Header($page_title);
 
 
-// Render関連の設定
+// Render関連の設定 render related settings
 $renderer =& new HTML_QuickForm_Renderer_ArraySmarty($smarty);
 $form->accept($renderer);
 
-//form関連の変数をassign
+//form関連の変数をassign assign form related variables
 $smarty->assign('form',$renderer->toArray());
 
-//その他の変数をassign
+//その他の変数をassign assign other variables
 $smarty->assign('var',array(
 	'html_header'   => "$html_header",
 	'page_menu'     => "$page_menu",
@@ -323,7 +323,7 @@ $smarty->assign('var',array(
 
 $smarty->assign("page_data",$page_data);
 
-//テンプレートへ値を渡す
+//テンプレートへ値を渡す pass the value to template
 $smarty->display(basename($_SERVER[PHP_SELF] .".tpl"));
 
 ?>
