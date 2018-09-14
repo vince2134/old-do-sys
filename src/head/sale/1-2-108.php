@@ -18,30 +18,30 @@
 
 $page_title = "受注照会";
 
-//環境設定ファイル
+//environment setting file 環境設定ファイル
 require_once("ENV_local.php");
 
-//HTML_QuickFormを作成
+//Create HTML_QuickForm HTML_QuickFormを作成
 $form =& new HTML_QuickForm("dateForm", "POST", $_SERVER["PHP_SELF"]);
 
-//DB接続
+//DB接続 connect Database
 $db_con = Db_Connect();
 
-// 権限チェック
+// 権限チェック aithority check
 $auth       = Auth_Check($db_con);
 
 
 /****************************/
-//データ項目作成関数
+//データ項目作成関数 data item creation function
 /****************************/
-//(引数：FC発注ID)
+//(引数：FC発注ID) argument:FC ordering number 
 function Get_Ord_Item($fc_ord_id){
-    //オンラインか
+    //オンラインか is it online order?
     if($fc_ord_id != NULL){
-        //オンライン
+        //オンライン online order
         $row_item[] = array("No.","商品コード<br>商品名","出荷数","原価単価<br>売上単価","原価金額<br>売上金額");
     }else{
-        //オフライン
+        //オフライン offline order 
         $row_item[] = array("No.","商品コード<br>商品名","受注数","原価単価<br>売上単価","原価金額<br>売上金額");
     }
 
@@ -49,27 +49,27 @@ function Get_Ord_Item($fc_ord_id){
 }
 
 /****************************/
-//外部変数取得
+//外部変数取得 acquire external variables 
 /****************************/
 $staff_id     = $_SESSION[staff_id];
 $shop_id      = $_SESSION[client_id];
-$aord_id      = $_GET["aord_id"];             //受注ID
-$fc_ord_id    = $_GET["fc_ord_id"];           //FC発注ID
-$input_flg    = $_GET["input_flg"];           //受注入力識別
-$del_flg      = $_GET["del_flg"];             //発注取り消しフラグ
-$add_flg      = $_GET["add_flg"];             //受注登録済みフラグ
-$aord_del_flg = $_GET["aord_del_flg"];        //受注削除フラグ
-$add_del_flg  = $_GET["add_del_flg"];         //受注削除フラグ
+$aord_id      = $_GET["aord_id"];             //受注ID order ID
+$fc_ord_id    = $_GET["fc_ord_id"];           //FC発注ID FC ordering ID
+$input_flg    = $_GET["input_flg"];           //受注入力識別 discern order input 
+$del_flg      = $_GET["del_flg"];             //発注取り消しフラグ ordering cancellation flag
+$add_flg      = $_GET["add_flg"];             //受注登録済みフラグ order registered flag
+$aord_del_flg = $_GET["aord_del_flg"];        //受注削除フラグ deleted order flag
+$add_del_flg  = $_GET["add_del_flg"];         //受注削除フラグ deleted order flag
 Get_Id_Check3($_GET[aord_id]);
 Get_Id_Check3($_GET[fc_ord_id]);
 /****************************/
-//オンライン処理
+//オンライン処理 online process
 /****************************/
 $aord_id = null;
-//遷移元判定
+//遷移元判定 determine where it transitioned from
 if($del_flg == true || $aord_del_flg == true || $add_del_flg == true || $add_flg == true){
 }elseif($fc_ord_id != NULL){
-    //出荷予定入力画面
+    //出荷予定入力画面 input screen for planned delivery
     $sql  = "SELECT ";
     $sql .= "    aord_id ";
     $sql .= "FROM ";
@@ -77,26 +77,26 @@ if($del_flg == true || $aord_del_flg == true || $add_del_flg == true || $add_flg
     $sql .= "WHERE ";
     $sql .= "    fc_ord_id = $fc_ord_id;";
     $result = Db_Query($db_con,$sql);
-    //GETデータ判定
+    //GETデータ判定 determine GET data
     Get_Id_Check($result);
 
-    //受注ID分ヘッダーとデータ表示
+    //受注ID分ヘッダーとデータ表示 header and data display of order ID
     while($aord_id_data = pg_fetch_array($result)){
         $aord_id[] = $aord_id_data[0];
     }
 }else{
-    //受注入力画面・受注照会
-    //オフラインは、一件表示
+    //受注入力画面・受注照会 order input screen・order inquiry
+    //オフラインは、一件表示 display 1 item if it's offline
     $num = 1;
-    $aord_id[0]      = $_GET["aord_id"];             //受注ID
+    $aord_id[0]      = $_GET["aord_id"];             //受注ID order ID
     Get_Id_Check2($aord_id[0]);
 }
 
 
-$html = NULL;     //HTML表示データ初期化
+$html = NULL;     //HTML表示データ初期化 initialization of HTML display data 
 for($s=0;$s<count($aord_id);$s++){
     /****************************/
-    //受注ヘッダー抽出判定処理
+    //受注ヘッダー抽出判定処理 order header extraction determination process
     /****************************/
     $sql  = "SELECT ";
     $sql .= "    ps_stat,";
@@ -106,18 +106,18 @@ for($s=0;$s<count($aord_id);$s++){
     $sql .= "WHERE ";
     $sql .= "    t_aorder_h.aord_id = ".$aord_id[$s].";";
     $result = Db_Query($db_con,$sql);
-    //GETデータ判定
+    //GETデータ判定 determine GET data
     Get_Id_Check($result);
 
-    //処理状況取得
+    //処理状況取得 acquire process status
     $ps_stat = pg_fetch_result($result,0,0);
-    //得意先ID取得
+    //得意先ID取得 acquire customer ID 
     $client_id = pg_fetch_result($result,0,1);
 
-    //処理状況が日次更新後か
+    //処理状況が日次更新後か is the process status after the daily update is done?
     if($ps_stat == '4' && $input_flg != "true"){
         /****************************/
-        //受注ヘッダ抽出SQL（処理状況が日次更新後）
+        //受注ヘッダ抽出SQL（処理状況が日次更新後）SQL for order header extraction (order process is after the daily update)
         /****************************/
         $sql  = "SELECT ";
         $sql .= "    t_aorder_h.ord_no,";
@@ -151,7 +151,7 @@ for($s=0;$s<count($aord_id);$s++){
         exit;
     }else{
         /****************************/
-        //受注ヘッダー抽出SQL
+        //受注ヘッダー抽出SQL SQL for order header extraction 
         /****************************/
         $sql  = "SELECT ";
         $sql .= "    t_aorder_h.ord_no,";
@@ -206,10 +206,10 @@ for($s=0;$s<count($aord_id);$s++){
     $h_data_list = Get_Data($result);
 
     /****************************/
-    //受注データ抽出SQL
+    //受注データ抽出SQL SQL for order data extraction
     /****************************/
     $data_sql  = "SELECT ";
-    //処理状況が日次更新後か
+    //処理状況が日次更新後か is the process status after the daily update
 //    if($ps_stat == '4'){
         $data_sql .= "    t_aorder_d.goods_cd,";
 //    }else{
@@ -229,7 +229,7 @@ for($s=0;$s<count($aord_id);$s++){
     $data_sql .= "FROM ";
     $data_sql .= "    t_aorder_d ";
     $data_sql .= "    INNER JOIN t_aorder_h ON t_aorder_d.aord_id = t_aorder_h.aord_id ";
-    //処理状況が日次更新後ではない
+    //処理状況が日次更新後ではない the process status is not after the daily update
     #2010-03-31 hashimoto-y
     #if($ps_stat != '4'){
     #    $data_sql .= "    INNER JOIN t_goods ON t_aorder_d.goods_id = t_goods.goods_id ";
@@ -245,29 +245,29 @@ for($s=0;$s<count($aord_id);$s++){
 
     $result = Db_Query($db_con,$data_sql);
     /****************************/
-    //受注データー表示
+    //受注データー表示 display order data
     /****************************/
-    //行項目部品を作成
+    //行項目部品を作成 create the row item component 
     $row_item = Get_Ord_Item($fc_ord_id);
-    //行データ部品を作成
+    //行データ部品を作成 create the row data component
     $row_data = Get_Data($result);
 
-    $sale_money                    =   number_format($h_data_list[0][15]);                     //税抜金額
-    $tax_money                     =   number_format($h_data_list[0][16]);                     //消費税
-    $st_money                      =   $h_data_list[0][15] + $h_data_list[0][16];              //税込金額
+    $sale_money                    =   number_format($h_data_list[0][15]);                     //税抜金額 amount without tax
+    $tax_money                     =   number_format($h_data_list[0][16]);                     //消費税 consumption tax
+    $st_money                      =   $h_data_list[0][15] + $h_data_list[0][16];              //税込金額 amount with tax
     $st_money                      =   number_format($st_money);
 
     /****************************/
-    //ヘッダーHTML作成
+    //ヘッダーHTML作成 create HTML header 
     /****************************/
-    //グリーン指定されているか
+    //グリーン指定されているか is it green assigned?
     if($h_data_list[0][4] == 't'){
         $green_flg = "グリーン指定あり　";
     }else{
         $green_flg = null;
     }
 
-    //日付形式変更
+    //日付形式変更 change the format of the date
     $form_sale_day                                 =   explode('-',$h_data_list[0][1]);
     $form_hope_day                                 =   explode('-',$h_data_list[0][2]);
     $form_arr_day                                  =   explode('-',$h_data_list[0][3]);
@@ -387,9 +387,9 @@ for($s=0;$s<count($aord_id);$s++){
     $html .= "<tr>";
     $html .= "<td>";
     /****************************/
-    //データHTML作成
+    //データHTML作成 create data HTML 
     /****************************/
-    //項目作成
+    //項目作成 create items
     $html .= "<table class=\"List_Table\" border=\"1\" width=\"100%\">";
     $html .= "<tr align=\"center\">";
     $html .= "<td class=\"Title_Blue\" width=\"\"><b>".$row_item[0][0]."</b></td>";
@@ -399,7 +399,7 @@ for($s=0;$s<count($aord_id);$s++){
     $html .= "<td class=\"Title_Blue\" width=\"\"><b>".$row_item[0][4]."</b></td>";
     $html .= "</tr>";
 
-    //データ作成
+    //データ作成 create date
     $num = 1;
     for($x=0;$x<count($row_data);$x++){
         if($row_data[$x][7] == 't'){
@@ -423,7 +423,7 @@ for($s=0;$s<count($aord_id);$s++){
     }
     $html .= "</table>";
     /****************************/
-    //合計HTML作成
+    //合計HTML作成 create total HTML
     /****************************/
     $html .= "<table width=\"100%\">";
     $html .= "<tr>";
@@ -447,17 +447,17 @@ for($s=0;$s<count($aord_id);$s++){
 
 
 /****************************/
-//部品定義
+//部品定義 component definition
 /****************************/
-//遷移元チェック
+//遷移元チェック check the where it transitioned from
 if($input_flg == true && $ps_stat != '4'){
-    //受注入力画面
-    //OKボタン
+    //受注入力画面 order input screen
+    //OKボタン ok button
     $form->addElement("button", "ok_button", "Ｏ　Ｋ",
         "onClick=\"location.href='".Make_Rtn_Page("aord")."'\""
     );
 
-    //オンライン・オフライン判定    
+    //オンライン・オフライン判定 determin if online or offline    
     $sql  = "SELECT";
     $sql .= "   CASE ";
     $sql .= "       WHEN fc_ord_id IS NOT NULL THEN 't'";
@@ -473,57 +473,57 @@ if($input_flg == true && $ps_stat != '4'){
     $online_div = (pg_fetch_result($result, 0,0) == 't')? true: false;
 
     if($online_div === true){    
-        //戻る
+        //戻る back
         $form->addElement("button","return_button","戻　る","onClick=\"location.href='1-2-110.php?aord_id=".$aord_id[0]."'\""); 
     }else{
-        //戻る
-		//rev.1.2 受注入力オフライン後の戻るボタン削除
+        //戻る back
+		//rev.1.2 受注入力オフライン後の戻るボタン削除 delete the back button after offline order input
         //$form->addElement("button","return_button","戻　る","onClick=\"location.href='1-2-101.php?aord_id=".$aord_id[0]."'\""); 
     }
-    $freeze_flg = true;    //受注完了メッセージ表示フラグ
+    $freeze_flg = true;    //受注完了メッセージ表示フラグ flag display order completion message 
 
 }else{
-    //OKボタン
+    //OKボタン ok button
     if ($fc_ord_id != null){
         $form->addElement("button", "ok_button", "Ｏ　Ｋ",
             "onClick=\"Submit_Page('".Make_Rtn_Page("aord")."');\""
         );
     }
     if($del_flg != true && $aord_del_flg != true && $fc_ord_id == null){
-        //戻る
+        //戻る back
         $form->addElement("button","return_button","戻　る","onClick=\"javascript:history.back()\"");
     }
 }
 
 
 /****************************/
-//HTMLヘッダ
+//HTMLヘッダ HTML header 
 /****************************/
 $html_header = Html_Header($page_title);
 
 /****************************/
-//HTMLフッタ
+//HTMLフッタ HTML footer 
 /****************************/
 $html_footer = Html_Footer();
 
 /****************************/
-//メニュー作成
+//メニュー作成 create menu
 /****************************/
 $page_menu = Create_Menu_h('sale','1');
 
 /****************************/
-//画面ヘッダー作成
+//画面ヘッダー作成 create screen header 
 /****************************/
 $page_header = Create_Header($page_title);
 
-// Render関連の設定
+// Render関連の設定 render related setting
 $renderer =& new HTML_QuickForm_Renderer_ArraySmarty($smarty);
 $form->accept($renderer);
 
-//form関連の変数をassign
+//form関連の変数をassign assign form related variable
 $smarty->assign('form',$renderer->toArray());
 
-//その他の変数をassign
+//その他の変数をassign assign other variable
 $smarty->assign('var',array(
     'html_header'   => "$html_header",
     'page_menu'     => "$page_menu",
@@ -533,7 +533,8 @@ $smarty->assign('var',array(
     'freeze_flg'    => "$freeze_flg",
 ));
 
-//テンプレートへ値を渡す
+//テンプレートへ値を渡す pass the value to the template
 $smarty->display(basename($_SERVER[PHP_SELF] .".tpl"));
 
 ?>
+s
