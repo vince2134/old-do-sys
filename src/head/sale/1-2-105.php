@@ -35,31 +35,31 @@
 
 $page_title = "受注照会";
 
-// 環境設定ファイル
+// 環境設定ファイル Environment set up file
 require_once("ENV_local.php");
 require_once(INCLUDE_DIR."common_quickform.inc");
 
-// HTML_QuickFormを作成
+// HTML_QuickFormを作成 create HTML_QuickForm
 $form =& new HTML_QuickForm("dateForm", "POST", $_SERVER["PHP_SELF"]);
 
-// テンプレート関数をレジスト
+// テンプレート関数をレジスト Register the template function
 $smarty->register_function("Make_Sort_Link_Tpl", "Make_Sort_Link_Tpl");
 
-// DB接続
+// DB接続 Connect to Database
 $db_con = Db_Connect();
 
-// 権限チェック
+// 権限チェック Authority check
 $auth       = Auth_Check($db_con);
-// ボタンDisabled
+// ボタンDisabled Button disabled
 $disabled   = ($auth[0] == "r") ? "disabled" : null;
-// 削除ボタンDisabled
+// 削除ボタンDisabled Delete button disabled
 $del_disabled = ($auth[1] == "f") ? "disabled" : null;
 
 
 /****************************/
-// 検索条件復元関連
+// 検索条件復元関連 search condition restoration related
 /****************************/
-// 検索フォーム初期値配列
+// 検索フォーム初期値配列 array of search form initial value
 $ary_form_list = array(
     "form_display_num"  => "1",
     "form_client"       => array("cd1" => "", "cd2" => "", "name" => ""),
@@ -83,51 +83,51 @@ $ary_form_list = array(
     "form_direct"       => "",
 );
 
-// 検索条件復元
+// 検索条件復元 restore search condition
 Restore_Filter2($form, array("aord", "sale"), "form_show_button", $ary_form_list);
 
 
 /****************************/
-// 外部変数取得
+// 外部変数取得 acquire external variables
 /****************************/
 $shop_id  = $_SESSION["client_id"];
 
 
 /****************************/
-// 初期値設定
+// 初期値設定 set up the initial value
 /****************************/
 $form->setDefaults($ary_form_list);
 
 $limit          = null;     // LIMIT
 $offset         = "0";      // OFFSET
-$total_count    = "0";      // 全件数
-$page_count     = ($_POST["f_page1"] != null) ? $_POST["f_page1"] : "1";    // 表示ページ数
+$total_count    = "0";      // 全件数 all items
+$page_count     = ($_POST["f_page1"] != null) ? $_POST["f_page1"] : "1";    // 表示ページ数 display page numbers
 
 
 /****************************/
-//フォーム作成
+//フォーム作成 create forms
 /****************************/
-/* 共通フォーム */
+/* 共通フォーム common forms */
 Search_Form_Aord($db_con, $form, $ary_form_list);
 
-/* モジュール別フォーム */
-// 本部受注番号
+/* モジュール別フォーム per module form*/
+// 本部受注番号 HQ order number
 Addelement_Slip_Range($form, "form_aord_no", "受注番号");
 
-// 受注法式
+// 受注法式 order method
 $item   =   null;
 $item[] =   $form->createElement("radio", null, null, "指定なし",   "1");
 $item[] =   $form->createElement("radio", null, null, "オンライン", "2");
 $item[] =   $form->createElement("radio", null, null, "オフライン", "3");
 $form->addGroup($item, "form_aord_type", "");
 
-// FC発注番号
+// FC発注番号 FC ordering number
 Addelement_Slip_Range($form, "form_ord_no", "発注番号");
 
-// 希望納期
+// 希望納期 desired delivery date
 Addelement_Date_Range($form, "form_hope_day", "希望納期", "-");
 
-// ソートリンク
+// ソートリンク sort link
 $ary_sort_item = array(
     "sl_aord_no"        => "本部受注番号",
     "sl_ord_no"         => "FC発注番号",
@@ -140,50 +140,50 @@ $ary_sort_item = array(
 );
 AddElement_Sort_Link($form, $ary_sort_item, "sl_aord_day");
 
-// 表示ボタン
+// 表示ボタン display button
 $form->addElement("submit", "form_show_button", "表　示");
 
-// クリア
+// クリア clear
 $form->addElement("button", "form_clear_button", "クリア", "onClick=\"javascript:location.href('".$_SERVER["PHP_SELF"]."');\"");
 
-// ヘッダ部リンクボタン
+// ヘッダ部リンクボタン header link button
 $ary_h_btn_list = array("照会・変更" => $_SERVER["PHP_SELF"], "入　力" => "./1-2-101.php", "受注残一覧" => "./1-2-106.php");
 Make_H_Link_Btn($form, $ary_h_btn_list);
 
-// 処理フラグ
+// 処理フラグ process flag
 $form->addElement("hidden","data_delete_flg");
 $form->addElement("hidden","aord_id_flg");
 $form->addElement("hidden","hdn_del_enter_date");
 
-// エラーセット用hidden
+// エラーセット用hidden for error set hidden
 $form->addElement("text", "err_saled_slip", null, null);
 
 
 /****************************/
-// 削除リンク押下処理
+// 削除リンク押下処理 process when delete link is pressed 
 /****************************/
 if($_POST["data_delete_flg"] == "true"){
 
-    /*** 削除前調査 ***/
-    // 選択されたデータの受注IDを取得
+    /*** 削除前調査 examine before deletion ***/
+    // Acquire the order ID of the selected data選択されたデータの受注IDを取得
     $aord_id    = $_POST["aord_id_flg"];
-    // 選択された受注伝票の作成日次を取得
+    // Acquire the created date of the selected order slip 選択された受注伝票の作成日次を取得
     $enter_date = $_POST["hdn_del_enter_date"];
 
-    // POSTされた削除受注IDが正当か（伝票作成日時を元に）調べる
+    // search if the deleted order ID that was POST valid (using the creation date of the order slip) POSTされた削除受注IDが正当か（伝票作成日時を元に）調べる
     $valid_flg = Update_check($db_con, "t_aorder_h", "aord_id", $aord_id, $enter_date);
 
-    /* 受注伝票がオンライン受注かオフライン受注かを調べる */
-    // 正当伝票フラグがtrueの場合
+    /* check if the order slip is an online order or an offline order 受注伝票がオンライン受注かオフライン受注かを調べる */
+    // if the valid slip flag is true 正当伝票フラグがtrueの場合
     if ($valid_flg == true){
         $sql  = "SELECT fc_ord_id FROM t_aorder_h WHERE aord_id = $aord_id;";
         $res  = Db_Query($db_con, $sql);
-        // オンライン受注の場合は発注IDを、オフライン受注の場合はnullを変数に代入
+        // If it's an online order substitute the ordering ID to the variable, if it is an offline order then substitute null in the variable. オンライン受注の場合は発注IDを、オフライン受注の場合はnullを変数に代入
         $fc_ord_id = (pg_fetch_result($res, 0, 0) != null) ? pg_fetch_result($res, 0, 0) : false;
     }
 
-    /* オフライン受注の場合は分納データの有無を確認 */
-    // 正当伝票フラグがtrueかつオンライン受注フラグがtrueの場合
+    /* オフライン受注の場合は分納データの有無を確認If If it's an offline order then check if there is a by batch delivery data */
+    // If the valid slip flag is true and the online order flag is true 正当伝票フラグがtrueかつオンライン受注フラグがtrueの場合
     if ($valid_flg == true && $fc_ord_id != null){
         $sql  = "SELECT \n";
         $sql .= "   aord_id \n";
@@ -195,7 +195,7 @@ if($_POST["data_delete_flg"] == "true"){
         $res  = Db_Query($db_con, $sql);
         if (pg_num_rows($res) > 1){
             $bunnou_flg = true;
-            // 削除受注IDの伝票と同じ発注IDを持つ受注ID（分納伝票ID）を配列に代入
+            // substitute the order ID (by batch delivery slip ID) that has the same ordering ID with the order ID of the deleted slip 削除受注IDの伝票と同じ発注IDを持つ受注ID（分納伝票ID）を配列に代入
             for ($i=0; $i<pg_num_rows($res); $i++){
                 $ary_del_aord_id[$i] = pg_fetch_result($res, $i, 0);
             }
@@ -204,8 +204,8 @@ if($_POST["data_delete_flg"] == "true"){
         }
     }
 
-    /* 該当伝票から売上が起こされていないか調べるS */
-    // 正当伝票フラグがtrueの場合
+    /* Check if the corresponding slip does not have sales 該当伝票から売上が起こされていないか調べる */
+    // If the validation slip flag is true 正当伝票フラグがtrueの場合
     if ($valid_flg == true){
         $sql  = "SELECT \n";
         $sql .= "   sale_id \n";
@@ -214,13 +214,13 @@ if($_POST["data_delete_flg"] == "true"){
         $sql .= "WHERE \n";
         $sql .= "   aord_id IN \n";
         $sql .= "   ( \n";
-        // 分納フラグがtrueの場合
+        // if the batch delivery flag is true 分納フラグがtrueの場合
         if ($bunnou_flg == true){
             foreach ($ary_del_aord_id as $key => $value){
                 $sql .= "       $value";
                 $sql .= ($key+1 < count($ary_del_aord_id)) ? ", \n" : " \n";
             }
-        // 分納フラグがtrueで無い場合
+        // if the batch delivery flag is not true 分納フラグがtrueで無い場合
         }else{
                 $sql .= "       $aord_id \n";
         }
@@ -230,21 +230,21 @@ if($_POST["data_delete_flg"] == "true"){
         $saled_flg = (pg_num_rows($res) > 0) ? true : false;
     }
         
-    /*** 削除できない場合（分納伝票で売上が行われている）のエラーメッセージセット ***/
-    // 売上フラグがtrueの場合
+    /*** set of error messages when you cannot delete (sales are being recorded with batch delivery slip) 削除できない場合（分納伝票で売上が行われている）のエラーメッセージセット ***/
+    // if the sales flag is true 売上フラグがtrueの場合
     if ($saled_flg == true){
-        // エラーをセット
+        // set the error エラーをセット
         $slip = ($bunnou_flg == true) ? "分納伝票" : "伝票";
         $form->setElementError("err_saled_slip", "売上済の".$slip."があるため、削除できません。");
     }
 
-    /*** 削除処理 ***/
-    // 正当伝票フラグがtrueかつ、売上フラグがtrueでない場合（該当受注伝票から売上が起こされていない場合）
+    /*** delete process 削除処理 ***/
+    // if the validation slip flag is true but the sales flag not true (there is no sales being recorded yet for the corresponding order slip) 正当伝票フラグがtrueかつ、売上フラグがtrueでない場合（該当受注伝票から売上が起こされていない場合）
     if ($valid_flg == true && $saled_flg != true){
 
         Db_Query($db_con, "BEGIN;");
 
-        // 受注伝票削除SQL
+        // SQL for delete order slip 受注伝票削除SQL
         $sql  = "DELETE FROM \n";
         $sql .= "   t_aorder_h \n";
         $sql .= "WHERE \n";
@@ -261,16 +261,16 @@ if($_POST["data_delete_flg"] == "true"){
         $sql .= ";";
         $res  = Db_Query($db_con, $sql);
 
-        // 削除エラーの場合はコミット
+        // commit if delete error occurs 削除エラーの場合はコミット
         if($res === false){
             Db_Query($db_con, "ROLLBACK;");
             exit;
         }
 
-        // オンライン受注の場合
+        // when in case of online order オンライン受注の場合
         if ($fc_ord_id != null){
 
-            // 上記で取得した発注IDを元に、残りの伝票数をカウント
+            // count the remaining order slips using the acquired ordering ID 上記で取得した発注IDを元に、残りの伝票数をカウント
             $sql  = "SELECT ";
             $sql .= "   COUNT(ord_no) ";
             $sql .= "FROM ";
@@ -281,7 +281,7 @@ if($_POST["data_delete_flg"] == "true"){
             $res  = Db_Query($db_con, $sql);
             $num = pg_fetch_result($res, 0, 0);
 
-            //伝票数が０の場合
+            //when the number of order slip is 0 伝票数が０の場合
             if($num == 0){
                 $sql  = "UPDATE t_order_h SET ";
                 $sql .= "   ord_stat = '1' ";
@@ -296,12 +296,12 @@ if($_POST["data_delete_flg"] == "true"){
             }
         }
 
-        //06-03-29 kaji 正常終了時のCOMMIT忘れ
+        //06-03-29 kaji when COMMIT was omitted at the end of the program 正常終了時のCOMMIT忘れ
         Db_Query($db_con, "COMMIT;");
 
     }
 
-    // hiddenをクリア
+    // clear the hidden hiddenをクリア
     $clear_hdn["data_delete_flg"]       = "";   
     $clear_hdn["hdn_del_enter_date"]    = "";   
     $form->setConstants($clear_hdn);
@@ -310,44 +310,44 @@ if($_POST["data_delete_flg"] == "true"){
 
 
 /****************************/
-// 表示ボタン押下処理
+// process when display button is pressed 表示ボタン押下処理
 /****************************/
 if ($_POST["form_show_button"] == "表　示"){
 
-    // 日付POSTデータの0埋め
+    // filling of 0s in the date POST data日付POSTデータの0埋め
     $_POST["form_aord_day"]     = Str_Pad_Date($_POST["form_aord_day"]);
     $_POST["form_hope_day"]     = Str_Pad_Date($_POST["form_hope_day"]);
     $_POST["form_arrival_day"]  = Str_Pad_Date($_POST["form_arrival_day"]);
 
     /****************************/
-    // エラーチェック
+    // error check エラーチェック
     /****************************/
-    // ■受注担当者
+    // ■assigned staff for order 受注担当者
     $err_msg = "受注担当者 は数値のみ入力可能です。";
     Err_Chk_Num($form, "form_c_staff", $err_msg);
 
-    // ■受注担当複数選択
+    // ■select multiple assigned staff for the order 受注担当複数選択
     $err_msg = "受注担当複数選択 は数値と「,」のみ入力可能です。";
     Err_Chk_Delimited($form, "form_multi_staff", $err_msg);
 
-    // ■受注日
+    // ■order data 受注日
     $err_msg = "受注日 の日付が妥当ではありません。";
     Err_Chk_Date($form, "form_aord_day", $err_msg);
 
-    // ■出荷予定日
+    // ■delivery date 出荷予定日
     $err_msg = "出荷予定日 は数値のみ入力可能です。";
     Err_Chk_Date($form, "form_arrival_day", $err_msg);
 
-    // ■希望納期
+    // ■desired delivery date 希望納期
     $err_msg = "希望納期 の日付が妥当ではありません。";
     Err_Chk_Date($form, "form_hope_day", $err_msg);
 
     /****************************/
-    // エラーチェック結果集計
+    // tally of error check resultエラーチェック結果集計
     /****************************/
-    // チェック適用
+    // apply checking チェック適用
     $form->validate();
-    // 結果をフラグに
+    // flag the result 結果をフラグに
     $err_flg = (count($form->_errors) > 0) ? true : false;
 
     $post_flg = ($err_flg != true) ? true : false;
@@ -355,19 +355,19 @@ if ($_POST["form_show_button"] == "表　示"){
 }
 
 /****************************/
-// 1. 表示ボタン押下＋エラーなし時
-// 2. ページ切り替え時
+// 1. when there is no error after display button is pressed 表示ボタン押下＋エラーなし時
+// 2. at the moment of page transition ページ切り替え時
 /****************************/
 if (($_POST["form_show_button"] != null && $err_flg != true) || ($_POST != null && $_POST["form_show_button"] == null)){
 
-    // 日付POSTデータの0埋め
+    // filling of 0s in date POST data日付POSTデータの0埋め
     $_POST["form_aord_day"]     = Str_Pad_Date($_POST["form_aord_day"]);
     $_POST["form_hope_day"]     = Str_Pad_Date($_POST["form_hope_day"]);
     $_POST["form_arrival_day"]  = Str_Pad_Date($_POST["form_arrival_day"]);
 
-    // 1. フォームの値を変数にセット
-    // 2. SESSION（hidden用）の値（検索条件復元関数内でセット）を変数にセット
-    // 一覧取得クエリ条件に使用
+    // 1. set the value of the form to the variable フォームの値を変数にセット
+    // 2. set the value (set within the restored search condition function) of SESSION (for hidden) to the variable SESSION（hidden用）の値（検索条件復元関数内でセット）を変数にセット
+    // use for the query condition of acquiring the list 一覧取得クエリ条件に使用
     $display_num    = $_POST["form_display_num"];
     $client_cd1     = $_POST["form_client"]["cd1"];
     $client_cd2     = $_POST["form_client"]["cd2"];
@@ -410,17 +410,17 @@ if (($_POST["form_show_button"] != null && $err_flg != true) || ($_POST != null 
 
 
 /****************************/
-// 一覧データ取得条件作成
+// create the condition for acquiring listed data 一覧データ取得条件作成
 /****************************/
 if ($post_flg == true && $err_flg != true){
 
     $sql = null;
 
-    // FC・取引先コード１
+    // FC・Business Partner code 1 FC・取引先コード１
     $sql .= ($client_cd1 != null) ? "AND t_aorder_h.client_cd1 LIKE '$client_cd1%' \n" : null;
-    // FC・取引先コード２
+    // FC・Business Partner code 2 FC・取引先コード２
     $sql .= ($client_cd2 != null) ? "AND t_aorder_h.client_cd2 LIKE '$client_cd2%' \n" : null;
-    // FC・取引先名
+    // FC・Business Partner FC・取引先名
     if ($client_name != null){
         $sql .= "AND \n";
         $sql .= "   ( \n";
@@ -431,17 +431,17 @@ if ($post_flg == true && $err_flg != true){
         $sql .= "       t_aorder_h.client_cname LIKE '%$client_name%' \n";
         $sql .= "   ) \n";
     }
-    // 受注担当者コード
+    // assigned staff code for an order 受注担当者コード
     $sql .= ($c_staff_cd != null) ? "AND t_staff.charge_cd = '$c_staff_cd' \n" : null;
-    // 受注担当者セレクト
+    // select assigned staff for an order 受注担当者セレクト
     $sql .= ($c_staff_select != null) ? "AND t_staff.staff_id = $c_staff_select \n" : null;
-    // 倉庫
+    // warehouse 倉庫
     $sql .= ($ware != null) ? "AND t_aorder_h.ware_id = $ware \n" : null;
-    // 請求先コード１
+    // billing destination code 1 請求先コード１
     $sql .= ($claim_cd1 != null) ? "AND t_client.client_cd1 LIKE '$claim_cd1%' \n" : null;
-    // 請求先コード２
+    // billing destination code 2 請求先コード２
     $sql .= ($claim_cd2 != null) ? "AND t_client.client_cd2 LIKE '$claim_cd2%' \n" : null;
-    // 請求先名
+    // billing name 請求先名
     if ($claim_name != null){
         $sql .= "AND \n";
         $sql .= "   ( \n";
@@ -452,7 +452,7 @@ if ($post_flg == true && $err_flg != true){
         $sql .= "       t_client.client_cname LIKE '%$claim_name%' \n";
         $sql .= "   ) \n";
     }
-    // 受注担当複数選択
+    // select multiple assigned staff for an order 受注担当複数選択
     if ($multi_staff != null){
         $ary_multi_staff = explode(",", $multi_staff);
         $sql .= "AND \n";
@@ -462,40 +462,40 @@ if ($post_flg == true && $err_flg != true){
             $sql .= ($key+1 < count($ary_multi_staff)) ? ", " : ") \n";
         }
     }
-    // 受注日（開始）
+    // oder date (start) 受注日（開始）
     $aord_day_s = $aord_day_sy."-".$aord_day_sm."-".$aord_day_sd;
     $sql .= ($aord_day_s != "--") ? "AND '$aord_day_s' <= t_aorder_h.ord_time \n" : null;
-    // 受注日（終了）
+    // order date (end) 受注日（終了）
     $aord_day_e = $aord_day_ey."-".$aord_day_em."-".$aord_day_ed;
     $sql .= ($aord_day_e != "--") ? "AND t_aorder_h.ord_time <= '$aord_day_e' \n" : null;
-    // 出荷予定日（開始）
+    // delvery date (start) 出荷予定日（開始）
     $arrival_day_s = $arrival_day_sy."-".$arrival_day_sm."-".$arrival_day_sd;
     $sql .= ($arrival_day_s != "--") ? "AND '$arrival_day_s' <= t_aorder_h.arrival_day \n" : null;
-    // 出荷予定日（終了）
+    // delivery date (end) 出荷予定日（終了）
     $arrival_day_e = $arrival_day_ey."-".$arrival_day_em."-".$arrival_day_ed;
     $sql .= ($arrival_day_e != "--") ? "AND t_aorder_h.arrival_day <= '$arrival_day_e' \n" : null;
-    // 本部受注番号（開始）
+    // HQ order number (start) 本部受注番号（開始）
     $sql .= ($aord_no_s != null) ? "AND t_aorder_h.ord_no >= '".str_pad($aord_no_s, 8, 0, STR_PAD_LEFT)."' \n" : null;
-    // 本部受注番号（終了）
+    // HQ order number ) (end) 本部受注番号（終了）
     $sql .= ($aord_no_e != null) ? "AND t_aorder_h.ord_no <= '".str_pad($aord_no_e, 8, 0, STR_PAD_LEFT)."' \n" : null;
-    // 受注方式
+    // order method 受注方式
     if ($aord_type == "2"){
         $sql .= "AND t_aorder_h.fc_ord_id IS NOT NULL \n";
     }else
     if ($aord_type == "3"){
         $sql .= "AND t_aorder_h.fc_ord_id IS NULL \n";
     }
-    // FC発注番号（開始）
+    // FC ordering number (start) FC発注番号（開始）
     $sql .= ($ord_no_s != null) ? "AND t_order_h.ord_no >= '".str_pad($ord_no_s, 8, 0, STR_PAD_LEFT)."' \n" : null;
-    // FC発注番号（終了）
+    // FC ordering number (end) FC発注番号（終了）
     $sql .= ($ord_no_e != null) ? "AND t_order_h.ord_no <= '".str_pad($ord_no_e, 8, 0, STR_PAD_LEFT)."' \n" : null;
-    // 希望納期（開始）
+    // desired delivery date (start) 希望納期（開始）
     $hope_day_s = $hope_day_sy."-".$hope_day_sm."-".$hope_day_sd;
     $sql .= ($hope_day_s != "--") ? "AND '$hope_day_s' <= t_aorder_h.hope_day \n" : null;
-    // 希望納期（終了）
+    // desired delivery date (end) 希望納期（終了）
     $hope_day_e = $hope_day_ey."-".$hope_day_em."-".$hope_day_ed;
     $sql .= ($hope_day_e != "--") ? "AND t_aorder_h.hope_day <= '$hope_day_e' \n" : null;
-    // 直送先
+    // direct destination 直送先
     if ($direct_name != null){
         $sql .= "AND \n";
         $sql .= "   ( \n";
@@ -507,28 +507,28 @@ if ($post_flg == true && $err_flg != true){
         $sql .= "   ) \n";
     }
 
-    // 変数詰め替え
+    // refill vairable 変数詰め替え
     $where_sql = $sql;
 
 
     $sql = null;
 
-    // ソート順
+    // sort order ソート順
     switch ($_POST["hdn_sort_col"]){
-        // 本部受注番号
+        // HQ order number 本部受注番号
         case "sl_aord_no":
             $sql .= "   t_aorder_h.ord_no, \n";
             $sql .= "   t_aorder_h.ord_time, \n";
             $sql .= "   t_aorder_h.client_cd1, \n";
             $sql .= "   t_aorder_h.client_cd2 \n";
             break;
-        // FC発注番号
+        // FC ordering number FC発注番号
         case "sl_ord_no":
             $sql .= "   t_order_h.ord_no, \n";
             $sql .= "   t_aorder_h.ord_no, \n";
             $sql .= "   t_aorder_h.ord_time \n";
             break;
-        // 直送先
+        // direct destination 直送先
         case "sl_direct":
             $sql .= "   t_aorder_h.direct_cname, \n" ;
             $sql .= "   t_aorder_h.ord_no, \n";
@@ -536,21 +536,21 @@ if ($post_flg == true && $err_flg != true){
             $sql .= "   t_aorder_h.client_cd1, \n";
             $sql .= "   t_aorder_h.client_cd2 \n";
             break;
-        // 受注日
+        // order day 受注日
         case "sl_aord_day":
             $sql .= "   t_aorder_h.ord_time, \n";
             $sql .= "   t_aorder_h.ord_no, \n";
             $sql .= "   t_aorder_h.client_cd1, \n";
             $sql .= "   t_aorder_h.client_cd2 \n";
             break;
-        // FC・取引先コード
+        // FC。business partner code FC・取引先コード
         case "sl_client_cd":
             $sql .= "   t_aorder_h.client_cd1, \n";
             $sql .= "   t_aorder_h.client_cd2, \n";
             $sql .= "   t_aorder_h.ord_time, \n";
             $sql .= "   t_aorder_h.ord_no \n";
             break;
-        // FC・取引先名
+        // FC・business partner name FC・取引先名
         case "sl_client_name":
             $sql .= "   t_aorder_h.client_cname, \n";
             $sql .= "   t_aorder_h.ord_time, \n";
@@ -558,7 +558,7 @@ if ($post_flg == true && $err_flg != true){
             $sql .= "   t_aorder_h.client_cd1, \n";
             $sql .= "   t_aorder_h.client_cd2 \n";
             break;
-        // 希望納期
+        // desired delivery date 希望納期
         case "sl_hope_day":
             $sql .= "   t_aorder_h.hope_day, \n";
             $sql .= "   t_aorder_h.ord_time, \n";
@@ -566,7 +566,7 @@ if ($post_flg == true && $err_flg != true){
             $sql .= "   t_aorder_h.client_cd1, \n";
             $sql .= "   t_aorder_h.client_cd2 \n";
             break;
-        // 出荷予定日
+        // planned delivery date 出荷予定日
         case "sl_arrival_day":
             $sql .= "   t_aorder_h.arrival_day, \n";
             $sql .= "   t_aorder_h.ord_time, \n";
@@ -576,14 +576,14 @@ if ($post_flg == true && $err_flg != true){
             break;
     }
 
-    // 変数詰め替え
+    // refill the variable 変数詰め替え
     $order_sql = $sql;
 
 }
 
 
 /****************************/
-// 一覧データ取得
+// acquuire list of data 一覧データ取得
 /****************************/
 if ($post_flg == true && $err_flg != true){
 
@@ -637,11 +637,11 @@ if ($post_flg == true && $err_flg != true){
     $sql .= "ORDER BY \n";
     $sql .= $order_sql;
 
-    // 全件数取得
+    // acquire all items 全件数取得
     $res            = Db_Query($db_con, $sql.";");
     $total_count    = pg_num_rows($res);
 
-    // 表示件数
+    // displayed items 表示件数
     switch ($display_num){
         case "1":
             $limit = $total_count;
@@ -651,25 +651,25 @@ if ($post_flg == true && $err_flg != true){
             break;
     }
 
-    // 取得開始位置
+    // starting acquiring location 取得開始位置
     $offset = ($page_count != null) ? ($page_count - 1) * $limit : "0";
 
-    // 行削除でページに表示するレコードが無くなる場合の対処
+    // how to approach a situation where the record to be displayed is gone because of row deletion 行削除でページに表示するレコードが無くなる場合の対処
     if($page_count != null){
-        // 行削除でtotal_countとoffsetの関係が崩れた場合
+        // case when the relationship between total_count and offset has collapsed because of row deletion 行削除でtotal_countとoffsetの関係が崩れた場合
         if ($total_count <= $offset){
-            // オフセットを選択件前に
+            // offset before the selected item オフセットを選択件前に
             $offset     = $offset - $limit;
-            // 表示するページを1ページ前に（一気に2ページ分削除されていた場合などには対応してないです）
+            // display the previous page (this does not correspond to situation when 2 pages are deleted) 表示するページを1ページ前に（一気に2ページ分削除されていた場合などには対応してないです）
             $page_count = $page_count - 1;
-            // 選択件数以下時はページ遷移を出力させない(nullにする)
+            // don't output the page transition when it's lower than the selcted item (null it). tbh the japanese is also weird 選択件数以下時はページ遷移を出力させない(nullにする)
             $page_count = ($total_count <= $display_num) ? null : $page_count;
         }
     }else{
         $offset = 0;
     }
 
-    // ページ内データ取得
+    // acquire the data within the page ページ内データ取得
     $limit_offset   = ($limit != null) ? "LIMIT $limit OFFSET $offset " : null;
     $res            = Db_Query($db_con, $sql.$limit_offset.";");
     $num            = pg_num_rows($res);
@@ -677,15 +677,15 @@ if ($post_flg == true && $err_flg != true){
 
 }
 
-//合計金額計算
+//compute the total amount 合計金額計算
 for($i = 0; $i < $num; $i++){
     $total_price = bcadd($total_price,$page_data[$i][4]);
 }
 $total_price = number_format($total_price);
 
-// 整形
+// formatting 整形
 for($i = 0; $i < $num; $i++){
-    $page_data[$i][4]  = number_format($page_data[$i][4]);          // 受注金額
+    $page_data[$i][4]  = number_format($page_data[$i][4]);          // order amount 受注金額
 }
 
 
@@ -717,12 +717,12 @@ $order_delete .= "}\n";
 
 
 /****************************/
-// HTML作成（検索部）
+// Create HTML (search) HTML作成（検索部）
 /****************************/
-// 共通検索テーブル
+// common search table 共通検索テーブル
 $html_s .= Search_Table_Aord($form);
 $html_s .= "<br style=\"font-size: 4px;\">\n";
-// モジュール個別検索テーブル１
+// search table per module 1 モジュール個別検索テーブル１
 $html_s .= "\n";
 $html_s .= "<table class=\"Table_Search\">\n";
 $html_s .= "    <col width=\"100px\" style=\"font-weight: bold;\">\n";
@@ -738,7 +738,7 @@ $html_s .= "    </tr>\n";
 $html_s .= "</table>\n";
 $html_s .= "\n";
 $html_s .= "<br style=\"font-size: 4px;\">\n";
-// モジュール個別検索テーブル２
+// search table per module 2 モジュール個別検索テーブル２
 $html_s .= "\n";
 $html_s .= "<table class=\"Table_Search\">\n";
 $html_s .= "    <col width=\"100px\" style=\"font-weight: bold;\">\n";
@@ -754,7 +754,7 @@ $html_s .= "    </tr>\n";
 $html_s .= "</table>\n";
 $html_s .= "\n";
 $html_s .= "<br style=\"font-size: 4px;\">\n";
-// ボタン
+// button ボタン
 $html_s .= "<table align=\"right\"><tr><td>\n";
 $html_s .= "    ".$form->_elements[$form->_elementIndex["form_show_button"]]->toHtml()."　\n";
 $html_s .= "    ".$form->_elements[$form->_elementIndex["form_clear_button"]]->toHtml()."\n";
@@ -763,41 +763,41 @@ $html_s .= "\n";
 
 
 /****************************/
-// HTMLヘッダ
+// HTML header HTMLヘッダ
 /****************************/
 $html_header = Html_Header($page_title);
 
 /****************************/
-// HTMLフッタ
+// HTML footer HTMLフッタ
 /****************************/
 $html_footer = Html_Footer();
 
 /****************************/
-// メニュー作成
+// create Menu メニュー作成
 /****************************/
 $page_menu = Create_Menu_h("sale", "1");
 
 /****************************/
-// 画面ヘッダー作成
+// create screen header 画面ヘッダー作成
 /****************************/
 $page_title .= Print_H_Link_Btn($form, $ary_h_btn_list);
 $page_header = Create_Header($page_title);
 
 /****************************/
-//ページ作成
+//create page ページ作成
 /****************************/
 $html_page  = Html_Page2($total_count, $page_count, 1, $limit);
 $html_page2 = Html_Page2($total_count, $page_count, 2, $limit);
 
-// Render関連の設定
+// Render related setting Render関連の設定
 $renderer =& new HTML_QuickForm_Renderer_ArraySmarty($smarty);
 $form->accept($renderer);
 
-// form関連の変数をassign
+// assign form related variables form関連の変数をassign
 $smarty->assign("form", $renderer->toArray());
 $smarty->assign("row", $page_data);
 
-// その他の変数をassign
+// assign other variables その他の変数をassign
 $smarty->assign("var", array(
     "html_header"   => "$html_header",
     "page_menu"     => "$page_menu",
@@ -817,7 +817,7 @@ $smarty->assign("html", array(
     "html_s"        => $html_s,
 ));
 
-// テンプレートへ値を渡す
+// pass the value to the template テンプレートへ値を渡す
 $smarty->display(basename($_SERVER["PHP_SELF"].".tpl"));
 
 ?>
