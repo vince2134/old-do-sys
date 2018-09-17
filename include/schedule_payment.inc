@@ -1,0 +1,757 @@
+<?php
+
+
+#ロイヤリティを登録
+function Insert_Sale_Head ($db_con, $sale_amount, $tax_amount, $client_data, $div){
+    //ロイヤリティの場合
+    if($div == '1'){
+        //■ロイヤリティ商品のデータ抽出　
+        //[20-1] 商品コード
+        //[20-2] 商品名
+        //[20-3] ロイヤリティ　AS　ロイヤリティ区分
+        //
+        //■抽出条件
+        //商品ID　=　1325
+        //
+        $sql  = "SELECT \n";
+        $sql .= "   goods_id, \n";
+        $sql .= "   goods_cd, \n";
+        $sql .= "   goods_name \n";
+        $sql .= "FROM \n";
+        $sql .= "   t_goods \n";
+        $sql .= "WHERE \n";
+        $sql .= "   goods_cd = '0000002'\n";
+        $sql .= "; \n";
+    }else{
+        //■一括消費税諸品のデータ抽出
+        $sql  = "SELECT \n";
+        $sql .= "   goods_id, \n";
+        $sql .= "   goods_cd, \n";
+        $sql .= "   goods_name \n";
+        $sql .= "FROM \n";
+        $sql .= "   t_goods \n";
+        $sql .= "WHERE \n";
+        $sql .= "   goods_cd = '0000001'\n";
+        $sql .= "; \n";
+    }
+    $result = Db_Query($db_con, $sql);
+    $goods_data = pg_fetch_array($result);
+    //配列の要素をそれぞれデータにセット
+    $claim_close_day = $client_data[0];        //請求締日
+    $c_client_id     = $client_data[1];        //得意先ID
+    $bill_id         = $client_data[2];        //請求書ID
+    $shop_id         = $client_data[3];        //ショップID
+    $sql  = "INSERT INTO t_lump_amount(";
+    $sql .= "   goods_id, ";
+    $sql .= "   goods_name, ";
+    $sql .= "   allocate_day, ";
+    $sql .= "   client_id, ";
+    $sql .= "   net_amount, ";
+    $sql .= "   tax_amount, ";
+    $sql .= "   data_div, ";
+    $sql .= "   schedule_payment_id, ";
+    $sql .= "   shop_id ";
+    $sql .= ")VALUES( ";
+    $sql .= "   ".$goods_data["goods_id"].",";
+    $sql .= "   '".$goods_data["goods_name"]."',";
+    $sql .= "   '".$claim_close_day."',";
+    $sql .= "   ".$c_client_id.",";
+    $sql .= "   ".$sale_amount.",";
+    $sql .= "   ".$tax_amount.",";
+    $sql .= "   '$div',";
+    $sql .= "   ".$bill_id.",";
+    $sql .= "   ".$shop_id."";
+    $sql .= ");";
+
+    $result = Db_Query($db_con, $sql);
+    if($result === false){
+        Db_Query($db_con, "ROLLBACK;");
+        exit;
+    }
+    return;
+}
+
+//月次更新以降かチェック
+function Payment_Monthly_Renew_Check($db_con, $close_day){
+    $sql  = "SELECT";
+    $sql .= "   COALESCE(MAX(close_day), '2005-01-01') AS renew_day ";
+    $sql .= "FROM ";
+    $sql .= "   t_sys_renew ";
+    $sql .= "WHERE ";
+    $sql .= "   shop_id = ".$_SESSION[client_id]." \n";
+    $sql .= "   AND ";
+    $sql .= "   renew_div = '2' \n";
+    $sql .= ";";
+
+    $result = Db_Query($db_con, $sql);
+    $renew_day = pg_fetch_result($result, 0,0);
+
+    if($renew_day >= $close_day){
+        return true;
+    }
+
+    return false;
+}
+
+//支払予定データ履歴テーブルへ登録
+function Add_Payment_Make_History($db_con, $payment_close_day, $close_day){
+
+    //既に履歴を登録済みか確認
+    $sql  = "SELECT";
+    $sql .= "   COUNT(*) ";
+    $sql .= "FROM ";
+    $sql .= "   t_payment_make_history ";
+    $sql .= "WHERE ";
+    $sql .= "   shop_id = $_SESSION[client_id] ";
+    $sql .= "   AND ";
+    $sql .= "   payment_close_day = '$payment_close_day' ";
+    $sql .= "   AND ";
+    $sql .= "   close_day = $close_day ";
+    $sql .= ";";
+
+    $result = Db_Query($db_con, $sql);
+
+    //登録があった場合
+    if(pg_fetch_result($result, 0,0) > 0){
+        return;
+    }
+
+    //登録がない場合
+    $sql  = "INSERT INTO t_payment_make_history (";
+    $sql .= "   close_day, ";
+    $sql .= "   payment_close_day, ";
+    $sql .= "   shop_id ";
+    $sql .= ") VALUES ( ";
+    $sql .= "   $close_day,";
+    $sql .= "   '$payment_close_day',";
+    $sql .= "   $_SESSION[client_id] ";
+    $sql .= ");";
+
+    $result = Db_Query($db_con, $sql);
+
+    if($result === false){
+        Db_Query($db_con, "ROLLBACK;");
+        exit;
+    }
+}
+
+
+//支払額として抽出された支払予定データにIDを登録
+function Update_Payout_Schedule_Id($db_con, $client_id, $close_day, $payout_schedule_id){
+    if($payout_schedule_id != null){
+        $sql  = "UPDATE \n";
+        $sql .= "   t_schedule_payment \n";
+        $sql .= "SET \n";
+        $sql .= "   payout_schedule_id = $payout_schedule_id \n";
+        $sql .= "WHERE \n";
+
+        //残高0の場合
+        if($payout_schedule_id === "0"){
+            $sql .= "   shop_id = ".$_SESSION[client_id]." \n";
+            $sql .= "   AND \n";
+            $sql .= "   client_id = $client_id \n";
+            $sql .= "   AND \n";
+            $sql .= "   payout_schedule_id IS NULL \n";
+            $sql .= "; \n";
+        }else{
+            $sql .= "   shop_id = ".$_SESSION[client_id]." \n";
+            $sql .= "   AND \n";
+            $sql .= "   client_id = $client_id \n";
+            $sql .= "   AND \n";
+            $sql .= "   payment_expected_date <= '$close_day' \n";
+            $sql .= "   AND \n";
+            $sql .= "   payout_schedule_id IS NULL \n";
+            $sql .= "; \n";
+        }
+
+        $result = Db_Query($db_con, $sql);
+
+        if($result === false){
+            Db_Query($db_con, "ROLLBACK");
+            exit;
+        }
+    }
+}
+
+//初めて締処理を行なう場合に買掛初期残高を抽出する関数
+/*
+ * 履歴：
+ * 　日付　　　　B票No.　　　　担当者　　　内容　
+ *   2009-12-29              aoyama-n      税率をTaxRateクラスから取得
+ */
+function Add_First_ap_Balance($db_con, $client_id, $close_day){
+
+    //支払予定テーブルにレコードが存在するかチェック
+    $sql  = "SELECT";
+    $sql .= "   COUNT(schedule_payment_id) ";
+    $sql .= "FROM ";
+    $sql .= "   t_schedule_payment ";
+    $sql .= "WHERE ";
+    $sql .= "   client_id = $client_id ";
+    $sql .= "   AND ";
+    $sql .= "   shop_id = ".$_SESSION["client_id"]." ";
+    $sql .= ";";
+
+    $result = Db_Query($db_con, $sql);
+    //初回登録でない場合
+    if(pg_fetch_result($result, 0, 0) >0){
+        return;
+    }
+
+    //初回買掛残高額の有無を確認
+    $sql  = "SELECT ";
+    $sql .= "   COUNT(client_id) ";
+    $sql .= "FROM ";
+    $sql .= "   t_first_ap_balance ";
+    $sql .= "WHERE ";
+    $sql .= "   client_id = $client_id ";
+    $sql .= "   AND ";
+    $sql .= "   shop_id = ".$_SESSION["client_id"]."";
+    $sql .= ";";
+
+    $result = Db_Query($db_con, $sql);
+    
+    //初期買掛残高設定を行なっていない場合
+    if(pg_fetch_result($result, 0,0) == 0){
+        return;
+    }
+        
+    //初期買掛残高額を抽出
+    $sql  = "SELECT";
+    $sql .= "   ap_balance_this ";
+    $sql .= "FROM ";
+    $sql .= "   t_ap_balance ";
+    $sql .= "WHERE ";
+    $sql .= "   ap_balance_id = (SELECT ";
+    $sql .= "                       MIN(ap_balance_id) ";
+    $sql .= "                   FROM ";
+    $sql .= "                       t_ap_balance ";
+    $sql .= "                   WHERE ";
+    $sql .= "                       client_id = $client_id ";
+    $sql .= "                       AND ";
+    $sql .= "                       shop_id = ".$_SESSION["client_id"]." ";
+    $sql .= "                   )";
+    $sql .= ";";
+
+    $result = Db_Query($db_con, $sql);
+
+    $ap_balance = pg_fetch_result($result, 0,0);
+
+    //マスタの情報を抽出
+    $sql  = "SELECT ";
+    $sql .= "   t_client.client_id, ";
+    $sql .= "   t_client.client_cd1, ";
+    $sql .= "   t_client.client_cd2, ";
+    $sql .= "   t_client.client_name,";
+    $sql .= "   t_client.client_cname, ";
+    $sql .= "   t_client.b_bank_name, ";
+    $sql .= "   t_client.intro_ac_num, ";
+    $sql .= "   t_client.account_name, ";
+    $sql .= "   t_client.trade_id, ";
+    $sql .= "   t_client.close_day, ";
+    $sql .= "   t_client.payout_m, ";
+    $sql .= "   t_client.payout_d, ";
+    $sql .= "   t_client.coax, ";
+    $sql .= "   t_client.tax_div, ";
+    $sql .= "   t_client.c_tax_div, ";
+    $sql .= "   t_client.col_terms, ";
+    $sql .= "   CASE ";
+    $sql .= "       WHEN payout_d = 29 THEN SUBSTR(TO_DATE(SUBSTR('$close_day', 1, 8) || 01, 'YYYY-MM-DD')\n";
+    $sql .= "                               +\n";
+    $sql .= "                               ((CAST(payout_m AS int) + 1) * interval '1 month') - interval '1 day', 1, 10)\n";
+    $sql .= "       ELSE SUBSTR(TO_DATE('$close_day', 'YYYY-MM-DD') + (CAST(payout_m AS int) * interval '1 month'), 1, 8)\n";
+    $sql .= "                               || \n";
+    $sql .= "                               LPAD(payout_d, 2, 0) \n";
+    $sql .= "   END AS payout_day ";
+    $sql .= "FROM ";
+    $sql .= "   t_client ";
+    $sql .= "WHERE ";
+    $sql .= "   t_client.client_id = $client_id ";
+    $sql .= ";";
+
+    $result = Db_Query($db_con, $sql);
+    $client_data = pg_fetch_array($result,0);
+
+    //ショップの情報を抽出
+    $sql  = "SELECT";
+    #2009-12-29 aoyama-n
+    #$sql .= "   tax_rate_n, ";
+    $sql .= "   royalty_rate ";
+    $sql .= "FROM ";
+    $sql .= "   t_client ";
+    $sql .= "WHERE ";
+    $sql .= "   t_client.client_id = ".$_SESSION['client_id']."";
+    $sql .= ";";
+
+    $result = Db_Query($db_con, $sql);
+    $shop_data = pg_fetch_array($result, 0);
+
+    #2009-12-29 aoyama-n
+    //税率クラス　インスタンス生成
+    $tax_rate_obj = new TaxRate($_SESSION['client_id']);
+    $tax_rate_obj->setTaxRateDay($close_day);
+    $tax_rate = $tax_rate_obj->getClientTaxRate($client_id);
+    $shop_data['tax_rate_n'] = $tax_rate;
+
+    //初期買掛残高額を支払予定テーブルに登録
+    $sql  = "INSERT INTO t_schedule_payment ( \n";
+    $sql .= "   schedule_payment_id,  \n";
+    $sql .= "   payment_close_day,  \n";
+    $sql .= "   execution_day,  \n";
+    $sql .= "   last_update_day,  \n";
+    $sql .= "   payment,  \n";
+    $sql .= "   tune_amount,  \n";
+    $sql .= "   rest_amount,  \n";
+    $sql .= "   sale_amount,  \n";
+    $sql .= "   tax_amount,  \n";
+    $sql .= "   account_payable,  \n";
+    $sql .= "   ca_balance_this,  \n";
+    $sql .= "   schedule_of_payment_this,  \n";
+    $sql .= "   installment_purchase,  \n";
+    $sql .= "   payment_expected_date,  \n"; 
+    $sql .= "   payment_extraction_s,  \n";
+    $sql .= "   payment_extraction_e,  \n";
+    $sql .= "   installment_payment_this,  \n";
+    $sql .= "   installment_balance,  \n";
+    $sql .= "   client_id,  \n";
+    $sql .= "   client_name,  \n";
+    $sql .= "   client_name2,  \n";
+    $sql .= "   client_cname,  \n";
+    $sql .= "   client_cd1,  \n";
+    $sql .= "   client_cd2,  \n";
+    $sql .= "   bank_name,  \n";
+    $sql .= "   intro_ac_num,  \n";
+    $sql .= "   account_name,  \n";
+    $sql .= "   operation_staff_name,  \n";
+    $sql .= "   fix_staff_name, \n";
+    $sql .= "   trade_id, \n";
+    $sql .= "   close_day, \n";
+    $sql .= "   pay_m, \n";
+    $sql .= "   pay_d, \n";
+    $sql .= "   coax, \n";
+    $sql .= "   tax_div,  \n";
+    $sql .= "   c_tax_div,  \n";
+    $sql .= "   tax_rate,  \n";
+    $sql .= "   royalty_rate,  \n";
+    $sql .= "   shop_id,  \n";
+    $sql .= "   col_terms,  \n";
+    $sql .= "   first_set_flg,  \n";
+    $sql .= "   last_update_flg \n";
+    $sql .= ") VALUES ( \n";
+    $sql .= "   (SELECT COALESCE(MAX(schedule_payment_id), 0)+1 FROM t_schedule_payment ),  \n";
+    $sql .= "   '".START_DAY."',  \n";      //初期買掛残高の仕入締日にはシステム開始日を登録
+    $sql .= "   now(),  \n";
+    $sql .= "   now(),  \n";
+    $sql .= "   0, \n";
+    $sql .= "   0, \n";
+    $sql .= "   0, \n";
+    $sql .= "   0, \n";
+    $sql .= "   0, \n";
+    $sql .= "   $ap_balance,  \n";
+    $sql .= "   $ap_balance,  \n";
+    $sql .= "   0, \n";
+    $sql .= "   0, \n";
+    $sql .= "   '".$client_data['payout_day']."',  \n";
+    $sql .= "   '".START_DAY."', \n";      //支払金額抽出期間（開始）にはシステム開始日を登録
+    $sql .= "   '".START_DAY."', \n";      //支払金額抽出期間（終了）にはシステム開始日を登録
+    $sql .= "   0, \n";
+    $sql .= "   0, \n";
+    $sql .= "   ".$client_data['client_id'].",  \n";
+    $sql .= "   '".$client_data['client_name']."',  \n";
+    $sql .= "   '".$client_data['client_name2']."',  \n";
+    $sql .= "   '".$client_data['client_cname']."',  \n";
+    $sql .= "   '".$client_data['client_cd1']."',  \n";
+    $sql .= "   '".$client_data['client_cd2']."',  \n";
+    $sql .= "   '".$client_data['bank_name']."',  \n";
+    $sql .= "   '".$client_data['intro_ac_num']."',  \n";
+    $sql .= "   '".$client_data['account_name']."',  \n";
+    $sql .= "   '".addslashes($_SESSION['staff_name'])."',  \n";
+    $sql .= "   '', \n" ;
+    $sql .= "   '".$client_data['trade_id']."',  \n";
+    $sql .= "   '".$client_data['close_day']."',  \n";
+    $sql .= "   '".$client_data['payout_m']."',  \n";
+    $sql .= "   '".$client_data['payout_d']."',  \n";
+    $sql .= "   '".$client_data['coax']."',  \n";
+    $sql .= "   '".$client_data['tax_div']."',  \n";
+    $sql .= "   '".$client_data['c_tax_div']."',  \n";
+    $sql .= "   '".$shop_data['tax_rate_n']."',  \n";
+    $sql .= "   '".$shop_data['royalty_rate']."',  \n";
+    $sql .= "   '".$_SESSION['client_id']."',  \n";
+    $sql .= "   '".$client_data['col_terms']."',  \n";
+    $sql .= "   't',  \n";
+    $sql .= "   't' \n";
+    $sql .= "); \n";
+
+    $result = Db_Query($db_con, $sql);
+
+    if($result === false){
+        Db_Query("ROLLBACK;");
+        exit;
+    }
+
+}
+
+//入力された締日以降に支払予定データが存在しないかチェック
+function Check_Remake_Data($db_con, $client_id, $close_day){
+
+    $sql  = "SELECT";
+    $sql .= "   COUNT(*) ";
+    $sql .= "FROM ";
+    $sql .= "   t_schedule_payment ";
+    $sql .= "WHERE ";
+    $sql .= "   client_id = $client_id ";
+    $sql .= "   AND ";
+    $sql .= "   payment_close_day >= '$close_day' ";
+    $sql .= "   AND ";
+    $sql .= "   shop_id = ".$_SESSION['client_id']."";
+    $sql .= ";";
+
+    $result = Db_Query($db_con, $sql);
+
+    $data_count = pg_fetch_result($result, 0,0);
+
+    if($data_count > 0){
+        return true;
+    }
+
+    return;
+
+}
+
+//支払予定データを更新
+function Update_Schedule_Payment($db_con, $update_id){
+
+    Db_Query($db_con, "BEGIN;");
+
+    $sql  = "UPDATE";
+    $sql .= "   t_schedule_payment ";
+    $sql .= "SET "; 
+    $sql .= "   last_update_flg = 't', ";
+    $sql .= "   last_update_staff_name = '".addslashes($_SESSION["staff_name"])."', ";
+    $sql .= "   last_update_day = now() ";
+    $sql .= "WHERE ";
+    $sql .= "   schedule_payment_id = $update_id ";
+    $sql .= ";";
+
+    $result = Db_Query($db_con, $sql);
+    if($result === false){
+        Db_Query($db_con, "ROLLBACK;");
+        return false;
+    }
+
+    Db_Query($db_con, "COMMIT;");
+
+    return true;
+}
+
+//支払予定データを削除
+function Delete_Schedule_Payment($db_con, $delete_id){
+
+    if(count($delete_id) == 0){
+        return true;
+    }
+
+    $delete_ary_id = str_replace('f', 'null', implode(',',$delete_id));
+
+/*
+    //締に対する支払データがあるかチェック
+    $sql  = "SELECT";
+    $sql .= "   t_payout_h.pay_no, ";
+    $sql .= "   t_schedule_payment.client_name, ";
+    $sql .= "   t_schedule_payment.payment_close_day ";
+    $sql .= "FROM ";
+    $sql .= "   t_payout_h ";
+    $sql .= "       INNER JOIN ";
+    $sql .= "   t_schedule_payment ";
+    $sql .= "   ON t_payout_h.schedule_payment_id = t_schedule_payment.schedule_payment_id ";
+    $sql .= "WHERE ";
+    $sql .= "   t_payout_h.schedule_payment_id IN (".$delete_ary_id.")" ;
+    $sql .= ";"; 
+
+    $result = Db_Query($db_con, $sql);
+    $err_num = pg_num_rows($result);
+
+    if($err_num > 0){
+        $err_data = pg_fetch_all($result);
+        return $err_data;
+    }
+*/
+
+    Db_Query($db_con, "BEGIN;");
+
+    //締に対する支払データの締IDをNULLでアップデート
+    $sql  = "UPDATE ";
+    $sql .= "   t_payout_h ";
+    $sql .= "SET ";
+    $sql .= "   schedule_payment_id = null ";
+    $sql .= "WHERE ";
+    $sql .= "   schedule_payment_id IN (".$delete_ary_id.")";
+    $sql .= ";";
+
+    $result = Db_Query($db_con, $sql);
+    if($result === false){
+        Db_Query($db_con, "ROLLBACK;");
+        return false;
+    }
+
+    //仕入締処理解除
+    $result = Cancel_Schedule_Payment_Target_Renew($db_con, $delete_ary_id);
+    if($result === false){
+        Db_Query($db_con, "ROLLBACK;");
+        return false;
+    }
+
+    //回収済予定IDをnullでアップデート
+    $sql  = "UPDATE";
+    $sql .= "   t_schedule_payment ";
+    $sql .= "SET ";
+    $sql .= "   payout_schedule_id = null ";
+    $sql .= "WHERE ";
+    $sql .= "   payout_schedule_id IN (".$delete_ary_id.")" ; 
+    $sql .= ";";
+
+    $result = Db_Query($db_con, $sql);    
+    if($result === false){
+        Db_Query($db_con, "ROLLBACK;");
+        return false;
+    }
+
+    //割賦仕入の支払予定IDをNULLでアップデート
+    $sql  = "UPDATE";
+    $sql .= "   t_amortization ";
+    $sql .= "SET ";
+    $sql .= "   schedule_payment_id = null ";
+    $sql .= "WHERE ";
+    $sql .= "   schedule_payment_id IN (".$delete_ary_id.") ";
+    $sql .= ";";
+
+    $result = Db_Query($db_con, $sql);
+    if($result == false){
+        Db_Query($db_con, "ROLLBACK;");
+        return false;
+    }
+
+
+    //支払予定データを削除
+    $sql  = "DELETE FROM t_schedule_payment ";
+    $sql .= "WHERE ";
+    $sql .= "   schedule_payment_id IN (".$delete_ary_id.")" ;
+    $sql .= ";";
+
+    $result = Db_Query($db_con, $sql);
+    if($result === false){
+        Db_Query($db_con, "ROLLBACK;");
+        return false;
+    }
+
+    Db_Query($db_con, "COMMIT;");
+
+    return true;
+}
+
+
+//未更新の支払予定データが存在するかチェック
+function Check_Non_Update_Data ($db_con, $client_id){
+
+    $sql  = "SELECT";
+
+    //本部の場合
+    if($_SESSION["group_kind"] == '1'){
+        $sql .= "   client_cd1 || '-' || client_cd2 AS client_cd, ";
+    //FCの場合
+    }else{
+        $sql .= "   client_cd1 AS client_cd, ";
+    }
+    $sql .= "   client_name ";
+    $sql .= "FROM ";
+    $sql .= "   t_schedule_payment ";
+    $sql .= "WHERE ";
+    $sql .= "   shop_id = $_SESSION[client_id] ";
+    $sql .= "   AND ";
+    $sql .= "   client_id = $client_id ";
+    $sql .= "   AND ";
+    $sql .= "   last_update_flg = 'f' ";
+    $sql .= ";";
+
+    $result = Db_Query($db_con, $sql);
+
+    $non_update_data_num = pg_num_rows($result);
+
+    if($non_update_data_num == 0){
+        return true;
+    }else{
+        return pg_fetch_assoc($result, 0);
+    }
+}
+
+
+//対象期間内の仕入、支払の日次更新を解除
+function Cancel_Schedule_Payment_Target_Renew($db_con, $delete_imp_id){
+
+    $delete_ary_id = explode(",", $delete_imp_id);
+
+    //最新の月次更新日を抽出
+    $sql  = "SELECT \n";
+    $sql .= "   COALESCE(MAX(close_day), '".START_DAY."') AS close_day ";
+    $sql .= "FROM ";
+    $sql .= "   t_sys_renew ";
+    $sql .= "WHERE ";
+    $sql .= "   shop_id = ".$_SESSION["client_id"]." ";
+    $sql .= "   AND ";
+    $sql .= "   renew_div = '2' ";
+    $sql .= ";";
+
+    $result = Db_Query($db_con, $sql);
+    $close_day = pg_fetch_result($result, 0,0);
+
+    foreach($delete_ary_id AS $key => $delete_id){
+
+        if($delete_id == 'null'){
+            continue;
+        }
+
+        //仕入先の締日とIDを抽出
+        $sql  = "SELECT";
+        $sql .= "   t_schedule_payment.client_id, ";
+        $sql .= "   t_schedule_payment.payment_close_day ";
+        $sql .= "FROM ";
+        $sql .= "   t_schedule_payment ";
+        $sql .= "WHERE ";
+        $sql .= "   t_schedule_payment.schedule_payment_id = $delete_id ";
+        $sql .= ";";
+
+        $result = Db_Query($db_con, $sql);
+        $client_data_num = pg_num_rows($result);
+
+        //排他制御
+        if($client_data_num == 0){
+            Db_Query($db_con, "ROLLBACK;");
+            continue;
+        }
+
+        $client_id         = pg_fetch_result($result, 0,0);      //仕入締ID
+        $payment_close_day = pg_fetch_result($result, 0,1);      //仕入締日
+
+        //前回仕入締日を抽出
+        $sql  = "SELECT \n";
+        $sql .= "   COALESCE(MAX(payment_close_day), '".START_DAY."')      AS payment_close_day \n";
+        $sql .= "FROM \n";
+        $sql .= "   t_schedule_payment \n";
+        $sql .= "WHERE \n";
+        $sql .= "   t_schedule_payment.client_id = $client_id ";
+        $sql .= "   AND ";
+        $sql .= "   t_schedule_payment.schedule_payment_id != $delete_id \n";
+        $sql .= "   AND ";
+        $sql .= "   t_schedule_payment.shop_id = ".$_SESSION["client_id"]." \n";
+        $sql .= "; \n";
+
+        $result   = Db_Query($db_con, $sql);
+        $payment_close_day_last = pg_fetch_result($result,0,0);
+
+
+        //日次更新解除の対象となる日付
+        if($close_day >= $payment_close_day_last){
+            $target_day = $close_day;
+        }else{  
+            $target_day = $payment_close_day_last;
+        }
+
+        //仕入の日次更新解除
+        $sql  = "UPDATE ";
+        $sql .= "   t_buy_h ";
+        $sql .= "SET ";
+        $sql .= "   renew_flg = 'f', ";
+        $sql .= "   renew_day = null ";
+        $sql .= "WHERE ";
+        $sql .= "   client_id = $client_id ";
+        $sql .= "   AND ";
+        $sql .= "   buy_day > '$target_day' ";
+        $sql .= "   AND ";
+        $sql .= "   buy_day <= '$payment_close_day' ";
+        $sql .= "   AND ";
+        $sql .= "   arrival_day > '$target_day' ";
+        $sql .= "   AND ";
+        $sql .= "   shop_id = ".$_SESSION["client_id"]." ";
+        $sql .= "   AND ";
+        $sql .= "   trade_id NOT IN ('71','73','74') ";
+        $sql .= ";";
+
+        $result = Db_Query($db_con, $sql);
+        if(!$result){
+            return false;
+        }
+
+        //支払の日時更新を解除
+        $sql  = "UPDATE \n";
+        $sql .= "   t_payout_h \n";
+        $sql .= "SET \n";
+        $sql .= "   renew_flg = 'f', \n";
+        $sql .= "   renew_day = null \n";
+        $sql .= "WHERE \n";
+        $sql .= "   pay_id IN (SELECT \n";
+        $sql .= "                   t_payout_h.pay_id \n";
+        $sql .= "               FROM \n";
+        $sql .= "                   t_payout_h \n";
+        $sql .= "                       INNER JOIN \n";
+        $sql .= "                   t_payout_d \n";
+        $sql .= "                   ON t_payout_h.pay_id = t_payout_d.pay_id \n";
+        $sql .= "               WHERE \n";
+        $sql .= "                   t_payout_h.client_id = $client_id \n";
+        $sql .= "                   AND \n";
+        $sql .= "                   t_payout_h.pay_day > '$target_day' \n";
+        $sql .= "                   AND \n";
+        $sql .= "                   t_payout_h.pay_day <= '$payment_close_day' \n";
+        $sql .= "                   AND \n";
+        $sql .= "                   t_payout_h.shop_id = ".$_SESSION["client_id"]." \n";
+        $sql .= "                   AND \n";
+        $sql .= "                   t_payout_d.trade_id != '49' \n";
+        $sql .= "           ) \n";
+        $sql .= ";\n";
+
+        $result = Db_Query($db_con, $sql);
+        if(!$result){
+            return false;
+        }
+    }
+    return true;
+}
+
+
+//支払データに抽出した割賦データに支払予定IDを残す
+function Update_Collect_Amortization ($db_con, $collect_day, $schedule_payment_id, $client_id){
+
+    $sql  = "UPDATE ";
+    $sql .= "   t_amortization ";
+    $sql .= "SET ";
+    $sql .= "   schedule_payment_id = $schedule_payment_id ";
+    $sql .= "WHERE ";
+    $sql .= "   buy_id IN (SELECT ";
+    $sql .= "                   t_buy_h.buy_id ";
+    $sql .= "               FROM ";
+    $sql .= "                   t_buy_h ";
+    $sql .= "               WHERE ";
+    $sql .= "                   t_buy_h.trade_id = '25' ";
+    $sql .= "                   AND ";
+    $sql .= "                   t_buy_h.client_id = $client_id ";
+    $sql .= "               ) ";
+    $sql .= "   AND ";
+    $sql .= "   schedule_payment_id IS NULL ";
+    $sql .= "   AND ";
+    $sql .= "   pay_day <= '$collect_day' ";
+    $sql .= ";";
+
+    $result = Db_Query($db_con, $sql);
+    if(!$result){
+        Db_Query($db_con, "ROLLBACK;");
+        exit;
+    }
+}
+
+
+
+
+
+
+
+
+?>

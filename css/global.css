@@ -1,0 +1,600 @@
+/************************************************
+ FONT 
+*************************************************/
+
+/** ページタイトル **/
+font.Page_Title {
+    font-size: 11pt;
+    font-weight: bold;
+    color: #585858;
+}
+
+/** エラー文字 **/
+font.Warning {
+    font-size: 9pt;
+    font-weight: bold;
+    color: #FF0000;
+}
+
+/** 年度カラー **/
+font.color {
+    color: #555555;
+}
+
+/** プルダウン **/
+select.select_title{
+    font-weight: bold;
+}
+
+
+select.Tohaba {
+    font-family: ＭＳ ゴシック;
+}
+/************************************************
+ INPUT
+*************************************************/
+/** 基本はIMEをONに **/
+input {
+    ime-mode: active;
+}
+textarea {
+    ime-mode: active;
+}
+
+/** 金額 **/
+input.money {
+    background-image:url(../image/money.png);
+    background-repeat:no-repeat;
+    background-position:right;
+    text-align:right;
+    ime-mode: disabled; 
+}
+
+/** 数値 **/
+input.num {
+    text-align:right;
+    ime-mode: disabled; 
+}
+
+/** 数量 **/
+input.money_num {
+    background-image   : url(../image/money_num.gif);
+    background-repeat  : no-repeat;
+    background-position: right;
+    text-align         : right;
+    ime-mode           : disabled; 
+}
+
+/** 合計 **/
+input.amount{
+    color           : #000000; 
+    border          : #ffffff 1px solid; 
+    background-color: #ffffff; 
+    text-align      : right;
+    width           : 15ex;
+    readonly        : readonly;
+}
+
+
+/** テキストボックス 金額・数量用右寄せ **/
+input.Textbox_right{
+    text-align: right;
+    font-family: ＭＳ ゴシック;
+}
+
+/** テキストボックス ReadOnly **/
+input.Textbox_readonly{
+    color: #000000;
+    border: #ffffff 1px solid gray;
+    background-color: #ffffff;
+}
+
+/** IME使用不可 **/
+input.ime_disabled{
+    ime-mode: disabled;
+}
+
+/** 
+INPUT {
+    font-family: ＭＳ ゴシック;
+}
+**/
+
+/** テキストボックス ReadOnly （枠無し版）**/
+input.Textbox_readonly.nborder{
+    border : #ffffff 1px solid; 
+    color  : #585858;
+}
+
+
+/************************************************
+ LINK 
+*************************************************/
+
+/** トップメニューリンク **/
+a.Main_Menu{ 
+    color:#585858; 
+    font-weight: bold; 
+    text-decoration:none;
+    font-size: 10pt;
+}
+
+/** 現在表示している画面リンク **/
+a.MyMenu{
+    color: #FEFEFE;
+    font-weight: bold; 
+    text-decoration:none;
+    font-size: 9pt;
+    font-weight: bold;
+}
+
+/** 表示していない画面リンク **/
+a.M_Menu{ 
+    color:#585858; 
+    font-weight: bold; 
+    text-decoration:none;
+    font-size: 9pt;
+}
+
+/** メイン・ログアウトリンク **/
+a.MyMenu2{
+    color:#FEFEFE; 
+    font-weight: bold; 
+    text-decoration:none;
+    font-size: 9pt;
+    font-weight: bold;
+}
+
+
+
+/************************************************
+ TABLE 
+*************************************************/
+
+/** テーブルの上のスペースサイズ **/
+table.M_Table{
+/*    margin-top: -20px;*/      /* 07/04/27 fukuda  印刷時に紙の上部が切れるため記述をBODYタグへ移動 */
+}
+
+/** テーブルのフォントサイズ **/
+table {
+    font-size: 9pt;
+}
+
+/** 各ページのメニューテーブル **/
+table.Menu_Table {
+    border-color: #BBBBBB;
+    color: #555555;
+}
+
+/** データ表示用テーブル **/
+table.Data_Table {
+    font-size: 10pt;
+    border-color: #BBBBBB;
+    color: #555555;
+    border-style: solid;
+    border-width: 2;
+    /** 追加 **/
+    border: 1 #999999 solid; /* テーブE澗里力叛並世機�色・スタイ�qd*/ 
+    border-collapse: collapse; /* 枠線の表示方法 */ 
+}
+
+/** 印刷ページ用テーブル **/
+table.Print_Table {
+    font-size: 9pt;
+    color: #444444;
+    border-color: #444444;
+    border-collapse : collapse ;
+    border-style: solid;
+    border-width: 2;
+}
+
+/** 検索結果・一覧用テーブル **/
+table.List_Table {
+    font-size: 9pt;
+    border-color: #BBBBBB;
+    color: #555555;
+    border-collapse : collapse;
+    border-style: solid;
+    border-width: 2;
+}
+
+/** セル内は改行させない **/
+td{
+    white-space: nowrap;
+    border-color: #999999;
+}
+th{
+    white-space: nowrap;
+}
+
+/** 登録テーブル内の入力欄のセル **/
+
+td.Value{
+    height: 24px;
+    background-color:  #FFFFFF;
+    /** 追加 **/
+    border: 1 #999999 solid; 
+}
+
+/* 予定カレンダー用 */
+td.cal{
+    /** セル下点線 **/
+    border-bottom: 1 #4C4C4C dashed;
+}
+
+td.cal2{
+    /** セル上線無し **/
+    border-top: 0;
+    line-height: 120%;
+    list-style-type: disc;
+    font-size: .9em;
+}
+
+td.cal3{
+    line-height: 120%;
+    list-style-type: disc;
+    font-size: .9em;
+}
+
+/** 検索テーブルCSS **/
+
+/** table **/
+table.Table_Search {
+    font-size: 10pt;
+    border-color: #BBBBBB;
+    color: #555555;
+    border-style: solid;
+    border-width: 2;
+    border: 1 #999999 solid;
+    border-collapse: collapse;
+}
+
+/** td **/
+td.Td_Search_1 {
+    height: 24px;
+    background-color: #99ccff;
+    border-color: #B9B9B8;
+    border: 1 #999999 solid;
+}
+td.Td_Search_2 {
+    height: 24px;
+    background-color: #d0d0d0;
+    border-color: #B9B9B8;
+    border: 1 #999999 solid;
+}
+td.Td_Search_3 {
+    height: 24px;
+    background-color: #f0d7ff;
+    border-color: #B9B9B8;
+    border: 1 #999999 solid;
+}
+
+/** 登録テーブル内のタイトルセル **/
+
+/** セルの背景色を変える **/
+td.Client{
+    background-color: #828180;
+    color:#FEFEFE;
+    border-color: #B9B9B8;
+}
+
+td.Type{
+    background-color: #99CCFF;
+    border-color: #B9B9B8;
+}
+
+td.color {
+    background-color: #828180;
+    color:#FEFEFE;
+    border-color: #B9B9B8;
+}
+
+td.Title_Act{
+    height: 24px;
+    background-color: #fdfd88;
+    color:#555555;
+    border-color: #B9B9B8;
+}
+
+td.Title_Blue {
+    height: 24px;
+    background-color: #828180;
+    color:#FEFEFE;
+    border-color: #B9B9B8;
+}
+td.Title_Pink {
+    height: 24px;
+    background-color: #828180;
+    color:#FEFEFE;
+    border-color: #B9B9B8;
+}
+td.Title_Yellow {
+    height: 24px;
+    background-color: #828180;
+    color:#FEFEFE;
+    border-color: #B9B9B8;
+}
+td.Title_Green {
+    height: 24px;
+    background-color: #828180;
+    color:#FEFEFE;
+    border-color: #B9B9B8;
+}
+td.Title_Purple {
+    height: 24px;
+    background-color: #828180;
+    color:#FEFEFE;
+    border-color: #B9B9B8;
+}
+td.Title_Parent {
+    height: 24px;
+    background-color: #949494;
+    color:#FEFEFE;
+    border-color: #B9B9B8;
+}
+td.Title_Gray {
+    height: 24px;
+    background-color: #828180;
+    color:#FEFEFE;
+    border-color: #B9B9B8;
+}
+td.Title_Add {
+    height: 24px;
+    background-color: #800080;
+    color:#FEFEFE;
+    border-color: #B9B9B8;
+}
+/** メニューの背景色を変える **/
+td.Sub_Menu {
+    color:#585858; 
+    font-weight: bold; 
+    text-decoration:none;
+    font-size: 9pt;
+    border-style: solid;
+    border-width: 1;
+    background-color: #FEFEFE;
+}
+
+td.Result2{
+    background-color: #EDF1F5;
+}
+
+/** 契約マスタのセルの背景色 **/
+td.Contract1{
+    background-color: #FFFFFF;
+}
+
+td.Contract2{
+    background-color: #DFFFDF;
+}
+
+/** 検索結果のタイトルセル **/
+
+th.Title_Blue {
+    background-color: #99CCFF;
+}
+th.Title_Pink {
+    background-color: #FFCCCC;
+}
+th.Title_Yellow {
+    background-color: #FFCC66;
+}
+th.Title_Green {
+    background-color: #3EE17F;
+}
+th.Title_Purple {
+    background-color: #C5BAF6;
+}
+th.Title_Gray {
+    background-color: #C1C1C1;
+}
+
+/** 検索結果の背景色 **/
+tr.Result1{
+    background-color: #FFFFFF;
+}
+
+tr.Result2{
+    background-color: #DFFFDF;
+}
+
+tr.Result3{
+    background-color: #D8D8D8;
+}
+
+tr.Result4{
+    background-color: #C0C0D0;
+}
+
+tr.Result5{
+    background-color: #FFFF99;
+}
+
+tr.Result6{
+    background-color: #FDFD88;
+}
+
+/** 改ページ **/
+tr.Chang_page{
+    page-break-before: always;
+}
+
+/****************************
+権限画面
+****************************/
+/** マスタ・設定 **/
+tr.System_top{
+    background-color: #C5BAF6;
+}
+td.System_top{
+    background-color: #C5BAF6;
+}
+/** Main_menu **/
+td.System_main{
+    background-color: #C8CAF6;
+}
+/** Sub_Menu **/
+td.System_sub{
+    background-color: #C8DAF6;
+}
+
+/************************************************
+その他
+*************************************************/
+/** ブラウザ枠とページ内容の上部隙間をなくす 07/04/27 fukuda **/
+body{
+    margin-top: 0px;
+}
+
+/** 各のメニューの高さ **/
+div.Menu{
+    line-height: 25px;
+}
+
+/** メニューの行幅 **/
+/** 共通項目名 **/
+div.M_Menu{
+    margin-top: 8px;
+    margin-bottom: -25px;
+}
+
+/** 現在表示している画面メニュー **/
+div.MyMenu{
+    background-image: url("../image/menu/sub_menu6-4.PNG");
+    background-repeat:no-repeat;
+    margin-bottom: -25px;
+}
+
+/** 現在表示されていない画面のメニュー **/
+div.MyMenu2{
+    background-image: url("../image/menu/menu_img3.PNG");
+    background-repeat:no-repeat;
+    margin-bottom: -25px;
+}
+
+/** メニューの項目 **/
+div.Main_Menu{
+    font-size: 11pt;
+    font-weight: bold;
+    color:#585858;
+    margin-bottom: 6px;
+    margin-top: -2px;
+}
+
+/** メニューの項目(マスタ管理) **/
+div.Main_Menu_M{
+    font-size: 11pt;
+    font-weight: bold;
+    color:#585858;
+    margin-bottom: -6px;
+    margin-top: -2px;
+}
+
+/** メインメニュー **/
+div.backcolor{
+    background-image: url("../image/menu/menu_img8.PNG");
+    background-repeat:no-repeat;
+    height: 23px;
+    padding:6.5px;
+    margin-bottom: 12px;
+    margin-left: 3px;
+    cursor:pointer;
+}
+/** ログアウト **/
+div.backcolor2{
+    background-image: url("../image/menu/menu_img8.PNG");
+    background-repeat:no-repeat;
+    height: 23px;
+    padding:6.5px;
+    margin-top: -1px;
+    margin-left: 3px;
+    cursor:pointer;
+}
+
+/** 注意書き **/
+div.note{
+     color:#0000ff;
+     font-weight: bold;
+     line-height: 130%;
+}
+
+
+fieldset {
+    border:3 #999999 solid;
+    padding: 7px;
+}
+
+fieldset.main_client {
+    border:4 #3300FF solid;
+    padding: 7px;
+}
+
+fieldset.client {
+    border:0 #999999 solid;
+    margin-left: 7px;
+}
+
+fieldset.client2 {
+    border:0 #999999 solid;
+    margin-left: 3px;
+}
+
+/** 背景画像 **/
+body{
+    background-color:#EEEEEE;
+    font-family: monospace;
+}
+body.bgimg_blue{
+    background-color:#EEEEEE;
+}
+
+body.bgimg_gray{
+    background-color:#EEEEEE;
+}
+
+body.bgimg_green{
+    background-color:#EEEEEE;
+}
+
+body.bgimg_pink{
+    background-color:#EEEEEE;
+}
+
+body.bgimg_purple{
+    background-color:#EEEEEE;
+}
+
+body.bgimg_yellow{
+    background-color:#EEEEEE;
+}
+
+/** テーブル内グレーカラムのリンクカラー **/
+td.Title_Blue a:link    {color: #60ff00 ;}
+td.Title_Blue a:visited {color: #60ff00 ;}
+td.Title_Blue a:active  {color: #60ff00 ;}
+td.Title_Blue a:hover   {color: #60ff00 ;}
+td.Title_gray a:link    {color: #60ff00 ;}
+td.Title_gray a:visited {color: #60ff00 ;}
+td.Title_gyay a:active  {color: #60ff00 ;}
+td.Title_gray a:hover   {color: #60ff00 ;}
+td.Title_green a:link    {color: #60ff00 ;}
+td.Title_green a:visited {color: #60ff00 ;}
+td.Title_green a:active  {color: #60ff00 ;}
+td.Title_green a:hover   {color: #60ff00 ;}
+td.Title_pink a:link    {color: #60ff00 ;}
+td.Title_pink a:visited {color: #60ff00 ;}
+td.Title_pink a:active  {color: #60ff00 ;}
+td.Title_pink a:hover   {color: #60ff00 ;}
+td.Title_purple a:link    {color: #60ff00 ;}
+td.Title_purple a:visited {color: #60ff00 ;}
+td.Title_purple a:active  {color: #60ff00 ;}
+td.Title_purple a:hover   {color: #60ff00 ;}
+td.Title_yellow a:link    {color: #60ff00 ;}
+td.Title_yellow a:visited {color: #60ff00 ;}
+td.Title_yellow a:active  {color: #60ff00 ;}
+td.Title_yellow a:hover   {color: #60ff00 ;}
+td.Title_Act a:link    {color: #555555;}
+td.Title_Act a:visited {color: #555555;}
+td.Title_Act a:active  {color: #555555;}
+td.Title_Act a:hover   {color: #555555;}

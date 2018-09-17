@@ -1,0 +1,17 @@
+<?php
+//読み込みファイル一覧
+require_once(PATH."config/global.php");
+require_once(PATH."config/config.php");
+require_once(PATH."config/define.php");
+require_once(PATH."function/session.fnc");
+require_once(PATH."function/function.fnc");
+require_once(PATH."function/permit.inc");
+require_once(PATH."function/func_qf_rule.inc");
+require_once(PATH."function/html.fnc");
+require_once(PATH."function/menu.fnc");
+require_once(PATH."function/db.fnc");
+require_once(PATH."function/TaxRate.php");
+require_once(PATH."function/TaxAmount.php");
+
+//sessionチェック
+?>

@@ -1,0 +1,801 @@
+<?php
+
+#
+# RtoRから「売上伝票」「仕入伝票」を作成する関数群
+#
+
+/**
+ * 概要  契約中のRtoRデータがあるかチェックする
+ *
+ * 説明
+ *
+ * @param resource  $db_con       DB接続リソース
+ * @param string    $client_id    得意先ID
+ *
+ * @return boolean
+ *
+ */
+function Check_Rental_Data($db_con,$client_id,$claim_day,$type=""){
+
+    //レンタルデータを取得
+    $sql  = "SELECT ";
+    $sql .= "    COUNT(rental_d_id) ";               //商品ID
+    $sql .= "FROM t_rental_h";
+    $sql .= "    INNER JOIN t_rental_d ON t_rental_h.rental_id = t_rental_d.rental_id ";
+    $sql .= "WHERE ";
+    $sql .= "    t_rental_d.rental_stat IN('10','21','22') ";
+    $sql .= "AND ";  
+    $sql .= "    t_rental_h.claim_day <= '$claim_day' "; //請求月以降のRtoR
+    $sql .= "AND ";  
+    //$sql .= "    t_rental_h.shop_id = $client_id ";
+
+    //仕入の場合(FC)
+    if($type == "buy"){
+        $sql .= "    t_rental_h.regist_shop_id = $client_id ";
+        //$sql .= "   AND t_rental_h. online_flg = 't' ";
+
+    //売上の場合(本部)はオンラインデータも対象とする
+    }else{
+        $sql .= "    t_rental_h.shop_id = $client_id "; //貸し先
+        $sql .= "AND ";  
+        //本部がオフライン登録　or　FCがオンラインで登録 
+    	$sql .= "   (t_rental_h.regist_shop_id = $_SESSION[client_id] OR t_rental_h.online_flg = 't' )\n ";
+	}
+
+    $result = Db_Query($db_con, $sql);
+    $count  = @pg_fetch_result($result, 0,0);
+    if ($count == "0") {
+        return false;
+    } else {
+        return true;
+    }
+
+}
+
+
+
+/**
+ * 概要  RtoRデータを基に特定期間の売上伝票を作成します。
+ *
+ * 説明
+ *
+ * @param resource  $db_con       DB接続リソース
+ * @param string    $client_id    得意先ID
+ * @param array     $sale_day_s   前回請求締日(yyyy-mm-dd形式)
+ * @param array     $sale_day_e   請求締日(yyyy-mm-dd形式)
+ *
+ * @return array                  伝票が作成された場合は売上ID、伝票を作成する必要がなかった場合はfalse
+ *
+ */
+function Regist_Sale_Rental_Range($db_con,$client_id,$sale_day_s,$sale_day_e){
+
+	//前回締日を今回開始日にするため日付を＋1する
+	$date = explode("-",$sale_day_s);
+	$sale_day_s = date("Y-m-d",mktime(0,0,0,$date[1],"$date[2]"+1,$date[0]));
+
+	//得意先の締日を取得
+	$client_info = Get_Client($db_con,$client_id,2);
+	$close_day = $client_info[close_day];
+
+	//RtoRの売上日を取得(契約の毎月○日の巡回日を求める関数を利用)
+	$sale_day_ary = Round_day($db_con,NULL,NULL,NULL,$close_day,NULL,NULL,2,$sale_day_s,$sale_day_e);
+	//print_array($sale_day_ary);
+
+	//売上日の数
+	$count = count($sale_day_ary);
+
+	//売上日がある場合
+	if ($count > 0){
+
+		//売上日の数だけRtoR伝票を作成する
+		foreach($sale_day_ary AS $key => $sale_day){
+			//期間分のRtoRの売上を作成する
+			$rental_id[] = Regist_Sale_Rental($db_con,$client_id,$sale_day,$sale_day_e,$count);
+		}
+		
+	//売上日がない場合
+	}else{
+		$rental_id[] = false;
+	}
+
+	return $rental_id;
+
+}
+
+
+
+
+/**
+ * 概要  RtoRデータから売上伝票を作成します。
+ *
+ * 説明
+ *
+ * @param resource  $db_con       DB接続リソース
+ * @param string    $client_id    得意先ID
+ * @param string    $sale_day     売上日(yyyy-mm-dd形式)
+ * @param string    $close_day    請求締日
+ * @param intger    $count        伝票作成枚数
+ *
+ * @return resource               伝票が作成された場合は売上ID、伝票を作成する必要がなかった場合はfalse
+ *
+ */
+function Regist_Sale_Rental($db_con,$client_id,$sale_day,$close_day,$count=1){
+
+    //レンタルデータがあるかチェックする
+    if(!Check_Rental_Data($db_con,$client_id,$sale_day)){
+        return false;
+    }
+
+    //自社の消費税率
+    #2009-12-24 aoyama-n
+    #$tax_rate = Get_Tax_Rate($db_con);
+
+    #2009-12-24 aoyama-n
+    //税率クラス　インスタンス生成
+    $tax_rate_obj = new TaxRate($_SESSION[client_id]);
+    $tax_rate_obj->setTaxRateDay($close_day);
+    $tax_rate = $tax_rate_obj->getClientTaxRate($client_id);
+    
+    //得意先の丸め区分
+    $client_tax = Get_Tax_div($db_con,$client_id);
+
+    //****************************
+    //売上ヘッダ作成
+    //****************************
+    //売上ヘッダ配列生成
+    $sale_head = Create_Sale_Head_Rental($db_con,$client_id,$close_day);
+
+    //SQLインジェクション対策
+    $sale_head = pg_convert($db_con,'t_sale_h',$sale_head);
+    //売上ヘッダ登録
+    $return = Db_Insert($db_con, t_sale_h, $sale_head);
+    
+    $sale_id = $sale_head[sale_id];
+
+    /****************************/
+    //売上データ作成
+    /****************************/
+    //売上データ配列生成
+    $sale_datas = Create_Sale_Data_Rental($db_con,$client_id,$sale_day);
+        
+    //行数分の処理を実施
+    foreach( $sale_datas as $key => $sale_data){
+
+				//複数の伝票が作成される場合、商品名に（○月分）を付加する
+				if ($count != "1"){
+					$s_date = explode("-",$sale_day);
+					$sale_data[official_goods_name] = $sale_data[official_goods_name]."(".$s_date[1]."月分)";
+					//$sale_data[goods_name] = $sale_data[goods_name]."(".$s_date[1]."月分)";
+				}
+
+
+        $sale_data[sale_id]   = $sale_id;
+        $sale_data[sale_d_id] = Get_Pkey(); 
+        $sale_data[line]      = $key+1;
+				//$sale_data[num]       = $sale_data[num] * $count; //回数の分だけ数量を増やす
+
+				//■行単位の合計金額を計算
+				$c_amount = $sale_data[cost_price] * $sale_data[num];     //原価金額（単価* 数量）
+				$sale_data[cost_amount] = Coax_Col($client_tax[coax], $c_amount);  //原価金額（丸め済）
+
+				$s_amount = $sale_data[sale_price] * $sale_data[num];     //売上金額（単価* 数量）
+				$sale_data[sale_amount] = Coax_Col($client_tax[coax], $s_amount);  //売上金額（丸め済）
+/*
+*/
+
+        //伝票の合計金額を計算するための配列を作成
+        $sale_d_cost_amount[] = $sale_data[cost_amount]; //行単位の原価金額
+        $sale_d_sale_amount[] = $sale_data[sale_amount]; //行単位の売上金額
+        $sale_d_tax_div[]     = $sale_data[tax_div];     //各商品の課税区分
+        
+        //SQLインジェクション対策
+        $sale_data = pg_convert($db_con,'t_sale_d',$sale_data);
+    
+        //売上データ登録
+        $return = Db_Insert($db_con, 't_sale_d', $sale_data);
+    
+    }
+    
+    
+    /****************************/
+    //売上ヘッダの合計金額をアップデート
+    /****************************/
+    $sale_head = "";
+    
+    //原価金額・消費税額の合計処理
+    $total_money = Total_Amount(
+                        $sale_d_cost_amount,
+                      $sale_d_tax_div,
+                      $client_tax[coax],
+                      $client_tax[tax_franct],
+                      $tax_rate,
+                      $client_id,
+                      $db_con
+                     );
+    $sale_head[cost_amount] = $total_money[0];
+    
+    //売上金額・消費税額の合計処理
+    $total_money = Total_Amount(
+                        $sale_d_sale_amount,
+                      $sale_d_tax_div,
+                      $client_tax[coax],
+                      $client_tax[tax_franct],
+                      $tax_rate,
+                      $client_id,
+                      $db_con
+                     );
+    $sale_head[net_amount] = $total_money[0];
+    $sale_head[tax_amount] = $total_money[1];
+        
+    //売上ヘッダ登録
+    $sale_head = pg_convert($db_con,'t_sale_h',$sale_head);
+    
+    //UPDATE条件
+    $where[sale_id] = $sale_id;
+    $where          = pg_convert($db_con,'t_sale_h',$where);
+    
+    //売上データ登録
+    $return = Db_Update($db_con, t_sale_h, $sale_head, $where);
+
+    //成功時はsale_id、失敗時はfalseを返す
+    if($return){    
+        return $sale_id;
+    } else {
+        Db_Query($db_con,"ROLLBACK;");
+        return false;
+    }
+
+}
+
+
+//RtoR用の売上ヘッダ配列を作成します
+function Create_Sale_Head_Rental($db_con,$client_id,$sale_day){
+
+    //自社の情報を取得します
+    $shop_data = Get_Shop($db_con);
+    
+    //得意先の情報を取得します
+    $client_data = Get_Client($db_con,$client_id);
+    
+    //レンタルヘッダ
+    $rental_head                  = array_merge($shop_data,$client_data);
+    $rental_head[shop_id]         = $_SESSION[client_id];
+    $rental_head[sale_id]         = Get_Pkey();
+    $rental_head[sale_no]         = Create_Slip_No($db_con,"sale");
+    $rental_head[sale_day]        = $sale_day;
+    $rental_head[claim_day]       = $sale_day;
+    $rental_head[client_id]       = $client_id;
+    $rental_head[c_staff_id]      = $_SESSION[staff_id];
+    $rental_head[c_staff_name]    = $_SESSION[staff_name];
+    $rental_head[e_staff_id]      = $_SESSION[staff_id];
+    $rental_head[e_staff_name]    = $_SESSION[staff_name];
+    $rental_head[claim_div]       = 1;
+    $rental_head[total_split_num] = 1;
+    $rental_head[trade_id]        = "11"; //売掛
+    $rental_head[renew_flg]       = "t";
+    $rental_head[renew_day]       = $sale_day;
+
+    return $rental_head;
+}
+
+
+//RtoR用の売上データ配列を作成します
+function Create_Sale_Data_Rental($db_con,$client_id,$sale_day){
+
+    //レンタルデータを取得
+    $sql  = "SELECT ";
+    $sql .= "    t_rental_d.goods_id,";               //商品ID
+    $sql .= "    t_rental_d.goods_cd,";               //商品CD
+    $sql .= "    t_g_product.g_product_name,";        //商品分類名
+    $sql .= "    (t_g_product.g_product_name || '　' || t_rental_d.goods_cname) AS official_goods_name,";    //商品名(正式)
+    $sql .= "    sum(t_rental_d.num) AS num,";        //数量
+
+    //$sql .= "    t_price.r_price AS buy_price, ";                                //仕入単価
+    //$sql .= "    t_price.r_price * sum(t_rental_d.num) AS buy_amount, ";         //仕入金額
+    $sql .= "    t_rental_d.rental_price AS cost_price,";                          //原価単価
+    $sql .= "    sum(t_rental_d.rental_amount) AS cost_amount, ";                  //原価金額
+    $sql .= "    t_rental_d.shop_price AS sale_price,";                            //売上単価
+    $sql .= "    sum(t_rental_d.shop_amount) AS sale_amount,";                     //売上金額
+
+    $sql .= "    t_goods.unit, ";      //単位
+    $sql .= "    t_goods.tax_div, ";   //課税区分
+    $sql .= "    '1' AS royalty ";     //ロイヤリティ
+
+    $sql .= "FROM t_rental_h";
+    $sql .= "    INNER JOIN t_rental_d ON t_rental_h.rental_id = t_rental_d.rental_id ";
+    $sql .= "    INNER JOIN t_goods ON t_goods.goods_id = t_rental_d.goods_id ";
+    $sql .= "    INNER JOIN t_g_product ON t_rental_d.g_product_id = t_g_product.g_product_id ";
+    //$sql .= "    INNER JOIN t_price ON t_goods.goods_id = t_price.goods_id AND t_price.rank_cd='1'";
+    $sql .= "WHERE ";
+    //$sql .= "    t_rental_d.rental_stat IN('10','21','22') ";
+    $sql .= "    t_rental_d.rental_stat IN('10','20','21','22') ";
+    $sql .= "AND ";
+    $sql .= "    t_rental_h.shop_id = $client_id ";
+    $sql .= "AND ";  
+    $sql .= "    (t_rental_h.regist_shop_id = $_SESSION[client_id] OR t_rental_h.online_flg = 't' )\n ";
+    $sql .= "AND ";  
+    $sql .= "    t_rental_h.claim_day <= '$sale_day' "; //請求月以降のRtoR
+    $sql .= "AND ";  
+    $sql .= "    ((t_rental_d.calcel_day IS NULL) OR (t_rental_d.calcel_day > '$sale_day')) "; //解約していない
+    $sql .= "GROUP BY ";
+    $sql .= "    t_rental_d.goods_id,";               //商品ID
+    $sql .= "    t_rental_d.goods_cd,";               //商品CD
+    $sql .= "    t_g_product.g_product_name,";        //商品分類名
+    $sql .= "    t_rental_d.goods_cname,";               //略称
+    //$sql .= "    t_price.r_price, ";                  //仕入単価
+    $sql .= "    t_rental_d.rental_price,";           //原価単価
+    $sql .= "    t_rental_d.shop_price,";             //売上単価
+    $sql .= "    t_goods.unit, ";                     //単位
+    $sql .= "    t_goods.tax_div ";                   //課税区分
+
+    $sql .= "ORDER BY ";
+    $sql .= "    t_rental_d.goods_cd"; 
+    $sql .= ";";
+
+    $result = Db_Query($db_con, $sql);
+    $rental_data = pg_fetch_all($result);
+
+    return $rental_data;
+}
+
+
+
+
+
+
+
+
+
+
+/**
+ * 概要  RtoRデータを基に特定期間の仕入伝票を作成します。
+ *
+ * 説明
+ *
+ * @param resource  $db_con       DB接続リソース
+ * @param array     $buy_day_s   前回仕入締日(yyyy-mm-dd形式)
+ * @param array     $buy_day_e   支払日(yyyy-mm-dd形式)
+ *
+ * @return array                  伝票が作成された場合は仕入ID、伝票を作成する必要がなかった場合はfalse
+ *
+ */
+function Regist_Buy_Rental_Range($db_con,$buy_day_s,$buy_day_e){
+
+	//前回締日を今回開始日にするため日付を＋1する
+	$date = explode("-",$buy_day_s);
+	$buy_day_s = date("Y-m-d",mktime(0,0,0,$date[1],"$date[2]"+1,$date[0]));
+
+	//仕入先（本部）のIDを取得
+	$client_id = Get_Client_Id_Head($db_con);
+
+	//得意先の締日を取得
+	$client_info = Get_Client($db_con,$client_id,2);
+	$close_day = $client_info[close_day];
+
+	//RtoRの仕入作成日を取得(契約の毎月○日の巡回日を求める関数を利用)
+	$buy_day_ary = Round_day($db_con,NULL,NULL,NULL,$close_day,NULL,NULL,2,$buy_day_s,$buy_day_e);
+	//print_array($buy_day_ary);
+
+	//仕入日の数
+	$count = count($buy_day_ary);
+
+	//仕入日がある場合
+	if ($count > 0){
+		//仕入作成日分のRtoR伝票を作成する
+		foreach($buy_day_ary AS $key => $buy_day){
+			//期間分のRtoRの仕入を作成する
+			$rental_id[] = Regist_Buy_Rental($db_con,$buy_day,$buy_day_e,$count);
+		}
+
+	//仕入作成日がない場合
+	}else{
+		$rental_id[] = false;
+	}
+
+	return $rental_id;
+
+}
+
+
+
+/**
+ * 概要  RtoRデータから本部に対して仕入伝票を作成します。
+ *
+ * 説明
+ *
+ * @param resource  $db_con       DB接続リソース
+ * @param string    $buy_day      仕入日(yyyy-mm-dd形式)
+ * @param string    $close_day    仕入締日
+ * @param intger    $count        伝票作成枚数
+ *
+ * @return resource               伝票が作成された場合は売上ID、伝票が作成されなかった場合はfalse
+ *
+ */
+function Regist_Buy_Rental($db_con,$buy_day,$close_day,$count=1){
+
+    //レンタルデータがあるかチェックする
+    if(!Check_Rental_Data($db_con,$_SESSION[client_id],$buy_day,"buy")){
+        return false;
+    }
+    //仕入先（本部）のIDを取得
+    $client_id = Get_Client_Id_Head($db_con);
+    
+    //自社の消費税率
+    #2009-12-24 aoyama-n
+    #$tax_rate   = Get_Tax_Rate($db_con);
+
+    #2009-12-24 aoyama-n
+    //税率クラス　インスタンス生成
+    $tax_rate_obj = new TaxRate($_SESSION[client_id]);
+    $tax_rate_obj->setTaxRateDay($close_day);
+    $tax_rate = $tax_rate_obj->getClientTaxRate($client_id);
+    
+    //得意先の丸め区分
+    $client_tax = Get_Tax_div($db_con,$client_id);
+
+    //****************************
+    //仕入ヘッダ作成
+    //****************************
+    //仕入ヘッダ配列生成
+    $buy_head = Create_Buy_Head_Rental($db_con,$client_id,$close_day);
+
+    //SQLインジェクション対策
+    $buy_head = pg_convert($db_con,'t_buy_h',$buy_head);
+
+    //仕入ヘッダ登録
+    $return = Db_Insert($db_con, 't_buy_h', $buy_head);
+
+    $buy_id = $buy_head[buy_id];
+
+    //****************************
+    //仕入データ作成
+    //****************************
+    //仕入データ配列生成
+    $buy_datas = Create_Buy_Data_Rental($db_con,$buy_day);
+    //print_array($buy_datas,buy_datas);
+
+    //行数分の処理を実施
+    foreach( $buy_datas as $key => $buy_data){
+
+
+				//複数の伝票が作成される場合、商品名に（○月分）を付加する
+				if ($count != "1"){
+					$b_date = explode("-",$buy_day);
+					$buy_data[goods_name] = $buy_data[goods_name]."(".$b_date[1]."月分)";
+				}
+
+        $buy_data[buy_id]   = $buy_id;
+        $buy_data[buy_d_id] = Get_Pkey();   
+        $buy_data[line]     = $key+1;
+				//$buy_data[num]      = $buy_data[num] * $count; //回数の分だけ数量を増やす
+
+				//■行単位の合計金額を計算
+				$b_amount = $buy_data[buy_price] * $buy_data[num];               //仕入金額（単価* 数量）
+				$buy_data[buy_amount] = Coax_Col($client_tax[coax], $b_amount);  //仕入金額（丸め済）
+
+        //伝票の合計金額を計算するための配列を作成
+        $buy_d_buy_amount[]  = $buy_data[buy_amount]; //行単位の売上金額
+        $buy_d_tax_div[]     = $buy_data[tax_div];     //各商品の課税区分
+/*
+*/
+        
+        //SQLインジェクション対策
+        $buy_data = pg_convert($db_con,'t_buy_d',$buy_data);
+        //print_array($buy_data,buy_data);
+    
+        //仕入データ登録
+        $return = Db_Insert($db_con, 't_buy_d', $buy_data);
+    
+    }
+
+    /****************************/
+    //仕入ヘッダの合計金額を計算
+    /****************************/
+    $buy_head = "";
+    
+    //仕入金額・消費税額の合計処理
+    $total_money = Total_Amount(
+                      $buy_d_buy_amount,
+                      $buy_d_tax_div,
+                      $client_tax[coax],
+                      $client_tax[tax_franct],
+                      $tax_rate,
+                      $client_id,
+                      $db_con
+                     );
+    $buy_head[net_amount] = $total_money[0];
+    $buy_head[tax_amount] = $total_money[1];
+
+    //仕入ヘッダ登録
+    $buy_head = pg_convert($db_con,'t_buy_h',$buy_head);
+    
+    //UPDATE条件
+    $where[buy_id] = $buy_id;
+    $where         = pg_convert($db_con,'t_buy_h',$where);
+    
+    //仕入データ登録
+    $return = Db_Update($db_con, 't_buy_h', $buy_head, $where);
+
+    //成功時はbuy_id、失敗時はfalseを返す
+    if($return){    
+        return $buy_id;
+    } else {
+        Db_Query($db_con,"ROLLBACK;");
+        return false;
+    }
+}
+
+//RtoR用の売上ヘッダ配列を作成します
+function Create_Buy_Head_Rental($db_con,$client_id,$buy_day){
+
+    /****************************/
+    //仕入ヘッダ作成
+    /****************************/
+    //拠点倉庫を取得
+    $sql    = "SELECT";
+    $sql   .= " t_ware.ware_id, "; 
+    $sql   .= " t_ware.ware_name "; 
+    $sql   .= "FROM t_branch ";
+    $sql   .= "INNER JOIN t_ware ON t_branch.bases_ware_id = t_ware.ware_id ";
+    $sql   .= "WHERE branch_id=(SELECT charge_branch_id FROM t_client WHERE client_id =".$client_id.") ";
+    $sql   .= "AND ";  
+    $sql   .= "    t_branch.shop_id = ".$_SESSION[client_id];
+
+/*
+    $sql    = "SELECT";
+    $sql   .= " t_client.ware_id, "; 
+    $sql   .= " t_ware.ware_name "; 
+    $sql   .= "FROM t_client ";
+    $sql   .= "INNER JOIN t_ware ON t_client.ware_id = t_ware.ware_id ";
+    $sql   .= "WHERE";
+    $sql   .= "    client_id = ".$_SESSION[client_id];
+*/
+    $result = Db_Query($db_con, $sql);
+    $shop_data = pg_fetch_array($result,0,PGSQL_ASSOC);
+
+    //仕入先（本部）のIDを取得
+    //$client_id = Get_Client_Id_Head($db_con);
+    //echo $client_id;
+
+    //仕入先本部の情報を抽出
+    $sql    = "SELECT";
+    $sql   .= " t_client.client_id, ";
+    $sql   .= " t_client.client_cd1, ";
+    $sql   .= " t_client.client_cd2, ";
+    $sql   .= " t_client.client_name, ";
+    $sql   .= " t_client.client_name2, ";
+    $sql   .= " t_client.client_cname ";
+    $sql   .= "FROM t_client ";
+    $sql   .= "WHERE t_client.client_id = $client_id ";
+    $result = Db_Query($db_con, $sql);
+    $client_data = pg_fetch_array($result,0,PGSQL_ASSOC);
+
+    //
+    $buy_head                  = array_merge($shop_data,$client_data);
+    $buy_head[buy_id]          = Get_Pkey();
+    $buy_head[shop_id]         = $_SESSION[client_id];
+    $buy_head[buy_no]          = Create_Slip_No($db_con,"buy");
+    $buy_head[buy_day]         = $buy_day;
+    $buy_head[arrival_day]     = $buy_day;
+
+    $buy_head[c_staff_id]      = $_SESSION[staff_id];
+    $buy_head[c_staff_name]    = $_SESSION[staff_name];
+    $buy_head[e_staff_id]      = $_SESSION[staff_id];
+    $buy_head[e_staff_name]    = $_SESSION[staff_name];
+    $buy_head[total_split_num] = 1;
+    $buy_head[trade_id]        = "21"; //掛仕入 
+    $buy_head[buy_div]         = 1;
+    $buy_head[renew_flg]       = "t";
+    $buy_head[renew_day]       = $buy_day;
+
+    return $buy_head;
+}
+
+function Create_Buy_Data_Rental($db_con,$buy_day){
+
+    $client_id = $_SESSION[client_id]; 
+
+    /****************************/
+    //仕入データ作成
+    /****************************/
+    //レンタルデータを取得
+    $sql  = "SELECT ";
+    $sql .= "    t_rental_d.goods_id,";                         //商品ID
+    $sql .= "    t_rental_d.goods_cd,";                         //商品CD
+    $sql .= "    (t_g_product.g_product_name || '　' || t_rental_d.goods_cname) AS goods_name,";  //商品名(正式)
+    $sql .= "    sum(t_rental_d.num) AS num,";                  //数量
+    $sql .= "    t_rental_d.shop_price AS buy_price,";          //仕入単価
+    $sql .= "    sum(t_rental_d.shop_amount) AS buy_amount,";   //仕入金額
+    $sql .= "    t_goods.tax_div, ";                            //課税区分
+    $sql .= "    '1' AS royalty ";                              //ロイヤリティ
+
+    $sql .= "FROM t_rental_h";
+    $sql .= "    INNER JOIN t_rental_d ON t_rental_h.rental_id = t_rental_d.rental_id ";
+    $sql .= "    INNER JOIN t_goods ON t_goods.goods_id = t_rental_d.goods_id ";
+    $sql .= "    INNER JOIN t_g_product ON t_rental_d.g_product_id = t_g_product.g_product_id ";
+    $sql .= "WHERE ";
+    //$sql .= "    t_rental_d.rental_stat IN('10','21','22') ";
+    $sql .= "    t_rental_d.rental_stat IN('10','20','21','22') ";
+    $sql .= "AND ";  
+    $sql .= "    t_rental_h.shop_id = $client_id ";
+    $sql .= "AND ";  
+    $sql .= "    (t_rental_h.regist_shop_id = $_SESSION[client_id] OR t_rental_h.online_flg = 't' )\n ";
+    $sql .= "AND ";  
+    $sql .= "    t_rental_h.claim_day <= '$buy_day' "; //請求月以降のRtoR
+    $sql .= "AND ";  
+    $sql .= "    ((t_rental_d.calcel_day IS NULL) OR (t_rental_d.calcel_day > '$buy_day')) "; //解約していない
+    //$sql .= "AND ";
+    //$sql .= "    t_rental_h. online_flg = 't' ";
+    $sql .= "GROUP BY ";
+    $sql .= "    t_rental_d.goods_id,";               //商品ID
+    $sql .= "    t_rental_d.goods_cd,";               //商品CD
+    $sql .= "    t_g_product.g_product_name,";        //商品分類名
+    $sql .= "    t_rental_d.goods_cname,";               //商品名
+    $sql .= "    t_rental_d.shop_price,";             //売上単価
+    $sql .= "    t_goods.tax_div ";                   //課税区分
+
+    $sql .= "ORDER BY ";
+    $sql .= "    t_rental_d.goods_cd"; 
+    $sql .= ";";
+
+    $result = Db_Query($db_con, $sql);
+    $rental_data = pg_fetch_all($result);
+
+    return $rental_data;
+}
+
+
+/**
+ * 概要 得意先の情報を取得します
+ *
+ * 説明
+ *
+ * @param resource   $db_con     DB接続リソース
+ * @param integer    $client_id  得意先ID
+ * @param integer    $type       取得データタイプ
+ *
+ * @return array           説明
+ */
+
+function Get_Client($db_con,$client_id,$type=1){
+
+
+	if ($type == "1"){
+    //得意先の情報を抽出
+    $sql  = "SELECT";
+    //$sql .= " t_client.shop_name, ";
+    //$sql .= " t_client.shop_name2, ";
+    $sql .= " t_client.client_id, ";
+    $sql .= " t_client.client_cd1, ";
+    $sql .= " t_client.client_cd2, ";
+    $sql .= " t_client.client_name, ";
+    $sql .= " t_client.client_name2, ";
+    $sql .= " t_client.client_cname, ";
+    $sql .= " t_client.post_no1 AS c_post_no1, ";
+    $sql .= " t_client.post_no2 AS c_post_no2, ";
+    $sql .= " t_client.address1 AS c_address1, ";
+    $sql .= " t_client.address2 AS c_address2, ";
+    $sql .= " t_client.address3 AS c_address3, ";
+    $sql .= " t_claim.claim_id ";
+    $sql .= "FROM t_client ";
+    $sql .= "INNER JOIN t_claim ON t_client.client_id = t_claim.client_id ";
+    $sql .= "WHERE t_client.client_id = $client_id ";
+    $sql .= "AND   t_claim.claim_div = '1' ";
+
+	} elseif($type == "2") {
+
+    //得意先の情報を抽出
+    $sql  = "SELECT";
+    $sql .= " t_client.client_id, ";
+    $sql .= " t_client.client_cd1, ";
+    $sql .= " t_client.client_cd2, ";
+    $sql .= " t_client.client_name, ";
+    $sql .= " t_client.client_name2, ";
+    $sql .= " t_client.client_cname, ";
+    $sql .= " t_client.close_day, ";
+    $sql .= " t_client.post_no1 AS c_post_no1, ";
+    $sql .= " t_client.post_no2 AS c_post_no2, ";
+    $sql .= " t_client.address1 AS c_address1, ";
+    $sql .= " t_client.address2 AS c_address2, ";
+    $sql .= " t_client.address3 AS c_address3 ";
+    $sql .= "FROM t_client ";
+    $sql .= "WHERE t_client.client_id = $client_id ";
+	}
+
+    $result = Db_Query($db_con, $sql);
+    
+    $client_data = pg_fetch_array($result,0,PGSQL_ASSOC);
+    
+    return $client_data;
+
+}
+
+
+/**
+ * 概要 自社の情報を取得します
+ *
+ * 説明
+ *
+ * @param resource   $db_con     DB接続リソース
+ * @param integer    $client_id  得意先ID
+ *
+ * @return array           説明
+ */
+function Get_Shop($db_con){
+
+    $shop_id = $_SESSION[client_id];
+
+    $sql  = "SELECT";
+    $sql .= " shop_name  AS c_shop_name, ";
+    $sql .= " shop_name2 AS c_shop_name2, ";
+    $sql .= " t_client.ware_id, "; 
+    $sql .= " t_ware.ware_name "; 
+    $sql .= "FROM t_client ";
+    $sql .= "INNER JOIN t_ware ON t_client.ware_id = t_ware.ware_id ";
+    $sql .= "WHERE";
+    $sql .= "    client_id = $shop_id ";
+    $result = Db_Query($db_con, $sql);
+
+    $client_data = pg_fetch_array($result,0,PGSQL_ASSOC);
+
+    return $client_data;
+
+}
+
+
+//仕入先（本部）のID取得
+function Get_Client_Id_Head($db_con){
+
+    //仕入先（本部）のID取得
+    $sql  = "SELECT ";
+    $sql .= "    client_id ";
+    $sql .= "FROM ";
+    $sql .= "    t_client ";
+    $sql .= "WHERE ";
+    $sql .= "    head_flg = 't' ";
+    $sql .= "AND ";
+    $sql .= "    client_div='2' ";
+    $sql .= "AND ";
+    $sql .= "    state = 1 ";
+    $sql .= "AND ";
+    $sql .= "    shop_id = ".$_SESSION[client_id];
+    $sql .= ";";
+
+    $result    = Db_Query($db_con, $sql); 
+    $client_id = @pg_fetch_result($result, 0,0);
+    
+    return $client_id;
+
+}
+
+//伝票番号を生成します
+function Create_Slip_No($db_con,$type){
+
+    if ($type == "sale"){
+        $table_name = "t_sale_h";
+        $column     = "sale_no";
+        
+    } elseif($type = buy) {
+        $table_name = "t_buy_h";
+        $column     = "buy_no";
+    
+    }
+
+    //伝票番号取得
+    $sql  = "SELECT ";
+    $sql .= "   MAX($column)";
+    $sql .= " FROM";
+    $sql .= "   $table_name";
+    $sql .= " WHERE";
+    $sql .= "   shop_id = ".$_SESSION[client_id];
+    $sql .= ";";
+    
+    $result = Db_Query($db_con, $sql);
+    $slip_no = pg_fetch_result($result, 0 ,0);
+    $slip_no = $slip_no +1;
+    $slip_no = str_pad($slip_no, 8, 0, STR_PAD_LEFT);
+
+    return $slip_no;
+}
+
+?>

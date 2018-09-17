@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="utf-8"?>
+<wc-entries
+   xmlns="svn:">
+<entry
+   committed-rev="1"
+   name=""
+   committed-date="2009-10-30T05:38:51.696297Z"
+   url="svn+ssh://210.196.79.251/var/svn/amenity/branches/anet-dosys-rev.1.4/anet-dosys/function"
+   last-author="kajioka-h"
+   kind="dir"
+   uuid="b28f2e69-2077-0410-9977-8d54750ab086"
+   revision="2"/>
+<entry
+   committed-rev="1"
+   name="func_qf_rule.inc"
+   text-time="2009-11-02T04:53:28.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="fdc1f8caffcdccea4db3df141ded3495"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:28.000000Z"/>
+<entry
+   committed-rev="1"
+   name="session.fnc"
+   text-time="2009-11-02T04:53:28.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="614f2f8ad0801661595f413338d08636"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:28.000000Z"/>
+<entry
+   committed-rev="3"
+   name="function.fnc"
+   text-time="2009-10-21T08:52:47.000000Z"
+   committed-date="2009-11-02T05:41:00.376251Z"
+   checksum="c8c86d5898fda871fd9b88c55cb34ca1"
+   last-author="root"
+   kind="file"
+   prop-time="2009-11-02T04:53:28.000000Z"
+   revision="3"/>
+<entry
+   committed-rev="1"
+   name="db.fnc"
+   text-time="2009-11-02T04:53:28.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="da7f6bf250761d08b17e1a81929be4bc"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:28.000000Z"/>
+<entry
+   committed-rev="1"
+   name="INCLUDE1.php"
+   text-time="2009-11-02T04:53:28.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="889d419a88c5dfd2c2efddca9a7b8c97"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:28.000000Z"/>
+<entry
+   committed-rev="1"
+   name="session.fnc.090831"
+   text-time="2009-11-02T04:53:28.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="14c0adb9579d5e06017ad09d03fbae8b"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:28.000000Z"/>
+<entry
+   committed-rev="1"
+   name="function.fnc.090904"
+   text-time="2009-11-02T04:53:28.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="338717e8a430a61daa7c42d07b591b06"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:28.000000Z"/>
+<entry
+   committed-rev="1"
+   name="function.fnc.090916"
+   text-time="2009-11-02T04:53:28.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="36f29b821e6f9bdf9c80deb9a3b0a483"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:28.000000Z"/>
+<entry
+   committed-rev="1"
+   name="func_qf_parts.inc"
+   text-time="2009-11-02T04:53:28.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="262980f186cb3d68305a8935c564f986"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:28.000000Z"/>
+<entry
+   committed-rev="1"
+   name="func_fukuda.inc"
+   text-time="2009-11-02T04:53:28.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="c1219daee60140ad39b12cff1f037004"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:28.000000Z"/>
+<entry
+   committed-rev="1"
+   name="function.fnc.090828"
+   text-time="2009-11-02T04:53:28.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="338717e8a430a61daa7c42d07b591b06"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:28.000000Z"/>
+<entry
+   committed-rev="1"
+   name="func_qf_chk_rule.inc"
+   text-time="2009-11-02T04:53:28.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="3e648f2a887fde67798555811c74cfd5"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:28.000000Z"/>
+<entry
+   committed-rev="1"
+   name="sample_func_watanabe.inc"
+   text-time="2009-11-02T04:53:28.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="8059a3592cd9cc0db25f3b47982b7476"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:28.000000Z"/>
+<entry
+   committed-rev="1"
+   name="permit.inc"
+   text-time="2009-11-02T04:53:28.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="16f89f6ee69bf1118aee85b97fcae572"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:28.000000Z"/>
+<entry
+   committed-rev="1"
+   name="menu.fnc"
+   text-time="2009-11-02T04:53:28.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="dbbb93ceb4653986d276931da5ef4f88"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:28.000000Z"/>
+<entry
+   committed-rev="6"
+   name="html.fnc"
+   text-time="2009-11-06T06:35:21.000000Z"
+   committed-date="2009-11-06T06:38:16.940412Z"
+   checksum="1ef06008596f7afecc9467960cb93ecd"
+   last-author="root"
+   kind="file"
+   prop-time="2009-11-02T04:53:28.000000Z"
+   revision="6"/>
+<entry
+   committed-rev="1"
+   name="INCLUDE.php"
+   text-time="2009-11-02T04:53:28.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="e7cc01fc6cc4ca4934d5e3210cdd6cc0"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:28.000000Z"/>
+<entry
+   committed-rev="1"
+   name="db_con.php"
+   text-time="2009-11-02T04:53:28.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="f7de4bbf377ac3844f0a6d70581ea9ca"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:28.000000Z"/>
+<entry
+   committed-rev="1"
+   name=".htaccess"
+   text-time="2009-11-02T04:53:28.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="4afd84b898945e884f88b7f2cda376c0"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:28.000000Z"/>
+<entry
+   committed-rev="1"
+   name="trade_fc.fnc"
+   text-time="2009-11-02T04:53:28.000000Z"
+   committed-date="2009-10-30T05:38:51.696297Z"
+   checksum="b215d0e4f99477d10571faf4090e3dcd"
+   last-author="kajioka-h"
+   kind="file"
+   prop-time="2009-11-02T04:53:28.000000Z"/>
+</wc-entries>

@@ -1,0 +1,557 @@
+<?php
+/**
+ *
+ * 発注・仕入エラーチェック関数
+ * 
+ * @param       int         $goods_id       商品ID
+ *              string      $goods_cd       商品コード
+ *              string      $goods_name     商品名
+ *              int         $num            数量
+ *              int         $price          単価  
+ *              int         $amount         金額  
+ *              string      $del_row        削除履歴    
+ *              int         $max_row        最大行数
+ *              string      $type           区分
+ *              
+ *
+ * @return      array       $return_array   結果配列
+ *              
+ * @autor       こうじ
+ * @version     1.00 (2006/10/07)
+ *
+ *
+ * 2009/09/01   aoyama-n    値引き金額が入力できるようにマイナス値を許可
+ * 2009/10/12   hashimoto-y 在庫管理フラグをショップ別商品情報テーブルに変更
+ *
+**/
+//aoyama-n 2009-09-01
+#function Row_Data_Check($goods_id, $goods_cd, $goods_name, $num, $price, $amount, $tax_div, $del_row, $max_row, $type, $conn, $num2=null, $royalty=null, $data_id=null, $check_ary=null ){
+function Row_Data_Check($goods_id, $goods_cd, $goods_name, $num, $price, $amount, $tax_div, $del_row, $max_row, $type, $conn, $num2=null, $royalty=null, $data_id=null, $check_ary=null, $discount_flg=null ){
+
+    //エラーメッセージ判定
+    if($type == 'ord'){
+        $type_name = "発注";
+    }elseif($type == 'buy'){
+        $type_name = "仕入";
+    }
+
+    //行数
+    $line = 0;
+    //登録データ配列キー
+    $j = 0;
+
+    //表示行数分ループ
+    for($i = 0; $i < $max_row; $i++){
+
+        //削除行を処理対処外とする
+        if(!@in_array("$i", $del_row)){
+
+            //チェックする行NO
+            $line = $line+1;
+
+            //商品入力チェック
+            if($goods_cd[$i] != null){
+
+                $goods_id[$i] = ($goods_id[$i] != null)? $goods_id[$i] : "null";
+
+                //登録ボタン押下前に商品コードが変更されていないかチェック
+                $sql  = "SELECT";
+                $sql .= "   COUNT(goods_id) ";
+                $sql .= "FROM";
+                $sql .= "   t_goods ";
+                $sql .= "WHERE";
+                $sql .= "   goods_id =  $goods_id[$i]";
+                $sql .= "   AND";
+                $sql .= "   goods_cd = '$goods_cd[$i]'";
+                $sql .= ";";
+
+                $result = Db_Query($conn, $sql);
+                $count = pg_fetch_result($result, 0,0);
+
+                //登録ボタン押下前と同じ場合
+                if($count == 1){
+                    $input_flg[$i] = true;
+                //違っていた場合
+                }else{
+                    $no_goods_err = $line."行目　商品情報取得前に ".$type_name."確認画面へボタン <br>が押されました。操作をやり直してください。";
+                    return array(true, $no_goods_err);
+                }
+            }else{
+                $input_flg[$i] = false;
+            }
+
+            //商品が入力されている場合
+            if($input_flg[$i] == true){
+
+                //正しい商品コードが入力されているか
+                if($goods_id[$i] == null){
+                    $goods_err[$i] = $line."行目　正しい商品コードを入力して下さい。";
+                    $err_flg[$i] = true;
+                    continue;
+
+                //正しい商品コードが入力されていた場合
+                }else{
+                    //数量と仕入単価に入力があるか
+                    if($num[$i] == null || $price[$i]["i"] == null){
+                         $price_num_err[$i] = $line."行目　".$type_name."入力に".$type_name."数と仕入単価は必須です。";
+                         $err_flg[$i] = true;
+                         continue;
+
+                    //数量と仕入単価に入力がある場合
+                    }else{
+                        //数量数半角数字チェック
+                        //文字列、null、発注時に０の場合エラー
+                        if((!ereg("^[0-9]+$",$num[$i]) || $num[$i] == null) || ($type != 'buy' && $num[$i] == 0)){
+                            $num_err[$i] = $line."行目　".$type_name."数は半角数字のみ入力可能です。";
+                            $err_flg[$i] = true;
+                        //ここから先は仕入のみ対象
+                        //発注から起こしている場合
+                        }elseif($check_ary[1] != null){
+                            //発注が削除されていないかを確認
+                            $update_check_flg = Update_Check($check_ary[0], "t_order_h", "ord_id", $check_ary[1], $check_ary[2]);
+                            //既に削除されていた場合
+                            if($update_check_flg === false){
+                                if($_SESSION[group_kind] == '1'){
+                                    header("Location:./1-3-205.php?buy_id=0&input_flg=true&del_ord_flg=true");
+                                }else{
+                                    header("Location:./2-3-205.php?buy_id=0&input_flg=true&del_ord_flg=true");
+                                }
+                                exit;
+                            }
+
+   
+                            //発注データIDがある場合 
+                            if($data_id[$i] != null){
+
+                                //仕入可能件数を抽出
+                                $sql  = "SELECT\n";
+                                $sql .= "    t_order_h.num - COALESCE(t_buy_h.num, 0) AS num \n";
+                                $sql .= "FROM\n";
+                                $sql .= "    (SELECT\n";
+                                $sql .= "        num,\n";
+                                $sql .= "        ord_d_id \n";
+                                $sql .= "    FROM\n";
+                                $sql .= "        t_order_d\n";
+                                $sql .= "    WHERE\n";
+                                $sql .= "        t_order_d.ord_d_id = $data_id[$i]\n";
+                                $sql .= "    ) AS t_order_h\n";
+                                $sql .= "        LEFT JOIN\n";
+                                $sql .= "    (SELECT\n";
+                                $sql .= "        SUM(num) AS num,\n";
+                                $sql .= "        ord_d_id \n";
+                                $sql .= "    FROM\n";
+                                $sql .= "        t_buy_h\n";
+                                $sql .= "            INNER JOIN\n";
+                                $sql .= "        t_buy_d\n";
+                                $sql .= "        ON t_buy_h.buy_id = t_buy_d.buy_id\n";
+                                $sql .= "    WHERE\n";
+                                $sql .= "        t_buy_d.ord_d_id = $data_id[$i]\n";
+
+                                //仕入変更時
+                                if($check_ary[3] != null ){
+                                    $sql .= "        AND\n";
+                                    $sql .= "        t_buy_h.buy_id <> $check_ary[3]\n";
+                                }
+                                $sql .= "    GROUP BY ord_d_id\n";
+                                $sql .= "    ) AS t_buy_h\n";
+                                $sql .= "    ON t_order_h.ord_d_id = t_buy_h.ord_d_id\n";
+                                $sql .= ";\n";
+
+                                $result = Db_Query($check_ary[0], $sql);
+                                if(pg_num_rows($result) > 0){
+                                    $designated_num = pg_fetch_result($result, 0, "num");
+                                }
+
+                                //仕入数チェック
+                                if($designated_num< $num[$i]){
+                                    if($_SESSION["group_kind"] == '1'){
+                                        $ord_num_err[$i] = $line."行目　仕入数が発注数を超えています。";
+                                    }else{
+                                        $num_err[$i] = $line."行目　仕入数が発注数を超えています。";
+                                        $err_flg[$i] = true;
+                                    }
+                                }
+                            }
+                        }
+
+                        //仕入単価半角数字チェック
+                        //if条件変更
+                        #if(($price[$i]["i"] != null && !ereg("^[0-9]+$",$price[$i]["i"])) || ($price[$i]["d"] != null && !ereg("^[0-9]+$",$price[$i]["d"]))){
+                        #    $price_err[$i] = $line."行目　仕入単価は半角数字のみ入力可能です。";
+                        #    $err_flg[$i] = true;
+                        #}
+                        //aoyama-n 2009-09-01
+                        //値引商品のチェック
+                        if ($discount_flg[$i] === 't'){
+                            if(($price[$i]["i"] != null && !ereg("^[-0-9]+$",$price[$i]["i"])) || ($price[$i]["d"] != null && !ereg("^[0-9]+$",$price[$i]["d"]))){
+                                $price_err[$i] = $line."行目　仕入単価は「-」と半角数字のみ入力可能です。";
+                                $err_flg[$i] = true;
+
+                            }elseif ($price[$i]["i"] > 0 ){
+                                $price_err[$i] = $line."行目　商品に値引を指定した場合、仕入単価は０以下の数値のみ入力可能です。";
+                                $err_flg[$i] = true;
+                            }
+                        //値引商品以外のチェック
+                        }else{
+                            if(($price[$i]["i"] != null && !ereg("^[0-9]+$",$price[$i]["i"])) || ($price[$i]["d"] != null && !ereg("^[0-9]+$",$price[$i]["d"]))){
+                                $price_err[$i] = $line."行目　仕入単価は半角数字のみ入力可能です。";
+                                $err_flg[$i] = true;
+                            }
+
+                        }
+
+
+                    }
+                }
+
+                //登録データ配列
+                $add_data[goods_id][$j]     = $goods_id[$i];        //商品ID              
+                $add_data[goods_cd][$j]     = $goods_cd[$i];        //商品CD              
+                $add_data[goods_name][$j]   = $goods_name[$i];      //商品名           
+                $add_data[num][$j]          = $num[$i];             //数量             
+                $add_data[price][$j]        = $price[$i];           //単価
+                $add_data[amount][$j]       = $amount[$i];          //金額
+                $add_data[tax_div][$j]      = $tax_div[$i];         //課税区分              
+                $add_data[num2][$j]         = ($num2[$i] != "-")?  $num2[$i] : 0;            //数量
+                $add_data[royalty][$j]      = $royalty[$i];         //ロイヤリティ
+                $add_data[data_id][$j]      = ($data_id[$i] != NULL)? $data_id[$i] : "NULL";         //データID
+                $add_data[def_line][$j]     = $line;
+                $j++;
+
+            //商品が選択されていないのに、数量、単価のいずれかに入力がある場合
+            }elseif(($goods_cd[$i] == null || $goods_name[$i] == null  || $price[$i]["i"] != null || $price[$i]["d"] != null) && $num[$i] != null){
+                $price_num_err[$i] = $line."行目　商品を選択して下さい。";
+                $err_flg[$i] = true;
+                $err_input_flg = true;
+                continue;
+            }
+        }
+    }
+
+    //商品入力がない場合
+    if(!@in_array(true, $input_flg) && $err_input_flg != true){
+        $no_goods_err = "商品が一つも選択されていません。";
+        $err_flg[] = true;
+    }
+
+    //エラーがあった場合
+    if(@in_array(true, $err_flg)){
+        $return_array = array(true, $no_goods_err, $goods_err, $price_num_err, $price_err, $num_err, $ord_num_err);
+    }else{
+        $return_array = array(false, $add_data, $ord_num_err);
+    }
+
+    return $return_array;
+
+}
+
+//発注入力で使用
+//顧客区分「特殊」でログインした場合の商品抽出関数
+function Get_Rank_Goods ($db_con, $designated_date='0', $goods_id=null, $goods_cd=null){
+
+    $shop_id = $_SESSION["client_id"];  //ショップID
+    $rank_cd = $_SESSION["rank_cd"];
+
+    $sql  = "SELECT ";
+    $sql .= "   goods_id, ";
+    $sql .= "   public_flg, ";
+    $sql .= "   shop_id ";
+    $sql .= "FROM ";
+    $sql .= "   t_goods ";
+    $sql .= "WHERE ";
+    //引数に商品コードが渡された場合
+    if($goods_id == null){
+        $sql .= "   goods_cd = '$goods_cd' ";
+    }else{
+        $sql .= "   goods_id = $goods_id ";
+    }
+
+    $sql .= ";";
+
+    $result = Db_Query($db_con, $sql);
+    $data_num = pg_num_rows($result);
+
+    //該当レコードなしの場合
+    if($data_num == 0){
+        return false;
+    }
+
+    $input_goods_data = pg_fetch_all($result);
+
+    //本部商品の場合
+    if($input_goods_data[0]["public_flg"] == "t"){
+        $head_flg = 't' ;
+        $goods_id = $input_goods_data[0]["goods_id"];       //商品ID
+    //FC商品の場合
+    }elseif($input_goods_data[0]["public_flg"] == "f"){
+        for($i = 0; $i < $data_num; $i++){
+
+            //FC商品は同一コードで複数該当する場合があるため、
+            //ショップIDが一致するものを対象の商品とする
+            if($input_goods_data[$i]["shop_id"] == $shop_id){
+                $goods_id = $input_goods_data[$i]["goods_id"];
+                $head_flg = 'f';
+                break;
+            }
+
+        }
+
+        //該当する商品がない場合
+        if($head_flg == null){
+            return false;
+        }
+    }
+
+    //商品データ抽出クエリ
+    $sql  = "SELECT\n ";
+    $sql .= "   t_goods.goods_id,\n";
+    $sql .= "   t_goods.name_change,\n";
+    #2009-10-12 hashimoto-y
+    #$sql .= "   t_goods.stock_manage,\n";
+    $sql .= "   t_goods_info.stock_manage,\n";
+
+    $sql .= "   t_goods.goods_cd,\n";
+    //aoyama-n 2009-09-07
+    //フレインの商品名に商品分類が表示されていない不具合修正
+    #$sql .= "   t_goods.goods_name,\n";
+    $sql .= "   (t_g_product.g_product_name || ' ' || t_goods.goods_name) AS goods_name, \n";  //商品名（正式）,\n";
+    #2009-10-12 hashimoto-y
+    #$sql .= "   CASE t_goods.stock_manage WHEN 1 THEN COALESCE(t_stock.stock_num,0) END AS rack_num,\n";
+    #$sql .= "   CASE t_goods.stock_manage WHEN 1 THEN COALESCE(t_stock_io.order_num,0) END AS on_order_num,\n";
+    #$sql .= "   CASE t_goods.stock_manage WHEN 1 THEN COALESCE(t_allowance_io.allowance_io_num,0) END AS allowance_total,\n";
+    $sql .= "   CASE t_goods_info.stock_manage WHEN 1 THEN COALESCE(t_stock.stock_num,0) END AS rack_num,\n";
+    $sql .= "   CASE t_goods_info.stock_manage WHEN 1 THEN COALESCE(t_stock_io.order_num,0) END AS on_order_num,\n";
+    $sql .= "   CASE t_goods_info.stock_manage WHEN 1 THEN COALESCE(t_allowance_io.allowance_io_num,0) END AS allowance_total,\n";
+
+    $sql .= "   COALESCE(t_stock.stock_num,0) + COALESCE(t_stock_io.order_num,0) - COALESCE(t_allowance_io.allowance_io_num,0) AS stock_total, \n";
+    $sql .= "   t_price.r_price,\n";
+    $sql .= "   t_goods.tax_div,\n";
+    $sql .= "   t_goods.in_num\n";
+    $sql .= "FROM\n";
+    $sql .= "   t_goods \n";
+    $sql .= "       INNER JOIN\n";
+    $sql .= "   t_price\n";
+    $sql .= "   ON t_goods.goods_id = t_price.goods_id\n";
+    //aoyama-n 2009-09-07
+    //フレインの商品名に商品分類が表示されていない不具合修正
+    $sql .= "       INNER JOIN\n";
+    $sql .= "   t_g_product\n";
+    $sql .= "   ON t_goods.g_product_id = t_g_product.g_product_id\n";
+
+    $sql .= "       LEFT JOIN\n";
+    $sql .= "   (SELECT\n";
+    $sql .= "       t_stock.goods_id,\n";
+    $sql .= "       SUM(t_stock.stock_num)AS stock_num,\n ";
+    $sql .= "       SUM(t_stock.rstock_num)AS rstock_num\n";
+    $sql .= "   FROM \n";
+    $sql .= "       t_stock\n";
+    $sql .= "           INNER JOIN\n";
+    $sql .= "       t_ware\n";
+    $sql .= "       ON t_stock.ware_id = t_ware.ware_id\n";
+    $sql .= "   WHERE\n";
+    $sql .= "       t_stock.shop_id =  $shop_id\n";
+    $sql .= "       AND\n";
+    $sql .= "       t_ware.count_flg = 't'\n";
+    $sql .= "   GROUP BY t_stock.goods_id\n";
+    $sql .= "   )AS t_stock\n";
+    $sql .= "   ON t_goods.goods_id = t_stock.goods_id\n";
+    $sql .= "       LEFT JOIN \n";
+    $sql .= "   (SELECT \n";
+    $sql .= "       t_stock_hand.goods_id,\n";
+    $sql .= "       SUM(t_stock_hand.num * CASE t_stock_hand.io_div WHEN 1 THEN 1 WHEN 2 THEN -1 END ) AS order_num\n";
+    $sql .= "   FROM\n";
+    $sql .= "       t_stock_hand\n";
+    $sql .= "           INNER JOIN\n";
+    $sql .= "       t_ware \n";
+    $sql .= "       ON t_stock_hand.ware_id = t_ware.ware_id\n";
+    $sql .= "   WHERE \n";
+    $sql .= "       t_stock_hand.work_div = 3 \n";
+    $sql .= "       AND \n";
+    $sql .= "       t_stock_hand.shop_id =  $shop_id\n";
+    $sql .= "       AND \n";
+    $sql .= "       t_ware.count_flg = 't'\n";
+    $sql .= "       AND \n";
+    $sql .= "       t_stock_hand.work_day <= (CURRENT_DATE + $designated_date)\n";
+    $sql .= "   GROUP BY t_stock_hand.goods_id\n";
+    $sql .= "   ) AS t_stock_io\n";
+    $sql .= "   ON t_goods.goods_id=t_stock_io.goods_id\n";
+    $sql .= "       LEFT JOIN \n";
+    $sql .= "   (SELECT \n";
+    $sql .= "       t_stock_hand.goods_id,\n";
+    $sql .= "       SUM(t_stock_hand.num * CASE t_stock_hand.io_div WHEN 1 THEN -1 WHEN 2 THEN 1 END ) AS allowance_io_num\n";
+    $sql .= "   FROM \n";
+    $sql .= "       t_stock_hand \n";
+    $sql .= "           INNER JOIN \n";
+    $sql .= "       t_ware \n";
+    $sql .= "       ON t_stock_hand.ware_id = t_ware.ware_id\n";
+    $sql .= "   WHERE \n";
+    $sql .= "       t_stock_hand.work_div = 1\n";
+    $sql .= "       AND \n";
+    $sql .= "       t_stock_hand.shop_id = $shop_id\n";
+    $sql .= "       AND \n";
+    $sql .= "       t_ware.count_flg = 't'\n";
+    $sql .= "       AND \n";
+    $sql .= "       t_stock_hand.work_day <= (CURRENT_DATE + $designated_date)\n";
+    $sql .= "   GROUP BY t_stock_hand.goods_id\n";
+    $sql .= "   ) AS t_allowance_io\n";
+    $sql .= "   ON t_goods.goods_id = t_allowance_io.goods_id \n";
+    #2009-10-12 hashimoto-y
+    $sql .= "   INNER JOIN t_goods_info   ON t_goods.goods_id  = t_goods_info.goods_id ";
+
+    $sql .= "WHERE\n";
+    $sql .= "   t_goods.goods_id = $goods_id\n";
+
+    #2009-10-12 hashimoto-y
+    $sql .= "   AND ";
+    $sql .= "   t_goods_info.shop_id = $shop_id ";
+
+    //本部商品の場合
+    if($head_flg == 't'){
+        $sql .= "   AND\n";
+        $sql .= "   t_goods.public_flg = 't'\n";
+        $sql .= "   AND\n";
+        $sql .= "   t_price.rank_cd = '$rank_cd'\n";
+    //FC商品の場合
+    }elseif($head_flg == 'f'){
+        $sql .= "   AND\n";
+        $sql .= "   t_goods.public_flg = 'f'\n";
+        $sql .= "   AND\n";
+        $sql .= "   t_goods.shop_id = $shop_id\n";
+        $sql .= "   AND\n";
+        $sql .= "   t_price.rank_cd = '1'\n";
+        $sql .= "   AND\n";
+        $sql .= "   t_price.shop_id = $shop_id\n";
+    }
+
+    $result = Db_Query($db_con, $sql);
+
+    $return_data = pg_fetch_array($result, 0);
+
+    return $return_data;
+}
+
+
+//仕入入力で使用
+function Get_Rank_Goods_Buy ($db_con, $ware_id, $goods_cd){
+
+    $shop_id = $_SESSION["client_id"];  //ショップID
+    $rank_cd = $_SESSION["rank_cd"];    //顧客区分コード
+
+    $sql  = "SELECT";
+    $sql .= "   goods_id, ";
+    $sql .= "   public_flg, ";
+    $sql .= "   shop_id ";
+    $sql .= "FROM ";
+    $sql .= "   t_goods ";
+    $sql .= "WHERE ";
+    $sql .= "   goods_cd = '$goods_cd' ";
+    $sql .= ";";
+
+    $result = Db_Query($db_con, $sql);
+    $data_num = pg_num_rows($result);
+    //該当レコードなしの場合
+    if($data_num == 0){
+        return false;
+    }
+
+    $input_goods_data = pg_fetch_all($result);
+    //本部商品の場合
+    if($input_goods_data[0]["public_flg"] == "t"){
+        $head_flg = 't' ; 
+        $goods_id = $input_goods_data[0]["goods_id"];       //商品ID
+    //FC商品の場合
+    }elseif($input_goods_data[0]["public_flg"] == "f"){
+        for($i = 0; $i < $data_num; $i++){
+
+            //FC商品は同一コードで複数該当する場合があるため、
+            //ショップIDが一致するものを対象の商品とする
+            if($input_goods_data[$i]["shop_id"] == $shop_id){
+                $goods_id = $input_goods_data[$i]["goods_id"];
+                $head_flg = 'f';
+                break;  
+            }       
+
+        }       
+
+        //該当する商品がない場合
+        if($head_flg == null){
+            return false;
+        }       
+    }
+
+
+    $sql  = "SELECT ";
+    $sql .= "   t_goods.goods_id,";
+    $sql .= "   t_goods.name_change,";
+    #2009-10-12 hashimoto-y
+    #$sql .= "   t_goods.stock_manage,";
+    $sql .= "   t_goods_info.stock_manage,";
+
+    $sql .= "   t_goods.goods_cd,";
+    $sql .= "     (t_g_product.g_product_name || ' ' || t_goods.goods_name) AS goods_name, \n";    //正式名
+    $sql .= "   t_goods.tax_div,";
+    #2009-10-12 hashimoto-y
+    #$sql .= "   CASE t_goods.stock_manage WHEN 1 THEN COALESCE(t_stock.stock_num,0) END AS stock_num,";
+    $sql .= "   CASE t_goods_info.stock_manage WHEN 1 THEN COALESCE(t_stock.stock_num,0) END AS stock_num,";
+
+    $sql .= "   t_price.r_price,";
+    $sql .= "   t_goods.in_num,";
+    $sql .= "   t_goods.royalty";
+    $sql .= " FROM";
+    $sql .= "   t_goods";
+    $sql .= "   INNER JOIN t_g_product ON t_goods.g_product_id = t_g_product.g_product_id \n";
+    $sql .= "   INNER JOIN t_price ON t_goods.goods_id = t_price.goods_id";
+    $sql .= "   LEFT JOIN";
+    $sql .= "   (SELECT";
+    $sql .= "       goods_id,";
+    $sql .= "       SUM(stock_num)AS stock_num";
+    $sql .= "    FROM";
+    $sql .= "        t_stock";
+    $sql .= "    WHERE";
+    $sql .= "        shop_id = $shop_id";
+    $sql .= "        AND";
+    $sql .= "        ware_id = $ware_id";
+    $sql .= "    GROUP BY t_stock.goods_id";
+    $sql .= "   )AS t_stock";
+    $sql .= "   ON t_goods.goods_id = t_stock.goods_id";
+    #2009-10-12 hashimoto-y
+    $sql .= "   INNER JOIN t_goods_info   ON t_goods.goods_id  = t_goods_info.goods_id ";
+
+    $sql .= " WHERE";
+    $sql .= "   t_goods.goods_cd = '$goods_cd'";
+    $sql .= "   AND";
+    $sql .= "   t_goods.accept_flg = '1'";
+    $sql .= "   AND";
+    $sql .= "   t_goods.state = 1";
+    #2009-10-12 hashimoto-y
+    $sql .= "   AND ";
+    $sql .= "   t_goods_info.shop_id = $shop_id ";
+
+    //仕入先に本部が指定されている場合
+    if($head_flg == 't'){
+        $sql .= "   AND";
+        $sql .= "   t_goods.public_flg = 't' ";
+        $sql .= "   AND";
+        $sql .= "   t_price.rank_cd = '$rank_cd'";
+    //仕入先に本部以外が指定されている場合
+    }elseif($head_flg == 'f'){
+        $sql .= "   AND";
+        $sql .= "   t_goods.public_flg = 'f'";
+        $sql .= "   AND";
+        $sql .= "   t_goods.shop_id = $shop_id";
+
+        $sql .= "   AND";
+        $sql .= "   t_price.rank_cd = '1'";
+        $sql .= "   AND";
+        $sql .= "   t_price.shop_id = $shop_id";
+
+    }
+    $sql .= ";";
+
+    $result = Db_Query($db_con, $sql);
+    $return_data = pg_fetch_array($result, 0);
+
+    return $return_data;
+}
+
+?>

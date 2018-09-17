@@ -1,0 +1,2766 @@
+<?php
+
+/****************************/
+// 日次/月次更新日取得関数
+/****************************/
+function Renew_Day($db_con, $renew_type, $shop_id){
+
+    // 日次/月次判断
+    $renew_div = ($renew_type == "daily") ? "1" : "2";
+
+    // 最終更新日取得
+    $sql  = "SELECT \n";
+    $sql .= "   MAX(close_day) \n";
+    $sql .= "FROM \n";
+    $sql .= "   t_sys_renew \n";
+    $sql .= "WHERE \n";
+    $sql .= "   renew_div = '".$renew_div."' \n";
+    $sql .= "AND \n";
+    $sql .= "   shop_id = $shop_id \n";
+    $sql .= ";";
+    $res  = Db_Query($db_con, $sql);
+    $renew_day = pg_fetch_result($res, 0);
+    if ($renew_day != null){
+        $ary_renew_day = explode("-", $renew_day);
+        $renew_day = date("Y-m-d", mktime(0, 0, 0, $ary_renew_day[1] , $ary_renew_day[2]+1, $ary_renew_day[0]));
+    }else{
+        // 更新が行われていない場合はシステム開始日を代入
+        $renew_day = START_DAY;
+    }
+
+    // 日付を返す
+    return $renew_day;
+
+}
+
+
+/****************************/
+// 日次/合計金額取得クエリ用関数
+/****************************/
+// SELECT
+function Total_Amount_Select_Sql($staff_id){
+
+    // 担当者明細時
+    if ($staff_id != null && $staff_id != "0"){
+        $sql  = "   t_attach_staff.staff_id, \n";
+        $sql .= "   t_attach_staff.staff_name, \n";
+        $sql .= "   COALESCE(t_sale_data.sale_amount, 0)        AS sale_amount, \n";
+        $sql .= "   COALESCE(t_payin_data.payin_amount, 0)      AS payin_amount \n";
+    // 代行明細時
+    }elseif ($staff_id == "0"){
+        $sql  = "   COALESCE(t_sale_data.sale_amount, 0)        AS sale_amount, \n";
+        $sql .= "   COALESCE(t_payin_data.payin_amount, 0)      AS payin_amount \n";
+    // 支店明細時
+    }elseif ($staff_id == null){
+        $sql  = "   COALESCE(t_sale_data.sale_amount, 0)        AS sale_amount, \n";
+        $sql .= "   COALESCE(t_payin_data.payin_amount, 0)      AS payin_amount, \n";
+        $sql .= "   COALESCE(t_buy_data.buy_amount, 0)          AS buy_amount, \n";
+        $sql .= "   COALESCE(t_payout_data.payout_amount, 0)    AS payout_amount \n";
+    }
+
+    // クエリを返す
+    return $sql;
+
+}
+
+// FROM attach
+function Total_Amount_Attach_Sql($renew_type, $staff_id, $shop_id, $branch_id, $monthly_renew_day, $end_day){
+
+    // 担当者明細時（所属）
+    if ($staff_id != null && $staff_id != "0"){
+        $sql  = "   ( \n";
+        $sql .= "       SELECT \n";
+        $sql .= "           t_shop_union.shop_id, \n";
+        $sql .= "           t_shop_union.staff_id, \n";
+        $sql .= "           t_staff.staff_name \n";
+        $sql .= "       FROM \n";
+        $sql .= "           ( \n";
+        $sql .= "               ( \n";
+        $sql .= "                   SELECT \n";
+        $sql .= "                       t_attach.shop_id, \n";
+        $sql .= "                       t_attach.staff_id \n";
+        $sql .= "                   FROM \n";
+        $sql .= "                       t_attach \n";
+        $sql .= "                   WHERE \n";
+        $sql .= "                       t_attach.shop_id = $shop_id \n";
+        $sql .= "               ) \n";
+        $sql .= "               UNION ALL \n";
+        $sql .= "               ( \n";
+        $sql .= "                   SELECT \n";
+        $sql .= "                       t_sale_h_amount.shop_id, \n";
+        $sql .= "                       t_sale_h_amount.main_staff_id AS staff_id \n";
+        $sql .= "                   FROM \n";
+        $sql .= "                       t_sale_h_amount \n";
+        if ($branch_id != null){
+        $sql .= "                       INNER JOIN t_client \n";
+        $sql .= "                       ON t_sale_h_amount.client_id = t_client.client_id AND t_client.charge_branch_id = $branch_id \n";
+        }
+        $sql .= "                   WHERE \n";
+        $sql .= "                       t_sale_h_amount.shop_id = $shop_id \n";
+        if ($renew_type == "daily"){
+        $sql .= "                   AND \n";
+        $sql .= "                       t_sale_h_amount.renew_flg = 'f' \n";
+        }else   
+        if ($renew_type == "halfway"){
+        $sql .= "                   AND \n";
+        $sql .= "                       t_sale_h_amount.renew_flg = 't' \n";
+        }
+        $sql .= "                   AND \n";
+        $sql .= "                       t_sale_h_amount.contract_div = '1' \n";
+        $sql .= "                   AND \n";
+        $sql .= "                       t_sale_h_amount.sale_day >= '$monthly_renew_day' \n";
+        if ($end_day != null){
+        $sql .= "                   AND \n";
+        $sql .= "                       t_sale_h_amount.sale_day <= '$end_day' \n";
+        }
+        $sql .= "               ) \n";
+        $sql .= "               UNION ALL \n";
+        $sql .= "               ( \n";
+        $sql .= "                   SELECT \n";
+        $sql .= "                       t_payin_h.shop_id, \n";
+        $sql .= "                       t_payin_h.collect_staff_id AS staff_id \n";
+        $sql .= "                   FROM \n";
+        $sql .= "                       t_payin_h \n";
+        if ($branch_id != null){
+        $sql .= "                       INNER JOIN t_client \n";
+        $sql .= "                       ON t_payin_h.client_id = t_client.client_id AND t_client.charge_branch_id = $branch_id \n";
+        }
+        $sql .= "                   WHERE \n";
+        $sql .= "                       t_payin_h.shop_id = $shop_id \n";
+        if ($renew_type == "daily"){
+        $sql .= "                   AND \n";
+        $sql .= "                       t_payin_h.renew_flg = 'f' \n";
+        }else
+        if ($renew_type == "halfway"){
+        $sql .= "                   AND \n";
+        $sql .= "                       t_payin_h.renew_flg = 't' \n";
+        }
+        $sql .= "                   AND \n";
+        $sql .= "                       t_payin_h.pay_day >= '$monthly_renew_day' \n";
+        if ($end_day != null){
+        $sql .= "                   AND \n";
+        $sql .= "                       t_payin_h.pay_day <= '$end_day' \n";
+        }
+        $sql .= "               ) \n";
+        $sql .= "           ) \n";
+        $sql .= "           AS t_shop_union \n";
+        $sql .= "           INNER JOIN t_staff ON t_shop_union.staff_id = t_staff.staff_id \n";
+        $sql .= "       WHERE \n";
+        $sql .= "           t_shop_union.staff_id = $staff_id \n";
+        $sql .= "       GROUP BY \n";
+        $sql .= "           t_shop_union.shop_id, \n";
+        $sql .= "           t_shop_union.staff_id, \n";
+        $sql .= "           t_staff.staff_name \n";
+        $sql .= "   ) \n";
+        $sql .= "   AS t_attach_staff \n";
+    // 代行明細時（所属）
+    }elseif ($staff_id == "0"){
+        $sql  = "   ( \n";
+        $sql .= "       SELECT \n";
+        $sql .= "           t_shop_union.shop_id \n";
+        $sql .= "       FROM \n";
+        $sql .= "           ( \n";
+        $sql .= "               ( \n";
+        $sql .= "                   SELECT \n";
+        $sql .= "                       t_sale_h_amount.shop_id \n";
+        $sql .= "                   FROM \n";
+        $sql .= "                       t_sale_h_amount \n";
+        if ($branch_id != null){
+        $sql .= "                       INNER JOIN t_client \n";
+        $sql .= "                       ON t_sale_h_amount.client_id = t_client.client_id AND t_client.charge_branch_id = $branch_id \n";
+        }
+        $sql .= "                   WHERE \n";
+        $sql .= "                       t_sale_h_amount.shop_id = $shop_id \n";
+        if ($renew_type == "daily"){
+        $sql .= "                   AND \n";
+        $sql .= "                       t_sale_h_amount.renew_flg = 'f' \n";
+        }else
+        if ($renew_type == "halfway"){
+        $sql .= "                   AND \n";
+        $sql .= "                       t_sale_h_amount.renew_flg = 't' \n";
+        }
+        $sql .= "                   AND \n";
+        $sql .= "                       t_sale_h_amount.contract_div != '1' \n";
+        $sql .= "                   AND \n";
+        $sql .= "                       t_sale_h_amount.sale_day >= '$monthly_renew_day' \n";
+        if ($end_day != null){
+        $sql .= "                   AND \n";
+        $sql .= "                       t_sale_h_amount.sale_day <= '$end_day' \n";
+        }
+        $sql .= "               ) \n";
+        $sql .= "               UNION ALL \n";
+        $sql .= "               ( \n";
+        $sql .= "                   SELECT \n";
+        $sql .= "                       t_payin_h.shop_id \n";
+        $sql .= "                   FROM \n";
+        $sql .= "                       t_payin_h \n";
+        if ($branch_id != null){
+        $sql .= "                       INNER JOIN t_client \n";
+        $sql .= "                       ON t_payin_h.client_id = t_client.client_id AND t_client.charge_branch_id = $branch_id \n";
+        }
+        $sql .= "                   WHERE \n";
+        $sql .= "                       t_payin_h.shop_id = $shop_id \n";
+        if ($renew_type == "daily"){
+        $sql .= "                   AND \n";
+        $sql .= "                       t_payin_h.renew_flg = 'f' \n";
+        }else
+        if ($renew_type == "halfway"){
+        $sql .= "                   AND \n";
+        $sql .= "                       t_payin_h.renew_flg = 't' \n";
+        }
+        $sql .= "                   AND \n";
+        $sql .= "                       t_payin_h.pay_day >= '$monthly_renew_day' \n";
+        if ($end_day != null){
+        $sql .= "                   AND \n";
+        $sql .= "                       t_payin_h.pay_day <= '$end_day' \n";
+        }
+        $sql .= "                   AND \n";
+        $sql .= "                       t_payin_h.act_client_id iS NOT NULL \n";
+        $sql .= "                   AND \n";
+        $sql .= "                       t_payin_h.collect_staff_id IS NULL \n";
+        $sql .= "               ) \n";
+        $sql .= "           ) \n";
+        $sql .= "           AS t_shop_union \n";
+        $sql .= "       GROUP BY \n";
+        $sql .= "           t_shop_union.shop_id \n";
+        $sql .= "   ) \n";
+        $sql .= "   AS t_attach_staff \n";
+    // 支店明細時（所属）
+    }elseif ($staff_id == null){
+        $sql  = "   ( \n";
+        $sql .= "       SELECT \n";
+        $sql .= "           t_shop_union.shop_id \n";
+        $sql .= "       FROM \n";
+        $sql .= "           ( \n";
+        $sql .= "               ( \n";
+        $sql .= "                   SELECT \n";
+        $sql .= "                       t_sale_h_amount.shop_id, \n";
+        $sql .= "                       t_sale_h_amount.main_staff_id AS staff_id \n";
+        $sql .= "                   FROM \n";
+        $sql .= "                       t_sale_h_amount \n";
+        if ($branch_id != null){
+        $sql .= "                       INNER JOIN t_client \n";
+        $sql .= "                       ON t_sale_h_amount.client_id = t_client.client_id AND t_client.charge_branch_id = $branch_id \n";
+        }
+        $sql .= "                   WHERE \n";
+        $sql .= "                       t_sale_h_amount.shop_id = $shop_id \n";
+        if ($renew_type == "daily"){
+        $sql .= "                   AND \n";
+        $sql .= "                       t_sale_h_amount.renew_flg = 'f' \n";
+        }else
+        if ($renew_type == "halfway"){
+        $sql .= "                   AND \n";
+        $sql .= "                       t_sale_h_amount.renew_flg = 't' \n";
+        }
+        $sql .= "                   AND \n";
+        $sql .= "                       t_sale_h_amount.sale_day >= '$monthly_renew_day' \n";
+        if ($end_day != null){
+        $sql .= "                   AND \n";
+        $sql .= "                       t_sale_h_amount.sale_day <= '$end_day' \n";
+        }
+        $sql .= "               ) \n";
+        $sql .= "               UNION ALL \n";
+        $sql .= "               ( \n";
+        $sql .= "                   SELECT \n";
+        $sql .= "                       t_buy_h.shop_id, \n";
+        $sql .= "                       t_buy_h.c_staff_id AS staff_id \n";
+        $sql .= "                   FROM \n";
+        $sql .= "                       t_buy_h \n";
+        if ($branch_id != null){
+        $sql .= "                       INNER JOIN t_client \n";
+        $sql .= "                       ON t_buy_h.client_id = t_client.client_id AND t_client.charge_branch_id = $branch_id \n";
+        }
+        $sql .= "                   WHERE \n";
+        $sql .= "                       t_buy_h.shop_id = $shop_id \n";
+        if ($renew_type == "daily"){
+        $sql .= "                   AND \n";
+        $sql .= "                       t_buy_h.renew_flg = 'f' \n";
+        }else
+        if ($renew_type == "halfway"){
+        $sql .= "                   AND \n";
+        $sql .= "                       t_buy_h.renew_flg = 't' \n";
+        }
+        $sql .= "                   AND \n";
+        $sql .= "                       t_buy_h.buy_day >= '$monthly_renew_day' \n";
+        if ($end_day != null){
+        $sql .= "                   AND \n";
+        $sql .= "                       t_buy_h.buy_day <= '$end_day' \n";
+        }
+        $sql .= "               ) \n";
+        $sql .= "               UNION ALL \n";
+        $sql .= "               ( \n";
+        $sql .= "                   SELECT \n";
+        $sql .= "                       t_payin_h.shop_id, \n";
+        $sql .= "                       t_payin_h.collect_staff_id AS staff_id \n";
+        $sql .= "                   FROM \n";
+        $sql .= "                       t_payin_h \n";
+        if ($branch_id != null){
+        $sql .= "                       INNER JOIN t_client \n";
+        $sql .= "                       ON t_payin_h.client_id = t_client.client_id AND t_client.charge_branch_id = $branch_id \n";
+        }
+        $sql .= "                   WHERE \n";
+        $sql .= "                       t_payin_h.shop_id = $shop_id \n";
+        if ($renew_type == "daily"){
+        $sql .= "                   AND \n";
+        $sql .= "                       t_payin_h.renew_flg = 'f' \n";
+        }else
+        if ($renew_type == "halfway"){
+        $sql .= "                   AND \n";
+        $sql .= "                       t_payin_h.renew_flg = 't' \n";
+        }
+        $sql .= "                   AND \n";
+        $sql .= "                       t_payin_h.sale_id IS NULL \n";
+        $sql .= "                   AND \n";
+        $sql .= "                       t_payin_h.pay_day >= '$monthly_renew_day' \n";
+        if ($end_day != null){
+        $sql .= "                   AND \n";
+        $sql .= "                       t_payin_h.pay_day <= '$end_day' \n";
+        }
+        $sql .= "               ) \n";
+        $sql .= "               UNION ALL \n";
+        $sql .= "               ( \n";
+        $sql .= "                   SELECT \n";
+        $sql .= "                       t_payout_h.shop_id, \n";
+        $sql .= "                       t_payout_h.c_staff_id AS staff_id \n";
+        $sql .= "                   FROM \n";
+        $sql .= "                       t_payout_h \n";
+        if ($branch_id != null){
+        $sql .= "                       INNER JOIN t_client \n";
+        $sql .= "                       ON t_payout_h.client_id = t_client.client_id AND t_client.charge_branch_id = $branch_id \n";
+        }
+        $sql .= "                   WHERE \n";
+        $sql .= "                       t_payout_h.shop_id = $shop_id \n";
+        if ($renew_type == "daily"){
+        $sql .= "                   AND \n";
+        $sql .= "                       t_payout_h.renew_flg = 'f' \n";
+        }else
+        if ($renew_type == "halfway"){
+        $sql .= "                   AND \n";
+        $sql .= "                       t_payout_h.renew_flg = 't' \n";
+        }
+        $sql .= "                   AND \n";
+        $sql .= "                       t_payout_h.buy_id IS NULL \n";
+        $sql .= "                   AND \n";
+        $sql .= "                       t_payout_h.pay_day >= '$monthly_renew_day' \n";
+        if ($end_day != null){
+        $sql .= "                   AND \n";
+        $sql .= "                       t_payout_h.pay_day <= '$end_day' \n";
+        }
+        $sql .= "               ) \n";
+        $sql .= "           ) \n";
+        $sql .= "           AS t_shop_union \n";
+        $sql .= "       GROUP BY \n";
+        $sql .= "           t_shop_union.shop_id \n";
+        $sql .= "   ) \n";
+        $sql .= "   AS t_attach_staff \n";
+    }
+
+    // クエリを返す
+    return $sql;
+
+}
+
+// FROM sale
+function Total_Amount_Sale_Sql($renew_type, $staff_id, $shop_id, $branch_id, $monthly_renew_day, $end_day){
+
+    if ($renew_type == "notax"){
+        $amount_col = "t_sale_h_amount.all_net_amount";
+    }else
+    if ($renew_type == "tax"){
+        $amount_col = "t_sale_h_amount.all_tax_amount";
+    }else
+    {
+        $amount_col = "t_sale_h_amount.all_total_amount";
+    }
+
+    // 担当者明細（売上）
+    if ($staff_id != null && $staff_id != "0"){
+        $sql  = "   LEFT JOIN \n";
+        $sql .= "   ( \n";
+        $sql .= "       SELECT \n";
+        $sql .= "           t_sale_h_amount.shop_id, \n";
+        $sql .= "           t_sale_h_amount.main_staff_id AS staff_id, \n";
+        $sql .= "           SUM( \n";
+        $sql .= "               CASE \n";
+        $sql .= "                   WHEN \n";
+        $sql .= "                       t_sale_h_amount.trade_id IN (61, 11, 15) \n";
+        $sql .= "                   THEN \n";
+        $sql .= "                       COALESCE($amount_col, 0) * 1 \n";
+        $sql .= "                   WHEN \n";
+        $sql .= "                       t_sale_h_amount.trade_id IN (63, 64, 13, 14) \n";
+        $sql .= "                   THEN \n";
+        $sql .= "                       COALESCE($amount_col, 0) * -1 \n";
+        $sql .= "                   ELSE 0 \n";
+        $sql .= "               END \n";
+        $sql .= "           ) \n";
+        $sql .= "           AS sale_amount \n";
+        $sql .= "       FROM \n";
+        $sql .= "           t_sale_h_amount \n";
+        if ($branch_id != null){
+        $sql .= "           INNER JOIN t_client \n";
+        $sql .= "           ON t_sale_h_amount.client_id = t_client.client_id AND t_client.charge_branch_id = $branch_id \n";
+        }
+        $sql .= "       WHERE \n";
+        $sql .= "           t_sale_h_amount.shop_id = $shop_id \n";
+        if ($renew_type == "daily"){
+        $sql .= "       AND \n";
+        $sql .= "           t_sale_h_amount.renew_flg = 'f' \n";
+        }else
+        if ($renew_type == "halfway"){
+        $sql .= "       AND \n";
+        $sql .= "           t_sale_h_amount.renew_flg = 't' \n";
+        }
+        $sql .= "       AND \n";
+        $sql .= "           t_sale_h_amount.contract_div = '1' \n";
+        $sql .= "       AND \n";
+        $sql .= "           t_sale_h_amount.sale_day >= '$monthly_renew_day' \n";
+        if ($end_day != null){
+        $sql .= "       AND \n";
+        $sql .= "           t_sale_h_amount.sale_day <= '$end_day' \n";
+        }
+        $sql .= "       GROUP BY \n";
+        $sql .= "           t_sale_h_amount.shop_id, \n";
+        $sql .= "           t_sale_h_amount.main_staff_id \n";
+        $sql .= "   ) \n";
+        $sql .= "   AS t_sale_data \n";
+        $sql .= "   ON t_attach_staff.shop_id = t_sale_data.shop_id \n";
+        $sql .= "   AND t_attach_staff.staff_id = t_sale_data.staff_id \n";
+    // 代行明細時（売上）
+    }elseif ($staff_id == "0"){
+        $sql  = "   LEFT JOIN \n";
+        $sql .= "   ( \n";
+        $sql .= "       SELECT \n";
+        $sql .= "           t_sale_h_amount.shop_id, \n";
+        $sql .= "           SUM( \n";
+        $sql .= "               CASE \n";
+        $sql .= "                   WHEN \n";
+        $sql .= "                       t_sale_h_amount.trade_id IN (61, 11, 15) \n";
+        $sql .= "                   THEN \n";
+        $sql .= "                       COALESCE($amount_col, 0) * 1 \n";
+        $sql .= "                   WHEN \n";
+        $sql .= "                       t_sale_h_amount.trade_id IN (63, 64, 13, 14) \n";
+        $sql .= "                   THEN \n";
+        $sql .= "                       COALESCE($amount_col, 0) * -1 \n";
+        $sql .= "                   ELSE 0 \n";
+        $sql .= "               END \n";
+        $sql .= "           ) \n";
+        $sql .= "           AS sale_amount \n";
+        $sql .= "       FROM \n";
+        $sql .= "           t_sale_h_amount \n";
+        if ($branch_id != null){
+        $sql .= "           INNER JOIN t_client \n";
+        $sql .= "           ON t_sale_h_amount.client_id = t_client.client_id AND t_client.charge_branch_id = $branch_id \n";
+        }
+        $sql .= "       WHERE \n";
+        $sql .= "           t_sale_h_amount.shop_id = $shop_id \n";
+        if ($renew_type == "daily"){
+        $sql .= "       AND \n";
+        $sql .= "           t_sale_h_amount.renew_flg = 'f' \n";
+        }else
+        if ($renew_type == "halfway"){
+        $sql .= "       AND \n";
+        $sql .= "           t_sale_h_amount.renew_flg = 't' \n";
+        }
+        $sql .= "       AND \n";
+        $sql .= "           t_sale_h_amount.contract_div != '1' \n";
+        $sql .= "       AND \n";
+        $sql .= "           t_sale_h_amount.sale_day >= '$monthly_renew_day' \n";
+        if ($end_day != null){
+        $sql .= "       AND \n";
+        $sql .= "           t_sale_h_amount.sale_day <= '$end_day' \n";
+        }
+        $sql .= "       GROUP BY \n";
+        $sql .= "           t_sale_h_amount.shop_id \n";
+        $sql .= "   ) \n";
+        $sql .= "   AS t_sale_data \n";
+        $sql .= "   ON t_attach_staff.shop_id = t_sale_data.shop_id \n";
+    // 支店明細時（売上）
+    }elseif ($staff_id == null){
+        $sql  = "   LEFT JOIN \n";
+        $sql .= "   ( \n";
+        $sql .= "       SELECT \n";
+        $sql .= "           t_sale_h_amount.shop_id, \n";
+        $sql .= "           SUM( \n";
+        $sql .= "               CASE \n";
+        $sql .= "                   WHEN \n";
+        $sql .= "                       t_sale_h_amount.trade_id IN (61, 11, 15) \n";
+        $sql .= "                   THEN \n";
+        $sql .= "                       COALESCE($amount_col, 0) * 1 \n";
+        $sql .= "                   WHEN \n";
+        $sql .= "                       t_sale_h_amount.trade_id IN (63, 64, 13, 14) \n";
+        $sql .= "                   THEN \n";
+        $sql .= "                       COALESCE($amount_col, 0) * -1 \n";
+        $sql .= "                   ELSE 0 \n";
+        $sql .= "               END \n";
+        $sql .= "           ) \n";
+        $sql .= "           AS sale_amount \n";
+        $sql .= "       FROM \n";
+        $sql .= "           t_sale_h_amount \n";
+        if ($branch_id != null){
+        $sql .= "           INNER JOIN t_client \n";
+        $sql .= "           ON t_sale_h_amount.client_id = t_client.client_id AND t_client.charge_branch_id = $branch_id \n";
+        }
+        $sql .= "       WHERE \n";
+        $sql .= "           t_sale_h_amount.shop_id = $shop_id \n";
+        if ($renew_type == "daily"){
+        $sql .= "       AND \n";
+        $sql .= "           t_sale_h_amount.renew_flg = 'f' \n";
+        }else
+        if ($renew_type == "halfway"){
+        $sql .= "       AND \n";
+        $sql .= "           t_sale_h_amount.renew_flg = 't' \n";
+        }
+        $sql .= "       AND \n";
+        $sql .= "           t_sale_h_amount.sale_day >= '$monthly_renew_day' \n";
+        if ($end_day != null){
+        $sql .= "       AND \n";
+        $sql .= "           t_sale_h_amount.sale_day <= '$end_day' \n";
+        }
+        $sql .= "       GROUP BY \n";
+        $sql .= "           t_sale_h_amount.shop_id \n";
+        $sql .= "   ) \n";
+        $sql .= "   AS t_sale_data \n";
+        $sql .= "   ON t_attach_staff.shop_id = t_sale_data.shop_id \n";
+    }
+
+    // クエリを返す
+    return $sql;
+
+}
+
+// FROM payin
+function Total_Amount_Payin_Sql($renew_type, $staff_id, $shop_id, $branch_id, $monthly_renew_day, $end_day){
+
+    $amount_col = "t_payin_d.amount";
+
+    // 担当者明細時（入金）
+    if ($staff_id != null && $staff_id != "0"){
+        $sql  = "   LEFT JOIN \n";
+        $sql .= "   ( \n";
+        $sql .= "       SELECT \n";
+        $sql .= "           t_payin_h.shop_id, \n";
+        $sql .= "           t_payin_h.collect_staff_id AS staff_id, \n";
+        $sql .= "           SUM(COALESCE($amount_col, 0)) AS payin_amount \n";
+        $sql .= "       FROM \n";
+        $sql .= "           t_payin_h \n";
+        $sql .= "           INNER JOIN t_payin_d ON t_payin_h.pay_id = t_payin_d.pay_id \n";
+        if ($branch_id != null){
+        $sql .= "           INNER JOIN t_client \n";
+        $sql .= "           ON t_payin_h.client_id = t_client.client_id AND t_client.charge_branch_id = $branch_id \n";
+        }
+        $sql .= "       WHERE \n";
+        $sql .= "           t_payin_h.shop_id = $shop_id \n";
+        if ($renew_type == "daily"){
+        $sql .= "       AND \n";
+        $sql .= "           t_payin_h.renew_flg = 'f' \n";
+        }else
+        if ($renew_type == "halfway"){
+        $sql .= "       AND \n";
+        $sql .= "           t_payin_h.renew_flg = 't' \n";
+        }
+        $sql .= "       AND \n";
+        $sql .= "           t_payin_d.trade_id IN (31, 39, 40) \n";
+        $sql .= "       AND \n";
+        $sql .= "           t_payin_h.pay_day >= '$monthly_renew_day' \n";
+        if ($end_day != null){
+        $sql .= "       AND \n";
+        $sql .= "           t_payin_h.pay_day <= '$end_day' \n";
+        }
+        $sql .= "       GROUP BY \n";
+        $sql .= "           t_payin_h.shop_id, \n";
+        $sql .= "           t_payin_h.collect_staff_id \n";
+        $sql .= "   ) \n";
+        $sql .= "   AS t_payin_data \n";
+        $sql .= "   ON t_attach_staff.shop_id = t_payin_data.shop_id \n";
+        $sql .= "   AND t_attach_staff.staff_id = t_payin_data.staff_id \n";
+    // 代行明細時（入金）
+    }elseif ($staff_id == "0"){
+        $sql  = "   LEFT JOIN \n";
+        $sql .= "   ( \n";
+        $sql .= "       SELECT \n";
+        $sql .= "           t_payin_h.shop_id, \n";
+        $sql .= "           SUM(COALESCE($amount_col, 0)) AS payin_amount \n";
+        $sql .= "       FROM \n";
+        $sql .= "           t_payin_h \n";
+        $sql .= "           INNER JOIN t_payin_d ON t_payin_h.pay_id = t_payin_d.pay_id \n";
+        if ($branch_id != null){
+        $sql .= "           INNER JOIN t_client \n";
+        $sql .= "           ON t_payin_h.client_id = t_client.client_id AND t_client.charge_branch_id = $branch_id \n";
+        }
+        $sql .= "       WHERE \n";
+        $sql .= "           t_payin_h.shop_id = $shop_id \n";
+        if ($renew_type == "daily"){
+        $sql .= "       AND \n";
+        $sql .= "           t_payin_h.renew_flg = 'f' \n";
+        }else
+        if ($renew_type == "halfway"){
+        $sql .= "       AND \n";
+        $sql .= "           t_payin_h.renew_flg = 't' \n";
+        }
+        $sql .= "       AND \n";
+        $sql .= "           t_payin_h.pay_day >= '$monthly_renew_day' \n";
+        if ($end_day != null){
+        $sql .= "       AND \n";
+        $sql .= "           t_payin_h.pay_day <= '$end_day' \n";
+        }
+        $sql .= "       AND \n";
+        $sql .= "           t_payin_h.act_client_id IS NOT NULL \n";
+        $sql .= "       AND \n";
+        $sql .= "           t_payin_h.collect_staff_id IS NULL \n";
+        if ($_SESSION["group_kind"] == "2"){
+        $sql .= "       AND \n";
+        $sql .= "           t_payin_d.trade_id IN (31, 40) \n";
+        }else{
+        $sql .= "       AND \n";
+        $sql .= "           t_payin_d.trade_id IN (31) \n";
+        }
+        $sql .= "       GROUP BY \n";
+        $sql .= "           t_payin_h.shop_id \n";
+        $sql .= "   ) \n";
+        $sql .= "   AS t_payin_data \n";
+        $sql .= "   ON t_attach_staff.shop_id = t_payin_data.shop_id \n";
+    // 支店明細時（入金）
+    }elseif ($staff_id == null){
+        $sql  = "   LEFT JOIN \n";
+        $sql .= "   ( \n";
+        $sql .= "       SELECT \n";
+        $sql .= "           t_payin_h.shop_id, \n";
+        $sql .= "           SUM(COALESCE($amount_col, 0)) AS payin_amount \n";
+        $sql .= "       FROM \n";
+        $sql .= "           t_payin_h \n";
+        $sql .= "           INNER JOIN t_payin_d ON t_payin_h.pay_id = t_payin_d.pay_id \n";
+        if ($branch_id != null){
+        $sql .= "           INNER JOIN t_client \n";
+        $sql .= "           ON t_payin_h.client_id = t_client.client_id AND t_client.charge_branch_id = $branch_id \n";
+        }
+        $sql .= "       WHERE \n";
+        $sql .= "           t_payin_h.shop_id = $shop_id \n";
+        if ($renew_type == "daily"){
+        $sql .= "       AND \n";
+        $sql .= "           t_payin_h.renew_flg = 'f' \n";
+        }else
+        if ($renew_type == "halfway"){
+        $sql .= "       AND \n";
+        $sql .= "           t_payin_h.renew_flg = 't' \n";
+        }
+        $sql .= "       AND \n";
+        $sql .= "           t_payin_h.pay_day >= '$monthly_renew_day' \n";
+        if ($end_day != null){
+        $sql .= "       AND \n";
+        $sql .= "           t_payin_h.pay_day <= '$end_day' \n";
+        }
+        $sql .= "       GROUP BY \n";
+        $sql .= "           t_payin_h.shop_id \n";
+        $sql .= "   ) \n";
+        $sql .= "   AS t_payin_data \n";
+        $sql .= "   ON t_attach_staff.shop_id = t_payin_data.shop_id \n";
+    }
+
+    // クエリを返す
+    return $sql;
+
+}
+
+// FROM buy
+function Total_Amount_Buy_Sql($renew_type, $staff_id, $shop_id, $branch_id, $monthly_renew_day, $end_day){
+
+    if ($renew_type == "notax"){
+        $amount_col = "COALESCE(t_buy_h.net_amount, 0)";
+    }else
+    if ($renew_type == "tax"){
+        $amount_col = "COALESCE(t_buy_h.tax_amount, 0)";
+    }else
+    if ($renew_type == "royalty"){
+        $amount_col = "COALESCE(t_buy_h.royalty_amount, 0)";
+    }else
+    {
+        $amount_col = "COALESCE(t_buy_h.net_amount, 0) + COALESCE(t_buy_h.tax_amount, 0)";
+    }
+
+    // 担当者明細時（仕入）
+    if ($staff_id != null && $staff_id != "0"){
+        $sql  = "   LEFT JOIN \n";
+        $sql .= "   ( \n";
+        $sql .= "       SELECT \n";
+        $sql .= "           t_buy_h.shop_id, \n";
+        $sql .= "           t_buy_h.c_staff_id AS staff_id, \n";
+        $sql .= "           SUM( \n";
+        $sql .= "               CASE \n";
+        $sql .= "                   WHEN \n";
+        $sql .= "                       t_buy_h.trade_id IN (71, 21, 25) \n";
+        $sql .= "                   THEN \n";
+        $sql .= "                       ($amount_col) * 1 \n";
+        $sql .= "                   WHEN \n";
+        $sql .= "                       t_buy_h.trade_id IN (73, 74, 23, 24) \n";
+        $sql .= "                   THEN \n";
+        $sql .= "                       ($amount_col) * -1 \n";
+        $sql .= "                   ELSE 0 \n";
+        $sql .= "               END \n";
+        $sql .= "           ) \n";
+        $sql .= "           AS buy_amount \n";
+        $sql .= "       FROM \n";
+        $sql .= "           t_buy_h \n";
+        if ($branch_id != null){
+        $sql .= "           INNER JOIN t_client \n";
+        $sql .= "           ON t_buy_h.client_id = t_client.client_id AND t_client.charge_branch_id = $branch_id \n";
+        }
+        $sql .= "       WHERE \n";
+        $sql .= "           t_buy_h.shop_id = $shop_id \n";
+        if ($renew_type == "daily"){
+        $sql .= "       AND \n";
+        $sql .= "           t_buy_h.renew_flg = 'f' \n";
+        }else
+        if ($renew_type == "halfway"){
+        $sql .= "       AND \n";
+        $sql .= "           t_buy_h.renew_flg = 't' \n";
+        }
+        $sql .= "       AND \n";
+        $sql .= "           t_buy_h.buy_day >= '$monthly_renew_day' \n";
+        if ($end_day != null){
+        $sql .= "       AND \n";
+        $sql .= "           t_buy_h.buy_day <= '$end_day' \n";
+        }
+        $sql .= "       GROUP BY \n";
+        $sql .= "           t_buy_h.shop_id, \n";
+        $sql .= "           t_buy_h.c_staff_id \n";
+        $sql .= "   ) \n";
+        $sql .= "   AS t_buy_data \n";
+        $sql .= "   ON t_attach_staff.shop_id = t_buy_data.shop_id \n";
+        $sql .= "   AND t_attach_staff.staff_id = t_buy_data.staff_id \n";
+    // 代行明細時（仕入）
+    }elseif ($staff_id == "0"){
+        $sql  = null;
+    // 支店明細時（仕入）
+    }elseif ($staff_id == null){
+        $sql  = "   LEFT JOIN \n";
+        $sql .= "   ( \n";
+        $sql .= "       SELECT \n";
+        $sql .= "           t_buy_h.shop_id, \n";
+        $sql .= "           SUM( \n";
+        $sql .= "               CASE \n";
+        $sql .= "                   WHEN \n";
+        $sql .= "                       t_buy_h.trade_id IN (71, 21, 25) \n";
+        $sql .= "                   THEN \n";
+        $sql .= "                       ($amount_col) * 1 \n";
+        $sql .= "                   WHEN \n";
+        $sql .= "                       t_buy_h.trade_id IN (73, 74, 23, 24) \n";
+        $sql .= "                   THEN \n";
+        $sql .= "                       ($amount_col) * -1 \n";
+        $sql .= "                   ELSE 0 \n";
+        $sql .= "               END \n";
+        $sql .= "           ) \n";
+        $sql .= "           AS buy_amount \n";
+        $sql .= "       FROM \n";
+        $sql .= "           t_buy_h \n";
+        if ($branch_id != null){
+        $sql .= "           INNER JOIN t_client \n";
+        $sql .= "           ON t_buy_h.client_id = t_client.client_id AND t_client.charge_branch_id = $branch_id \n";
+        }
+        $sql .= "       WHERE \n";
+        $sql .= "           t_buy_h.shop_id = $shop_id \n";
+        if ($renew_type == "daily"){
+        $sql .= "       AND \n";
+        $sql .= "           t_buy_h.renew_flg = 'f' \n";
+        }else
+        if ($renew_type == "halfway"){
+        $sql .= "       AND \n";
+        $sql .= "           t_buy_h.renew_flg = 't' \n";
+        }
+        $sql .= "       AND \n";
+        $sql .= "           t_buy_h.buy_day >= '$monthly_renew_day' \n";
+        if ($end_day != null){
+        $sql .= "       AND \n";
+        $sql .= "           t_buy_h.buy_day <= '$end_day' \n";
+        }
+        $sql .= "       GROUP BY \n";
+        $sql .= "           t_buy_h.shop_id \n";
+        $sql .= "   ) \n";
+        $sql .= "   AS t_buy_data \n";
+        $sql .= "   ON t_attach_staff.shop_id = t_buy_data.shop_id \n";
+    }
+
+    // クエリを返す
+    return $sql;
+
+}
+
+// FROM payout
+function Total_Amount_Payout_Sql($renew_type, $staff_id, $shop_id, $branch_id, $monthly_renew_day, $end_day){
+ 
+    $amount_col = "t_payout_d.pay_amount";
+
+    // 担当者明細時（支払）
+    if ($staff_id != null && $staff_id != "0"){
+        $sql  = null;
+    // 代行明細時（支払）
+    }elseif ($staff_id == "0"){
+        $sql  = null;
+    // 支店明細時（支払）
+    }elseif ($staff_id == null){
+        $sql  = "   LEFT JOIN \n";
+        $sql .= "   ( \n";
+        $sql .= "       SELECT \n";
+        $sql .= "           t_payout_h.shop_id, \n";
+        $sql .= "           SUM(COALESCE($amount_col, 0)) AS payout_amount \n";
+        $sql .= "       FROM \n";
+        $sql .= "           t_payout_h \n";
+        $sql .= "           INNER JOIN t_payout_d ON t_payout_h.pay_id = t_payout_d.pay_id \n";
+        if ($branch_id != null){
+        $sql .= "           INNER JOIN t_client \n";
+        $sql .= "           ON t_payout_h.client_id = t_client.client_id AND t_client.charge_branch_id = $branch_id \n";
+        }
+        $sql .= "       WHERE \n";
+        $sql .= "           t_payout_h.shop_id = $shop_id \n";
+        if ($renew_type == "daily"){
+        $sql .= "       AND \n";
+        $sql .= "           t_payout_h.renew_flg = 'f' \n";
+        }else
+        if ($renew_type == "halfway"){
+        $sql .= "       AND \n";
+        $sql .= "           t_payout_h.renew_flg = 't' \n";
+        }
+        $sql .= "       AND \n";
+        $sql .= "           t_payout_h.pay_day >= '$monthly_renew_day' \n";
+        if ($end_day != null){
+        $sql .= "       AND \n";
+        $sql .= "           t_payout_h.pay_day <= '$end_day' \n";
+        }
+        $sql .= "       GROUP BY \n";
+        $sql .= "           t_payout_h.shop_id \n";
+        $sql .= "   ) \n";
+        $sql .= "   AS t_payout_data \n";
+        $sql .= "   ON t_attach_staff.shop_id = t_payout_data.shop_id \n";
+    }
+
+    // クエリを返す
+    return $sql;
+
+}
+
+function Get_Total_Amount($db_con, $renew_type, $staff_id, $shop_id, $branch_id, $monthly_renew_day, $end_day){
+
+    $sql  = "SELECT \n";
+    $sql .=     Total_Amount_Select_Sql ($staff_id);
+    $sql .= "FROM \n";
+    $sql .=     Total_Amount_Attach_Sql ($renew_type, $staff_id, $shop_id, $branch_id, $monthly_renew_day, $end_day);
+    $sql .=     Total_Amount_Sale_Sql   ($renew_type, $staff_id, $shop_id, $branch_id, $monthly_renew_day, $end_day);
+    $sql .=     Total_Amount_Payin_Sql  ($renew_type, $staff_id, $shop_id, $branch_id, $monthly_renew_day, $end_day);
+    $sql .=     Total_Amount_Buy_Sql    ($renew_type, $staff_id, $shop_id, $branch_id, $monthly_renew_day, $end_day);
+    $sql .=     Total_Amount_Payout_Sql ($renew_type, $staff_id, $shop_id, $branch_id, $monthly_renew_day, $end_day);
+    $sql .= ";";
+    $res_total = Db_Query($db_con, $sql);
+    $num_total = pg_num_rows($res_total);
+    $ary_total = Two_To_Linear(Get_Data($res_total));
+
+    return $ary_total;
+
+}
+
+function Get_Royal_Amount($db_con, $staff_id, $shop_id, $branch_id, $monthly_renew_day, $end_day){
+
+    $sql  = "SELECT \n";
+    $sql .= "   SUM(COALESCE(t_lump_amount.net_amount, 0)), \n";
+    $sql .= "   SUM(COALESCE(t_lump_amount.tax_amount, 0)), \n";
+    $sql .= "   SUM(COALESCE(t_lump_amount.net_amount, 0) + COALESCE(t_lump_amount.tax_amount, 0)) \n";
+    $sql .= "FROM \n";
+    $sql .= "   t_lump_amount \n";
+    if ($branch_id != null){
+    $sql .= "   INNER JOIN t_client \n";
+    $sql .= "       ON  t_lump_amount.client_id = t_client.client_id \n";
+    $sql .= "       AND t_client.charge_branch_id = $branch_id \n";
+    }
+    $sql .= "WHERE \n";
+    $sql .= "   t_lump_amount.data_div = '1' \n";
+    $sql .= "AND \n";
+    $sql .= "   t_lump_amount.shop_id = $shop_id \n";
+    $sql .= "AND \n";
+    $sql .= "   t_lump_amount.allocate_day >= '$monthly_renew_day' \n";
+    $sql .= "AND \n";
+    $sql .= "   t_lump_amount.allocate_day <= '$end_day' \n";
+    $sql .= ";"; 
+    $res_total = Db_Query($db_con, $sql);
+    $num_total = pg_num_rows($res_total);
+    $ary_total = Two_To_Linear(Get_Data($res_total));
+
+    return $ary_total;
+
+}
+
+function Get_Lump_Amount($db_con, $staff_id, $shop_id, $branch_id, $monthly_renew_day, $end_day){
+
+    $sql  = "SELECT \n";
+    $sql .= "   SUM \n";
+    $sql .= "       ( \n";
+    $sql .= "           CASE \n";
+    $sql .= "               WHEN t_lump_amount.bill_id IS NOT NULL \n";
+    $sql .= "               THEN COALESCE(t_lump_amount.tax_amount, 0) \n";
+    $sql .= "               ELSE 0 \n";
+    $sql .= "           END \n";
+    $sql .= "       ), \n";
+    $sql .= "   SUM \n";
+    $sql .= "       ( \n";
+    $sql .= "           CASE \n";
+    $sql .= "               WHEN t_lump_amount.schedule_payment_id IS NOT NULL \n";
+    $sql .= "               THEN COALESCE(t_lump_amount.tax_amount, 0) \n";
+    $sql .= "               ELSE 0 \n";
+    $sql .= "           END \n";
+    $sql .= "       ) \n";
+    $sql .= "FROM \n";
+    $sql .= "   t_lump_amount \n";
+    if ($branch_id != null){
+    $sql .= "   INNER JOIN t_client \n";
+    $sql .= "       ON  t_lump_amount.client_id = t_client.client_id \n";
+    $sql .= "       AND t_client.charge_branch_id = $branch_id \n";
+    }
+    $sql .= "WHERE \n";
+    $sql .= "   t_lump_amount.data_div = '2' \n";
+    $sql .= "AND \n";
+    $sql .= "   t_lump_amount.shop_id = $shop_id \n";
+    $sql .= "AND \n";
+    $sql .= "   t_lump_amount.allocate_day >= '$monthly_renew_day' \n";
+    $sql .= "AND \n";
+    $sql .= "   t_lump_amount.allocate_day <= '$end_day' \n";
+    $sql .= ";"; 
+    $res_total = Db_Query($db_con, $sql);
+    $num_total = pg_num_rows($res_total);
+    $ary_total = Two_To_Linear(Get_Data($res_total));
+
+    return $ary_total;
+
+}
+
+function Make_Html_Total_Amount($ary_total, $renew_type, $staff_id, $ary_royal = null, $ary_lump = null){
+
+    if ($renew_type == "daily"){
+        $title      = "日次未実施累計";
+    }else
+    if ($renew_type == "halfway"){
+        $title      = "日次実施済累計";
+    }else
+    if ($renew_type == "notax"){
+        $title      = "合計";
+        $sub_title  = "税抜金額";
+        $royal_col  = "0";
+    }else
+    if ($renew_type == "tax"){
+        $sub_title  = "消費税額";
+        $royal_col  = "1";
+    }else
+    if ($renew_type == "lump"){
+        $sub_title  = "一括消費税";
+    }else
+    if ($renew_type == "royalty"){
+        $sub_title  = "ロイヤリティ";
+    }else
+    if ($renew_type == "monthly"){
+        $sub_title  = "税込金額";
+    }
+
+    $td_opt  = " class=\"Value\" align=\"right\"";
+
+    $html_t .= "<tr>\n";
+    if ($renew_type == "daily" || $renew_type == "halfway"){
+    $html_t .= "    <td class=\"Title_Green\" colspan=\"2\">$title</td>\n";
+    }else
+    if ($renew_type == "notax"){
+    $html_t .= "    <td class=\"Title_Green\" rowspan=\"5\">$title</td><td class=\"Title_Green\">$sub_title</td>\n";
+    }else{
+    $html_t .= "    <td class=\"Title_Green\">$sub_title</td>\n";
+    }
+
+    // 担当者明細時
+    if ($staff_id != null && $staff_id != "0"){
+
+        if ($renew_type != "royalty"){
+            $html_t .= "    <td class=\"Value\" align=\"right\">".Numformat_Ortho($ary_total[2])."</td>\n";  // 売上
+        }else{
+            $html_t .= "    <td class=\"Value\" align=\"center\">-</td>\n";  // 売上
+        }
+        if ($renew_type == "daily" || $renew_type == "halfway" || $renew_type == "monthly"){
+            $html_t .= "    <td class=\"Value\" align=\"right\">".Numformat_Ortho($ary_total[3])."</td>\n";  // 入金
+        }else{
+            $html_t .= "    <td class=\"Value\" align=\"center\">-</td>\n";  // 入金
+        }
+
+    // 代行明細時
+    }elseif ($staff_id == "0"){
+
+        if ($renew_type != "royalty"){
+            $html_t .= "    <td class=\"Value\" align=\"right\">".Numformat_Ortho($ary_total[0])."</td>\n";  // 売上
+        }else{
+            $html_t .= "    <td class=\"Value\" align=\"center\">-</td>\n";  // 売上
+        }
+        if ($renew_type == "daily" || $renew_type == "halfway" || $renew_type == "monthly"){
+            $html_t .= "    <td class=\"Value\" align=\"right\">".Numformat_Ortho($ary_total[1])."</td>\n";  // 入金
+        }else{
+            $html_t .= "    <td class=\"Value\" align=\"center\">-</td>\n";  // 入金
+        }
+
+    // 支店明細時
+    }elseif ($staff_id == null){
+
+        if ($renew_type != "royalty" && $renew_type != "monthly"){
+            $html_t .= "    <td class=\"Value\" align=\"right\">". Numformat_Ortho($ary_total[0])."</td>\n";  // 売上
+        }else
+        if ($renew_type == "monthly"){
+            $html_t .= "    <td class=\"Value\" align=\"right\">". Numformat_Ortho($ary_total[0] + $ary_lump[0])."</td>\n";  // 売上
+        }else{
+            $html_t .= "    <td class=\"Value\" align=\"center\">-</td>\n";  // 売上
+        }
+        if ($renew_type == "daily" || $renew_type == "halfway" || $renew_type == "monthly"){
+            $html_t .= "    <td class=\"Value\" align=\"right\">".Numformat_Ortho($ary_total[1])."</td>\n";  // 入金
+        }else{
+            $html_t .= "    <td class=\"Value\" align=\"center\">-</td>\n";  // 入金
+        }
+        if ($renew_type == "notax" || $renew_type == "tax"){
+            $html_t .= "    <td class=\"Value\" align=\"right\">".Numformat_Ortho($ary_total[2])."</td>\n";  // 仕入
+        }else
+        if ($renew_type == "monthly"){
+            $html_t .= "    <td class=\"Value\" align=\"right\">".Numformat_Ortho($ary_total[2] + $ary_royal[2] + $ary_lump[1])."</td>\n";  // 仕入
+        }else{
+            $html_t .= "    <td class=\"Value\" align=\"right\">".Numformat_Ortho($ary_total[2])."</td>\n";  // 仕入
+        }
+        if ($renew_type == "daily" || $renew_type == "halfway" || $renew_type == "monthly"){
+            $html_t .= "    <td class=\"Value\" align=\"right\">".Numformat_Ortho($ary_total[3])."</td>\n";  // 支払
+        }else{
+            $html_t .= "    <td class=\"Value\" align=\"center\">-</td>\n";  // 支払
+        }
+    }
+    $html_t .= "</tr>\n";
+
+    return $html_t;
+
+}
+
+
+/****************************/
+// 明細金額取得クエリ用関数
+/****************************/
+// 売上明細
+function Particular_Sale_Sql($renew_type, $staff_id, $shop_id, $branch_id, $monthly_renew_day, $end_day){
+
+    // ループ用配列（販売区分）
+    if ($staff_id != null && $staff_id != "0"){
+        $ary_sale_div   = array("01", "02", "03", "04", "05", "06");
+    }elseif ($staff_id == "0"){
+        $ary_sale_div   = array("08");
+    }elseif ($staff_id == null){
+        $ary_sale_div   = array("01", "02", "03", "04", "05", "06", "08");
+    }
+
+    $sql  = "SELECT \n";
+    foreach ($ary_sale_div as $key => $value){
+    $sql .= "   COALESCE(t_sale_data.genkin_".$value."_count, 0)        AS genkin_".$value."_count, \n";
+    $sql .= "   COALESCE(t_sale_data.genkin_".$value."_cost_amount, 0)  AS genkin_".$value."_cost, \n";
+    $sql .= "   COALESCE(t_sale_data.genkin_".$value."_sale_amount, 0)  AS genkin_".$value."_sale, \n";
+    }
+    $sql .= "   COALESCE(t_sale_tax.genkin_tax_amount, 0)               AS genkin_tax, \n";
+    $sql .= "   COALESCE(t_sale_data.genkin_gai_count, 0)               AS genkin_gai_count, \n";
+    $sql .= "   COALESCE(t_sale_data.genkin_gai_cost_amount, 0)         AS genkin_gai_cost, \n";
+    $sql .= "   COALESCE(t_sale_data.genkin_gai_sale_amount, 0)         AS genkin_gai_sale, \n";
+    foreach ($ary_sale_div as $key => $value){
+    $sql .= "   COALESCE(t_sale_data.kake_".$value."_count, 0)          AS kake_".$value."_count, \n";
+    $sql .= "   COALESCE(t_sale_data.kake_".$value."_cost_amount, 0)    AS kake_".$value."_cost, \n";
+    $sql .= "   COALESCE(t_sale_data.kake_".$value."_sale_amount, 0)    AS kake_".$value."_sale, \n";
+    }
+    $sql .= "   COALESCE(t_sale_tax.kake_tax_amount, 0)                 AS kake_tax, \n";
+    $sql .= "   COALESCE(t_sale_data.kake_gai_count, 0)                 AS kake_gai_count, \n";
+    $sql .= "   COALESCE(t_sale_data.kake_gai_cost_amount, 0)           AS kake_gai_cost, \n";
+    $sql .= "   COALESCE(t_sale_data.kake_gai_sale_amount, 0)           AS kake_gai_sale \n";
+    $sql .= "FROM \n";
+    // 所属
+    $sql .= "   ( \n";
+    $sql .= "       SELECT \n";
+    if ($staff_id != null && $staff_id != "0"){
+    $sql .= "           shop_id, \n";
+    $sql .= "           staff_id \n";
+    }else{
+    $sql .= "           shop_id \n";
+    }
+    $sql .= "       FROM \n";
+    $sql .= "           ( \n";
+    $sql .= "               ( \n";
+    $sql .= "                   SELECT \n";
+    if ($staff_id != null && $staff_id != "0"){
+    $sql .= "                       t_attach.shop_id, \n";
+    $sql .= "                       t_attach.staff_id \n";
+    }else{
+    $sql .= "                       t_attach.shop_id \n";
+    }
+    $sql .= "                   FROM \n";
+    $sql .= "                       t_attach \n";
+    $sql .= "               ) \n";
+    $sql .= "               UNION ALL \n";
+    $sql .= "               ( \n";
+    $sql .= "                   SELECT \n";
+    if ($staff_id != null && $staff_id != "0"){
+    $sql .= "                       t_sale_h_amount.shop_id, \n";
+    $sql .= "                       t_sale_h_amount.main_staff_id AS staff_id \n";
+    }else{
+    $sql .= "                       t_sale_h_amount.shop_id \n";
+    }
+    $sql .= "                   FROM \n";
+    $sql .= "                       t_sale_h_amount \n";
+    if ($branch_id != null){
+    $sql .= "                       INNER JOIN t_client \n";
+    $sql .= "                       ON t_sale_h_amount.client_id = t_client.client_id AND t_client.charge_branch_id = $branch_id \n";
+    }
+    $sql .= "               ) \n";
+    $sql .= "           ) \n";
+    $sql .= "           AS t_attach_sale \n";
+    $sql .= "       WHERE \n";
+    $sql .= "           shop_id = $shop_id \n";
+    if ($staff_id != null && $staff_id != "0"){
+    $sql .= "       AND \n";
+    $sql .= "           staff_id = $staff_id \n";
+    }elseif ($staff_id == "0"){
+    $sql .= "       GROUP BY \n";
+    $sql .= "           shop_id \n";
+    }elseif ($staff_id == null){
+    $sql .= "       GROUP BY \n";
+    $sql .= "           shop_id \n";
+    }
+    $sql .= "   ) \n";
+    $sql .= "   AS t_attach_staff \n";
+    // 売上データ(join 商品マスタ)
+    $sql .= "   LEFT JOIN \n";
+    $sql .= "   ( \n";
+    $sql .= "       SELECT \n";
+    $sql .= "           t_sale_goods.shop_id, \n";
+    if ($staff_id != null && $staff_id != "0"){
+    $sql .= "           t_sale_goods.staff_id, \n";
+    }
+    // 現金売上 - 明細件数
+    foreach ($ary_sale_div as $key => $value){
+    $sql .= "           COUNT( \n";
+    $sql .= "               CASE \n";
+    $sql .= "                   WHEN \n";
+    $sql .= "                       t_sale_goods.trade_id IN (61, 63, 64) \n";
+    $sql .= "                   AND \n";
+    $sql .= "                       CAST(LPAD(t_sale_goods.sale_div_cd, 2, '0') AS TEXT) = '$value' \n";
+    $sql .= "                   THEN \n";
+    $sql .= "                       t_sale_goods.sale_d_id \n";
+    $sql .= "               END \n";
+    $sql .= "           ) AS genkin_".$value."_count, \n";
+    }
+    // 現金売上 - 原価
+    foreach ($ary_sale_div as $key => $value){
+    $sql .= "           SUM( \n";
+    $sql .= "               CASE \n";
+    $sql .= "                   WHEN \n";
+    $sql .= "                       t_sale_goods.trade_id IN (61) \n";
+    $sql .= "                   AND \n";
+    $sql .= "                       CAST(LPAD(t_sale_goods.sale_div_cd, 2, '0') AS TEXT) = '$value' \n";
+    $sql .= "                   THEN \n";
+    $sql .= "                       COALESCE(t_sale_goods.cost_amount, 0) * 1 \n";
+    $sql .= "                   WHEN \n";
+    $sql .= "                       t_sale_goods.trade_id IN (63, 64) \n";
+    $sql .= "                   AND \n";
+    $sql .= "                       CAST(LPAD(t_sale_goods.sale_div_cd, 2, '0') AS TEXT) = '$value' \n";
+    $sql .= "                   THEN \n";
+    $sql .= "                       COALESCE(t_sale_goods.cost_amount, 0) * -1 \n";
+    $sql .= "                   ELSE 0 \n";
+    $sql .= "               END \n";
+    $sql .= "           ) AS genkin_".$value."_cost_amount, \n";
+    }
+    // 現金売上 - 金額
+    foreach ($ary_sale_div as $key => $value){
+    $sql .= "           SUM( \n";
+    $sql .= "               CASE \n";
+    $sql .= "                   WHEN \n";
+    $sql .= "                       t_sale_goods.trade_id IN (61) \n";
+    $sql .= "                   AND \n";
+    $sql .= "                       CAST(LPAD(t_sale_goods.sale_div_cd, 2, '0') AS TEXT) = '$value' \n";
+    $sql .= "                   THEN \n";
+    $sql .= "                       COALESCE(t_sale_goods.sale_amount, 0) * 1 \n";
+    $sql .= "                   WHEN \n";
+    $sql .= "                       t_sale_goods.trade_id IN (63, 64) \n";
+    $sql .= "                   AND \n";
+    $sql .= "                       CAST(LPAD(t_sale_goods.sale_div_cd, 2, '0') AS TEXT) = '$value' \n";
+    $sql .= "                   THEN \n";
+    $sql .= "                       COALESCE(t_sale_goods.sale_amount, 0) * -1 \n";
+    $sql .= "                   ELSE 0 \n";
+    $sql .= "               END \n";
+    $sql .= "           ) AS genkin_".$value."_sale_amount, \n";
+    }
+    // 現金売上 - 販売管理外件数
+    $sql .= "           COUNT( \n";
+    $sql .= "               CASE \n";
+    $sql .= "                   WHEN \n";
+    $sql .= "                       t_sale_goods.trade_id IN (61, 63, 64) \n";
+    $sql .= "                   AND \n";
+    $sql .= "                       t_sale_goods.sale_manage = '2' \n";
+    $sql .= "                   THEN \n";
+    $sql .= "                       t_sale_goods.sale_d_id \n";
+    $sql .= "               END \n";
+    $sql .= "           ) AS genkin_gai_count, \n";
+    // 現金売上 - 販売管理外原価
+    $sql .= "           SUM( \n";
+    $sql .= "               CASE \n";
+    $sql .= "                   WHEN \n";
+    $sql .= "                       t_sale_goods.trade_id IN (61) \n";
+    $sql .= "                   AND \n";
+    $sql .= "                       t_sale_goods.sale_manage = '2' \n";
+    $sql .= "                   THEN \n";
+    $sql .= "                       COALESCE(t_sale_goods.cost_amount) * 1 \n";
+    $sql .= "                   WHEN \n";
+    $sql .= "                       t_sale_goods.trade_id IN (63, 64) \n";
+    $sql .= "                   AND \n";
+    $sql .= "                       t_sale_goods.sale_manage = '2' \n";
+    $sql .= "                   THEN \n";
+    $sql .= "                       COALESCE(t_sale_goods.cost_amount) * -1 \n";
+    $sql .= "                   ELSE 0 \n";
+    $sql .= "               END \n";
+    $sql .= "           ) AS genkin_gai_cost_amount, \n";
+    // 現金売上 - 販売管理外金額
+    $sql .= "           SUM( \n";
+    $sql .= "               CASE \n";
+    $sql .= "                   WHEN \n";
+    $sql .= "                       t_sale_goods.trade_id IN (61) \n";
+    $sql .= "                   AND \n";
+    $sql .= "                       t_sale_goods.sale_manage = '2' \n";
+    $sql .= "                   THEN \n";
+    $sql .= "                       COALESCE(t_sale_goods.sale_amount) * 1 \n";
+    $sql .= "                   WHEN \n";
+    $sql .= "                       t_sale_goods.trade_id IN (63, 64) \n";
+    $sql .= "                   AND \n";
+    $sql .= "                       t_sale_goods.sale_manage = '2' \n";
+    $sql .= "                   THEN \n";
+    $sql .= "                       COALESCE(t_sale_goods.sale_amount) * -1 \n";
+    $sql .= "                   ELSE 0 \n";
+    $sql .= "               END \n";
+    $sql .= "           ) AS genkin_gai_sale_amount, \n";
+    // 掛売上 - 明細件数
+    foreach ($ary_sale_div as $key => $value){
+    $sql .= "           COUNT( \n";
+    $sql .= "               CASE \n";
+    $sql .= "                   WHEN \n";
+    $sql .= "                       t_sale_goods.trade_id IN (11, 13, 14, 15) \n";
+    $sql .= "                   AND \n";
+    $sql .= "                       CAST(LPAD(t_sale_goods.sale_div_cd, 2, '0') AS TEXT) = '$value' \n";
+    $sql .= "                   THEN \n";
+    $sql .= "                       t_sale_goods.sale_d_id \n";
+    $sql .= "               END \n";
+    $sql .= "           ) AS kake_".$value."_count, \n";
+    }
+    // 掛売上 - 原価
+    foreach ($ary_sale_div as $key => $value){
+    $sql .= "           SUM( \n";
+    $sql .= "               CASE \n";
+    $sql .= "                   WHEN \n";
+    $sql .= "                       t_sale_goods.trade_id IN (11, 15) \n";
+    $sql .= "                   AND \n";
+    $sql .= "                       CAST(LPAD(t_sale_goods.sale_div_cd, 2, '0') AS TEXT) = '$value' \n";
+    $sql .= "                   THEN \n";
+    $sql .= "                       COALESCE(t_sale_goods.cost_amount, 0) * 1 \n";
+    $sql .= "                   WHEN \n";
+    $sql .= "                       t_sale_goods.trade_id IN (13, 14) \n";
+    $sql .= "                   AND \n";
+    $sql .= "                       CAST(LPAD(t_sale_goods.sale_div_cd, 2, '0') AS TEXT) = '$value' \n";
+    $sql .= "                   THEN \n";
+    $sql .= "                       COALESCE(t_sale_goods.cost_amount, 0) * -1 \n";
+    $sql .= "                   ELSE 0 \n";
+    $sql .= "               END \n";
+    $sql .= "           ) AS kake_".$value."_cost_amount, \n";
+    }
+    // 掛売上 - 金額
+    foreach ($ary_sale_div as $key => $value){
+    $sql .= "           SUM( \n";
+    $sql .= "               CASE \n";
+    $sql .= "                   WHEN \n";
+    $sql .= "                       t_sale_goods.trade_id IN (11, 15) \n";
+    $sql .="                    AND \n";
+    $sql .= "                       CAST(LPAD(t_sale_goods.sale_div_cd, 2, '0') AS TEXT) = '$value' \n";
+    $sql .= "                   THEN \n";
+    $sql .= "                       COALESCE(t_sale_goods.sale_amount, 0) * 1 \n";
+    $sql .= "                   WHEN \n";
+    $sql .= "                       t_sale_goods.trade_id IN (13, 14) \n";
+    $sql .= "                   AND \n";
+    $sql .= "                       CAST(LPAD(t_sale_goods.sale_div_cd, 2, '0') AS TEXT) = '$value' \n";
+    $sql .= "                   THEN \n";
+    $sql .= "                       COALESCE(t_sale_goods.sale_amount, 0) * -1 \n";
+    $sql .= "                   ELSE 0 \n";
+    $sql .= "               END \n";
+    $sql .= "           ) AS kake_".$value."_sale_amount, \n";
+    }
+    // 掛売上 - 販売管理外件数
+    $sql .= "           COUNT( \n";
+    $sql .= "               CASE \n";
+    $sql .= "                   WHEN \n";
+    $sql .= "                       t_sale_goods.trade_id IN (11, 13, 14, 15) \n";
+    $sql .= "                   AND \n";
+    $sql .= "                       t_sale_goods.sale_manage = '2' \n";
+    $sql .= "                   THEN \n";
+    $sql .= "                       t_sale_goods.sale_d_id \n";
+    $sql .= "               END \n";
+    $sql .= "           ) AS kake_gai_count, \n";
+    // 掛売上 - 販売管理外原価
+    $sql .= "           SUM( \n";
+    $sql .= "               CASE \n";
+    $sql .= "                   WHEN \n";
+    $sql .= "                       t_sale_goods.trade_id IN (11, 15) \n";
+    $sql .= "                   AND \n";
+    $sql .= "                       t_sale_goods.sale_manage = '2' \n";
+    $sql .= "                   THEN \n";
+    $sql .= "                       COALESCE(t_sale_goods.cost_amount) * 1 \n";
+    $sql .= "                   WHEN \n";
+    $sql .= "                       t_sale_goods.trade_id IN (13, 14) \n";
+    $sql .= "                   AND \n";
+    $sql .= "                       t_sale_goods.sale_manage = '2' \n";
+    $sql .= "                   THEN \n";
+    $sql .= "                       COALESCE(t_sale_goods.cost_amount) * -1 \n";
+    $sql .= "                   ELSE 0 \n";
+    $sql .= "               END \n";
+    $sql .= "           ) AS kake_gai_cost_amount, \n";
+    // 掛売上 - 販売管理外金額
+    $sql .= "           SUM( \n";
+    $sql .= "               CASE \n";
+    $sql .= "                   WHEN \n";
+    $sql .= "                       t_sale_goods.trade_id IN (11, 15) \n";
+    $sql .= "                   AND \n";
+    $sql .= "                       t_sale_goods.sale_manage = '2' \n";
+    $sql .= "                   THEN \n";
+    $sql .= "                       COALESCE(t_sale_goods.sale_amount) * 1 \n";
+    $sql .= "                   WHEN \n";
+    $sql .= "                       t_sale_goods.trade_id IN (13, 14) \n";
+    $sql .= "                   AND \n";
+    $sql .= "                       t_sale_goods.sale_manage = '2' \n";
+    $sql .= "                   THEN \n";
+    $sql .= "                       COALESCE(t_sale_goods.sale_amount) * -1 \n";
+    $sql .= "                   ELSE 0 \n";
+    $sql .= "               END \n";
+    $sql .= "           ) AS kake_gai_sale_amount \n";
+    $sql .= "       FROM \n";
+    $sql .= "           ( \n";
+    $sql .= "               SELECT \n";
+    $sql .= "                   t_sale_d_amount.sale_d_id, \n";
+    $sql .= "                   t_sale_d_amount.shop_id, \n";
+    $sql .= "                   t_sale_d_amount.trade_id, \n";
+    $sql .= "                   CASE \n";
+    $sql .= "                       WHEN \n";
+    $sql .= "                           t_sale_d_amount.contract_div = '1' \n";
+    $sql .= "                       THEN \n";
+    $sql .= "                           CAST(LPAD(t_sale_d_amount.sale_div_cd, 2, '0') AS TEXT) \n";
+    $sql .= "                       ELSE '08' \n";
+    $sql .= "                   END \n";
+    $sql .= "                   AS sale_div_cd, \n";
+    $sql .= "                   t_goods.sale_manage, \n";
+    $sql .= "                   t_sale_d_amount.main_staff_id AS staff_id, \n";
+    $sql .= "                   COALESCE(t_sale_d_amount.all_net_amount, 0)  AS cost_amount, \n";
+    $sql .= "                   COALESCE(t_sale_d_amount.all_sale_amount, 0) AS sale_amount \n";
+    $sql .= "               FROM \n";
+    $sql .= "                   t_sale_d_amount \n";
+    $sql .= "                   LEFT JOIN t_goods ON t_sale_d_amount.goods_id = t_goods.goods_id \n";
+    if ($branch_id != null){
+    $sql .= "                   INNER JOIN t_sale_h_amount \n";
+    $sql .= "                   ON t_sale_d_amount.sale_id = t_sale_h_amount.sale_id \n";
+    $sql .= "                   INNER JOIN t_client \n";
+    $sql .= "                   ON t_sale_h_amount.client_id = t_client.client_id AND t_client.charge_branch_id = $branch_id \n";
+    }
+    $sql .= "               WHERE \n";
+    $sql .= "                   t_sale_d_amount.shop_id = $shop_id \n";
+    if ($renew_type == "daily"){
+    $sql .= "               AND \n";
+    $sql .= "                   t_sale_d_amount.renew_flg = 'f' \n";
+    }else
+    if ($renew_type == "halfway"){
+    $sql .= "               AND \n";
+    $sql .= "                   t_sale_d_amount.renew_flg = 't' \n";
+    }
+    if ($staff_id != null && $staff_id != "0"){
+    $sql .= "               AND \n";
+    $sql .= "                   t_sale_d_amount.contract_div = '1' \n";
+    }elseif ($staff_id == "0"){
+    $sql .= "               AND \n";
+    $sql .= "                   t_sale_d_amount.contract_div != '1' \n";
+    }
+    $sql .= "               AND \n";
+    $sql .= "                   t_sale_d_amount.sale_day >= '$monthly_renew_day' \n";
+    if ($end_day != null){
+    $sql .= "               AND \n";
+    $sql .= "                   t_sale_d_amount.sale_day <= '$end_day' \n";
+    }
+    if ($staff_id != null && $staff_id != "0"){
+    $sql .= "               AND \n";
+    $sql .= "                   t_sale_d_amount.main_staff_id = $staff_id \n";
+    }
+    $sql .= "           ) \n";
+    $sql .= "           AS t_sale_goods \n";
+    if ($staff_id != null && $staff_id != "0"){
+    $sql .= "       GROUP BY \n";
+    $sql .= "           t_sale_goods.shop_id, \n";
+    $sql .= "           t_sale_goods.staff_id \n";
+    }else{
+    $sql .= "       GROUP BY \n";
+    $sql .= "           t_sale_goods.shop_id \n";
+    }
+    $sql .= "   ) \n";
+    $sql .= "   AS t_sale_data \n";
+    $sql .= "   ON t_attach_staff.shop_id = t_sale_data.shop_id \n";
+    if ($staff_id != null && $staff_id != "0"){
+    $sql .= "   AND t_attach_staff.staff_id = t_sale_data.staff_id \n";
+    }
+    // 売上ヘッダ(join 取引先マスタ)
+    $sql .= "   LEFT JOIN \n";
+    $sql .= "   ( \n";
+    $sql .= "       SELECT \n";
+    $sql .= "           t_sale_client.shop_id, \n";
+    if ($staff_id != null && $staff_id != "0"){
+    $sql .= "           t_sale_client.staff_id, \n";
+    }
+    // 現金売上 - 伝票消費税額
+    $sql .= "           SUM( \n";
+    $sql .= "               CASE \n";
+    $sql .= "                   WHEN \n";
+    $sql .= "                       t_sale_client.trade_id = 61 \n";
+    $sql .= "                   AND \n";
+    $sql .= "                       t_sale_client.c_tax_div = '1' \n";
+    $sql .= "                   THEN \n";
+    $sql .= "                       COALESCE(t_sale_client.tax_amount, 0) * 1 \n";
+    $sql .= "                   WHEN \n";
+    $sql .= "                       t_sale_client.trade_id IN (63, 64) \n";
+    $sql .= "                   AND \n";
+    $sql .= "                       t_sale_client.c_tax_div = '1' \n";
+    $sql .= "                   THEN \n";
+    $sql .= "                       COALESCE(t_sale_client.tax_amount, 0) * -1 \n";
+    $sql .= "                   ELSE 0 \n";
+    $sql .= "               END \n";
+    $sql .= "           ) AS genkin_tax_amount, \n";
+    // 掛売上 - 伝票消費税額
+    $sql .= "           SUM( \n";
+    $sql .= "               CASE \n";
+    $sql .= "                   WHEN \n";
+    $sql .= "                       t_sale_client.trade_id IN (11, 15) \n";
+    $sql .= "                   AND \n";
+    $sql .= "                       t_sale_client.c_tax_div = '1' \n";
+    $sql .= "                   THEN \n";
+    $sql .= "                       COALESCE(t_sale_client.tax_amount, 0) * 1 \n";
+    $sql .= "                   WHEN \n";
+    $sql .= "                       t_sale_client.trade_id IN (13, 14) \n";
+    $sql .= "                   AND \n";
+    $sql .= "                       t_sale_client.c_tax_div = '1' \n";
+    $sql .= "                   THEN \n";
+    $sql .= "                       COALESCE(t_sale_client.tax_amount, 0) * -1 \n";
+    $sql .= "                   ELSE 0 \n";
+    $sql .= "               END \n";
+    $sql .= "           ) AS kake_tax_amount \n";
+    $sql .= "       FROM \n";
+    $sql .= "           ( \n";
+    $sql .= "               SELECT \n";
+    $sql .= "                   t_sale_h_amount.shop_id, \n";
+    $sql .= "                   t_sale_h_amount.trade_id, \n";
+    $sql .= "                   t_sale_h_amount.renew_flg, \n";
+    $sql .= "                   t_sale_h_amount.sale_day, \n";
+    $sql .= "                   t_client_tax.c_tax_div, \n";
+    $sql .= "                   t_sale_h_amount.main_staff_id AS staff_id, \n";
+    $sql .= "                   COALESCE(t_sale_h_amount.all_tax_amount, 0) AS tax_amount \n";
+    $sql .= "               FROM \n";
+    $sql .= "                   t_sale_h_amount \n";
+    $sql .= "                   LEFT JOIN t_client AS t_client_tax ON t_sale_h_amount.client_id = t_client_tax.client_id \n";
+    if ($branch_id != null){
+    $sql .= "                   INNER JOIN t_client AS t_client_branch \n";
+    $sql .= "                   ON t_sale_h_amount.client_id = t_client_branch.client_id AND t_client_branch.charge_branch_id = $branch_id \n";
+    }
+    $sql .= "               WHERE \n";
+    $sql .= "                   t_sale_h_amount.shop_id = $shop_id \n";
+    if ($renew_type == "daily"){
+    $sql .= "               AND \n";
+    $sql .= "                   t_sale_h_amount.renew_flg = 'f' \n";
+    }else
+    if ($renew_type == "halfway"){
+    $sql .= "               AND \n";
+    $sql .= "                   t_sale_h_amount.renew_flg = 't' \n";
+    }
+    if ($staff_id != null && $staff_id != "0"){
+    $sql .= "               AND \n";
+    $sql .= "                   t_sale_h_amount.contract_div = '1' \n";
+    }elseif ($staff_id == "0"){
+    $sql .= "               AND \n";
+    $sql .= "                   t_sale_h_amount.contract_div != '1' \n";
+    }
+    $sql .= "               AND \n";
+    $sql .= "                   t_sale_h_amount.sale_day >= '$monthly_renew_day' \n";
+    if ($end_day != null){
+    $sql .= "               AND \n";
+    $sql .= "                   t_sale_h_amount.sale_day <= '$end_day' \n";
+    }
+    if ($staff_id != null && $staff_id != "0"){
+    $sql .= "               AND \n";
+    $sql .= "                   t_sale_h_amount.main_staff_id = $staff_id \n";
+    }
+    $sql .= "           ) \n";
+    $sql .= "           AS t_sale_client \n";
+    if ($staff_id != null && $staff_id != "0"){
+    $sql .= "       GROUP BY \n";
+    $sql .= "           t_sale_client.shop_id, \n";
+    $sql .= "           t_sale_client.staff_id \n";
+    }else{
+    $sql .= "       GROUP BY \n";
+    $sql .= "           t_sale_client.shop_id \n";
+    }
+    $sql .= "   ) \n";
+    $sql .= "   AS t_sale_tax \n";
+    $sql .= "   ON t_attach_staff.shop_id = t_sale_tax.shop_id \n";
+    if ($staff_id != null && $staff_id != "0"){
+    $sql .= "   AND t_attach_staff.staff_id = t_sale_tax.staff_id \n";
+    }
+    if ($staff_id == "0" || $staff_id == null){
+    }
+    $sql .= ";";
+
+    // クエリを返す
+    return $sql;
+
+}
+
+// 仕入明細
+function Particular_Buy_Sql($renew_type, $staff_id, $shop_id, $branch_id, $monthly_renew_day, $end_day){
+
+    $sql  = "SELECT \n";
+    $sql .= "   COALESCE(t_buy_data.genkin_all_count, 0)        AS genkin_count, \n";
+    $sql .= "   COALESCE(t_buy_data.genkin_all_amount, 0)       AS genkin_amount, \n";
+    $sql .= "   COALESCE(t_buy_data_tax.genkin_tax_amount, 0)   AS genkin_tax, \n";
+    $sql .= "   COALESCE(t_buy_data.kake_all_count, 0)          AS kake_count, \n";
+    $sql .= "   COALESCE(t_buy_data.kake_all_amount, 0)         AS kake_amount, \n";
+    $sql .= "   COALESCE(t_buy_data_tax.kake_tax_amount, 0)     AS kake_tax \n";
+    $sql .= "FROM \n";
+    // 所属
+    $sql .= "   ( \n";
+    $sql .= "       SELECT \n";
+    $sql .= "           t_attach.shop_id \n";
+    $sql .= "       FROM \n";
+    $sql .= "           t_attach \n";
+    $sql .= "       WHERE \n";
+    $sql .= "           t_attach.shop_id = $shop_id \n";
+    $sql .= "       GROUP BY \n";
+    $sql .= "           t_attach.shop_id \n";
+    $sql .= "   ) \n";
+    $sql .= "   AS t_attach_staff \n";
+    // 仕入ヘッダ(join 仕入データ)
+    $sql .= "   LEFT JOIN \n";
+    $sql .= "   ( \n";
+    $sql .= "       SELECT \n";
+    $sql .= "           t_buy_h.shop_id, \n";
+    // 現金仕入 - 商品（全て） - 件数
+    $sql .= "           COUNT( \n";
+    $sql .= "               CASE \n";
+    $sql .= "                   WHEN \n";
+    $sql .= "                       t_buy_h.trade_id IN (71, 73, 74) \n";
+    $sql .= "                   THEN \n";
+    $sql .= "                       t_buy_d.buy_d_id \n";
+    $sql .= "               END \n";
+    $sql .= "           ) \n";
+    $sql .= "           AS genkin_all_count, \n";
+    // 現金仕入 - 商品（全て） - 金額
+    $sql .= "           SUM( \n";
+    $sql .= "               CASE \n";
+    $sql .= "                   WHEN \n";
+    $sql .= "                       t_buy_h.trade_id IN (71) \n";
+    $sql .= "                   THEN \n";
+    $sql .= "                       COALESCE(t_buy_d.buy_amount, 0) * 1 \n";
+    $sql .= "                   WHEN \n";
+    $sql .= "                       t_buy_h.trade_id IN (73, 74) \n";
+    $sql .= "                   THEN \n";
+    $sql .= "                       COALESCE(t_buy_d.buy_amount, 0) * -1 \n";
+    $sql .= "                   ELSE 0 \n";
+    $sql .= "               END \n";
+    $sql .= "           ) \n";
+    $sql .= "           AS genkin_all_amount, \n";
+    // 掛仕入 - 商品（全て） - 件数
+    $sql .= "           COUNT( \n";
+    $sql .= "               CASE \n";
+    $sql .= "                   WHEN \n";
+    $sql .= "                       t_buy_h.trade_id IN (21, 23, 24, 25) \n";
+    $sql .= "                   THEN \n";
+    $sql .= "                       t_buy_d.buy_d_id \n";
+    $sql .= "               END \n";
+    $sql .= "           ) \n";
+    $sql .= "           AS kake_all_count, \n";
+    // 掛仕入 - 商品（全て） - 金額
+    $sql .= "           SUM( \n";
+    $sql .= "               CASE \n";
+    $sql .= "                   WHEN \n";
+    $sql .= "                       t_buy_h.trade_id IN (21, 25) \n";
+    $sql .= "                   THEN \n";
+    $sql .= "                       COALESCE(t_buy_d.buy_amount, 0) * 1 \n";
+    $sql .= "                   WHEN \n";
+    $sql .= "                       t_buy_h.trade_id IN (23, 24) \n";
+    $sql .= "                   THEN \n";
+    $sql .= "                       COALESCE(t_buy_d.buy_amount, 0) * -1 \n";
+    $sql .= "                   ELSE 0 \n";
+    $sql .= "               END \n";
+    $sql .= "           ) \n";
+    $sql .= "           AS kake_all_amount \n";
+    $sql .= "       FROM \n";
+    $sql .= "           t_buy_h \n";
+    $sql .= "           INNER JOIN t_buy_d ON t_buy_h.buy_id = t_buy_d.buy_id \n";
+    if ($branch_id != null){
+    $sql .= "           INNER JOIN t_client \n";
+    $sql .= "           ON t_buy_h.client_id = t_client.client_id AND t_client.charge_branch_id = $branch_id \n";
+    }
+    $sql .= "       WHERE \n";
+    $sql .= "           t_buy_h.shop_id = $shop_id \n";
+    if ($renew_type == "daily"){
+    $sql .= "       AND \n";
+    $sql .= "           t_buy_h.renew_flg = 'f' \n";
+    }else
+    if ($renew_type == "halfway"){
+    $sql .= "       AND \n";
+    $sql .= "           t_buy_h.renew_flg = 't' \n";
+    }
+    $sql .= "       AND \n";
+    $sql .= "           t_buy_h.buy_day >= '$monthly_renew_day' \n";
+    if ($end_day != null){
+    $sql .= "       AND \n";
+    $sql .= "           t_buy_h.buy_day <= '$end_day' \n";
+    }
+    $sql .= "       GROUP BY \n";
+    $sql .= "           t_buy_h.shop_id \n";
+    $sql .= "   ) \n";
+    $sql .= "   AS t_buy_data \n";
+    $sql .= "   ON t_attach_staff.shop_id = t_buy_data.shop_id \n";
+    // 仕入ヘッダ（join 取引先マスタ）
+    $sql .= "   LEFT JOIN \n";
+    $sql .= "   ( \n";
+    $sql .= "       SELECT \n";
+    $sql .= "           t_buy_h.shop_id, \n";
+    // 現金仕入 - 伝票消費税 - 金額
+    $sql .= "           SUM( \n";
+    $sql .= "               CASE \n";
+    $sql .= "                   WHEN \n";
+    $sql .= "                       t_buy_h.trade_id IN (71) \n";
+    $sql .= "                   AND \n";
+    $sql .= "                       t_client_tax.c_tax_div = '1' \n";
+    $sql .= "                   THEN \n";
+    $sql .= "                       COALESCE(t_buy_h.tax_amount, 0) * 1 \n";
+    $sql .= "                   WHEN \n";
+    $sql .= "                       t_buy_h.trade_id IN (73, 74) \n";
+    $sql .= "                   AND \n";
+    $sql .= "                       t_client_tax.c_tax_div = '1' \n";
+    $sql .= "                   THEN \n";
+    $sql .= "                       COALESCE(t_buy_h.tax_amount, 0) * -1 \n";
+    $sql .= "                   ELSE 0 \n";
+    $sql .= "               END \n";
+    $sql .= "           ) \n";
+    $sql .= "           AS genkin_tax_amount, \n";
+    // 掛仕入 - 伝票消費税 - 金額
+    $sql .= "           SUM( \n";
+    $sql .= "               CASE \n";
+    $sql .= "                   WHEN \n";
+    $sql .= "                       t_buy_h.trade_id IN (21, 25) \n";
+    $sql .= "                   AND \n";
+    $sql .= "                       t_client_tax.c_tax_div = '1' \n";
+    $sql .= "                   THEN \n";
+    $sql .= "                       COALESCE(t_buy_h.tax_amount, 0) * 1 \n";
+    $sql .= "                   WHEN \n";
+    $sql .= "                       t_buy_h.trade_id IN (23, 24) \n";
+    $sql .= "                   AND \n";
+    $sql .= "                       t_client_tax.c_tax_div = '1' \n";
+    $sql .= "                   THEN \n";
+    $sql .= "                       COALESCE(t_buy_h.tax_amount, 0) * -1 \n";
+    $sql .= "                   ELSE 0 \n";
+    $sql .= "               END \n";
+    $sql .= "           ) \n";
+    $sql .= "           AS kake_tax_amount \n";
+    $sql .= "       FROM \n";
+    $sql .= "           t_buy_h \n";
+    $sql .= "           LEFT JOIN t_client AS t_client_tax ON t_buy_h.client_id = t_client_tax.client_id \n";
+    if ($branch_id != null){
+    $sql .= "           INNER JOIN t_client AS t_client_branch \n";
+    $sql .= "           ON t_buy_h.client_id = t_client_branch.client_id AND t_client_branch.charge_branch_id = $branch_id \n";
+    }
+    $sql .= "       WHERE \n";
+    $sql .= "           t_buy_h.shop_id = $shop_id \n";
+    if ($renew_type == "daily"){
+    $sql .= "       AND \n";
+    $sql .= "           t_buy_h.renew_flg = 'f' \n";
+    }else
+    if ($renew_type == "halfway"){
+    $sql .= "       AND \n";
+    $sql .= "           t_buy_h.renew_flg = 't' \n";
+    }
+    $sql .= "       AND \n";
+    $sql .= "           t_buy_h.buy_day >= '$monthly_renew_day' \n";
+    if ($end_day != null){
+    $sql .= "       AND \n";
+    $sql .= "           t_buy_h.buy_day <= '$end_day' \n";
+    }
+    $sql .= "       GROUP BY \n";
+    $sql .= "           t_buy_h.shop_id \n";
+    $sql .= "   ) \n";
+    $sql .= "   AS t_buy_data_tax \n";
+    $sql .= "   ON t_attach_staff.shop_id = t_buy_data_tax.shop_id \n";
+    $sql .= ";";
+
+    // クエリを返す
+    return $sql;
+
+}
+
+// 入金明細 - 銀行情報取得
+function Bank_Payin_Sql($shop_id, $branch_id, $trade, $monthly_renew_day, $end_day){
+
+    $sql  = "SELECT \n";
+    $sql .= "   t_payin_d.trade_id, \n";
+    $sql .= "   t_payin_d.bank_cd, \n";
+    $sql .= "   t_payin_d.bank_name, \n";
+    $sql .= "   t_payin_d.b_bank_cd, \n";
+    $sql .= "   t_payin_d.b_bank_name, \n";
+    $sql .= "   t_payin_d.account_no \n";
+    $sql .= "FROM \n";
+    // 所属
+    $sql .= "   ( \n";
+    $sql .= "       SELECT \n";
+    $sql .= "           t_attach.shop_id \n";
+    $sql .= "       FROM \n";
+    $sql .= "           t_attach \n";
+    $sql .= "       WHERE \n";
+    $sql .= "           t_attach.shop_id = $shop_id \n";
+    $sql .= "       GROUP BY \n";
+    $sql .= "           t_attach.shop_id \n";
+    $sql .= "   ) \n";
+    $sql .= "   AS t_attach_staff \n";
+    // 入金ヘッダ
+    $sql .= "   LEFT JOIN \n";
+    $sql .= "   ( \n";
+    $sql .= "       SELECT \n";
+    $sql .= "           t_payin_h.pay_id, \n";
+    $sql .= "           t_payin_h.shop_id \n";
+    $sql .= "       FROM \n";
+    $sql .= "           t_payin_h \n";
+    if ($branch_id != null){
+    $sql .= "           INNER JOIN t_client \n";
+    $sql .= "           ON t_payin_h.client_id = t_client.client_id AND t_client.charge_branch_id = $branch_id \n";
+    }
+    $sql .= "       WHERE \n";
+    $sql .= "           t_payin_h.pay_day >= '$monthly_renew_day' \n";
+    if ($end_day != null){
+    $sql .= "       AND \n";
+    $sql .= "           t_payin_h.pay_day <= '$end_day' \n";
+    }
+    $sql .= "   ) \n";
+    $sql .= "   AS t_payin_monthly \n";
+    $sql .= "   ON t_attach_staff.shop_id = t_payin_monthly.shop_id \n";
+    $sql .= "   INNER JOIN t_payin_d \n";
+    $sql .= "   ON t_payin_monthly.pay_id = t_payin_d.pay_id \n";
+    $sql .= "   AND trade_id = ".$trade." \n";
+    $sql .= "GROUP BY \n";
+    $sql .= "   t_payin_d.trade_id, \n";
+    $sql .= "   t_payin_d.bank_cd, \n";
+    $sql .= "   t_payin_d.bank_name, \n";
+    $sql .= "   t_payin_d.b_bank_cd, \n";
+    $sql .= "   t_payin_d.b_bank_name, \n";
+    $sql .= "   account_no \n";
+    $sql .= "ORDER BY \n";
+    $sql .= "   t_payin_d.trade_id, \n";
+    $sql .= "   t_payin_d.bank_cd, \n";
+    $sql .= "   t_payin_d.bank_name, \n";
+    $sql .= "   t_payin_d.b_bank_cd, \n";
+    $sql .= "   t_payin_d.b_bank_name, \n";
+    $sql .= "   account_no \n";
+    $sql .= ";";
+
+    // クエリを返す
+    return $sql;
+
+}
+
+// 入金明細 - 銀行出力用
+function Particular_Payin_Bank_Sql($shop_id, $branch_id, $value, $monthly_renew_day, $end_day){
+
+    $sql  = "SELECT \n";
+    $sql .= "   t_payin_data.bank_cd, \n";
+    $sql .= "   t_payin_data.bank_name, \n";
+    $sql .= "   t_payin_data.b_bank_cd, \n";
+    $sql .= "   t_payin_data.b_bank_name, \n";
+    $sql .= "   t_payin_data.account_no, \n";
+    $sql .= "   COALESCE(t_payin_data.daily_amount, 0)      AS daily_amount, \n";
+    $sql .= "   COALESCE(t_payin_data.halfway_amount, 0)    AS halfway_amount, \n";
+    $sql .= "   COALESCE(t_payin_data.monthly_count, 0)     AS monthly_count, \n";
+    $sql .= "   COALESCE(t_payin_data.monthly_amount, 0)    AS monthly_amount \n";
+    $sql .= "FROM \n";
+    // 所属
+    $sql .= "   ( \n";
+    $sql .= "       SELECT \n";
+    $sql .= "           t_attach.shop_id \n";
+    $sql .= "       FROM \n";
+    $sql .= "           t_attach \n";
+    $sql .= "       WHERE \n";
+    $sql .= "           t_attach.shop_id = $shop_id \n";
+    $sql .= "       GROUP BY \n";
+    $sql .= "           t_attach.shop_id \n";
+    $sql .= "   ) \n";
+    $sql .= "   AS t_attach_staff \n";
+    // 入金ヘッダ（JOIN 入金データ）
+    $sql .= "   LEFT JOIN \n";
+    $sql .= "   ( \n";
+    $sql .= "       SELECT \n";
+    $sql .= "           t_payin_h.shop_id, \n";
+    $sql .= "           t_payin_d.bank_cd, \n";
+    $sql .= "           t_payin_d.bank_name, \n";
+    $sql .= "           t_payin_d.b_bank_cd, \n";
+    $sql .= "           t_payin_d.b_bank_name, \n";
+    $sql .= "           t_payin_d.account_no, \n";
+    $sql .= "           SUM( \n";
+    $sql .= "               CASE \n";
+    $sql .= "                   WHEN \n";
+    $sql .= "                       t_payin_h.renew_flg = 'f' \n";
+    $sql .= "                   THEN \n";
+    $sql .= "                       COALESCE(t_payin_d.amount, 0) \n";
+    $sql .= "                   ELSE 0 \n";
+    $sql .= "               END \n";
+    $sql .= "           ) AS daily_amount, \n";
+    $sql .= "           SUM( \n";
+    $sql .= "               CASE \n";
+    $sql .= "                   WHEN \n";
+    $sql .= "                       t_payin_h.renew_flg = 't' \n";
+    $sql .= "                   THEN \n";
+    $sql .= "                       COALESCE(t_payin_d.amount, 0) \n";
+    $sql .= "                   ELSE 0 \n";
+    $sql .= "               END \n";
+    $sql .= "           ) AS halfway_amount, \n";
+    $sql .= "           COUNT( \n";
+    $sql .= "               t_payin_d.pay_d_id \n";
+    $sql .= "           ) AS monthly_count, \n";
+    $sql .= "           SUM( \n";
+    $sql .= "               COALESCE(t_payin_d.amount, 0) \n";
+    $sql .= "           ) AS monthly_amount \n";
+    $sql .= "       FROM \n";
+    $sql .= "           t_payin_h \n";
+    if ($branch_id != null){
+    $sql .= "           INNER JOIN t_client \n";
+    $sql .= "           ON t_payin_h.client_id = t_client.client_id AND t_client.charge_branch_id = $branch_id \n";
+    }
+    $sql .= "           INNER JOIN t_payin_d ON t_payin_h.pay_id = t_payin_d.pay_id \n";
+    $sql .= "       AND \n";
+    $sql .= "           t_payin_h.pay_day >= '$monthly_renew_day' \n";
+    if ($end_day != null){
+    $sql .= "       AND \n";
+    $sql .= "           t_payin_h.pay_day <= '$end_day' \n";
+    }
+    $sql .= "       AND \n";
+    $sql .= "           t_payin_d.trade_id = ".$value["trade_id"]." \n";
+    $sql .= "       AND \n";
+    $sql .= "           t_payin_d.bank_cd = '".$value["bank_cd"]."' \n";
+    $sql .= "       AND \n";
+    $sql .= "           t_payin_d.bank_name = '".addslashes($value["bank_name"])."' \n";
+    $sql .= "       AND \n";
+    $sql .= "           t_payin_d.b_bank_cd = '".$value["b_bank_cd"]."' \n";
+    $sql .= "       AND \n";
+    $sql .= "           t_payin_d.b_bank_name = '".addslashes($value["b_bank_name"])."' \n";
+    $sql .= "       AND \n";
+    $sql .= "           t_payin_d.account_no = '".$value["account_no"]."' \n";
+    $sql .= "       GROUP BY \n";
+    $sql .= "           t_payin_h.shop_id, \n";
+    $sql .= "           t_payin_d.bank_cd, \n";
+    $sql .= "           t_payin_d.bank_name, \n";
+    $sql .= "           t_payin_d.b_bank_cd, \n";
+    $sql .= "           t_payin_d.b_bank_name, \n";
+    $sql .= "           t_payin_d.account_no \n";
+    $sql .= "   ) \n";
+    $sql .= "   AS t_payin_data \n";
+    $sql .= "   ON t_attach_staff.shop_id = t_payin_data.shop_id \n";
+    $sql .= "   ORDER BY \n";
+    $sql .= "       t_payin_data.bank_cd, \n";
+    $sql .= "       t_payin_data.b_bank_cd, \n";
+    $sql .= "       t_payin_data.account_no \n";
+    $sql .= ";";
+
+    // クエリを返す
+    return $sql;
+
+}
+
+// 入金明細 - 銀行未出力用
+function Particular_Payin_Nobank_Sql($shop_id, $branch_id, $staff_id, $trade, $monthly_renew_day, $end_day){
+
+    $sql  = "SELECT \n";
+    $sql .= "   COALESCE(t_payin_data.daily_amount, 0)      AS daily_amount, \n";
+    $sql .= "   COALESCE(t_payin_data.halfway_amount, 0)    AS halfway_amount, \n";
+    $sql .= "   COALESCE(t_payin_data.monthly_count, 0)     AS monthly_count, \n";
+    $sql .= "   COALESCE(t_payin_data.monthly_amount, 0)    AS monthly_amount \n";
+    $sql .= "FROM \n";
+    // 所属
+    $sql .= "   ( \n";
+    $sql .= "       SELECT \n";
+    if ($staff_id != null && $staff_id != "0"){
+    $sql .= "           t_attach_payin.shop_id, \n";
+    $sql .= "           t_attach_payin.staff_id \n";
+    }else{
+    $sql .= "           t_attach_payin.shop_id \n";
+    }
+    $sql .= "       FROM \n";
+    $sql .= "           ( \n";
+    $sql .= "               ( \n";
+    $sql .= "                   SELECT \n";
+    if ($staff_id != null && $staff_id != "0"){
+    $sql .= "                       t_attach.shop_id, \n";
+    $sql .= "                       t_attach.staff_id \n";
+    }else{
+    $sql .= "                       t_attach.shop_id \n";
+    }
+    $sql .= "                   FROM \n";
+    $sql .= "                       t_attach \n";
+    $sql .= "               ) \n";
+    $sql .= "               UNION ALL \n";
+    $sql .= "               ( \n";
+    $sql .= "                   SELECT \n";
+    if ($staff_id != null && $staff_id != "0"){
+    $sql .= "                       t_payin_h.shop_id, \n";
+    $sql .= "                       t_payin_h.collect_staff_id AS staff_id \n";
+    }else{
+    $sql .= "                       t_payin_h.shop_id \n";
+    }
+    $sql .= "                   FROM \n";
+    $sql .= "                       t_payin_h \n";
+    if ($branch_id != null && $staff_id != "0"){
+    $sql .= "                   INNER JOIN t_client \n";
+    $sql .= "                   ON t_payin_h.client_id = t_client.client_id AND t_client.charge_branch_id = $branch_id \n";
+    }
+    $sql .= "               ) \n";
+    $sql .= "           ) \n";
+    $sql .= "           AS t_attach_payin \n";
+    $sql .= "       WHERE \n";
+    $sql .= "           t_attach_payin.shop_id = $shop_id \n";
+    if ($staff_id != null && $staff_id != "0"){
+    $sql .= "       AND \n";
+    $sql .= "           t_attach_payin.staff_id = $staff_id \n";
+    $sql .= "       GROUP BY \n";
+    $sql .= "           t_attach_payin.shop_id, \n";
+    $sql .= "           t_attach_payin.staff_id \n";
+    }else{
+    $sql .= "       GROUP BY \n";
+    $sql .= "           t_attach_payin.shop_id \n";
+    }
+    $sql .= "   ) \n";
+    $sql .= "   AS t_attach_staff \n";
+    // 入金ヘッダ(join 入金データ)
+    $sql .= "   LEFT JOIN \n";
+    $sql .= "   ( \n";
+    $sql .= "       SELECT \n";
+    $sql .= "           t_payin_h.shop_id, \n";
+    if ($staff_id != null && $staff_id != "0"){
+    $sql .= "           t_payin_h.collect_staff_id AS staff_id, \n";
+    }
+    $sql .= "           SUM( \n";
+    $sql .= "               CASE \n";
+    $sql .= "                   WHEN \n";
+    $sql .= "                       t_payin_h.renew_flg = 'f' \n";
+    $sql .= "                   THEN \n";
+    $sql .= "                       COALESCE(t_payin_d.amount, 0) \n";
+    $sql .= "                   ELSE 0 \n";
+    $sql .= "               END \n";
+    $sql .= "           ) AS daily_amount, \n";
+    $sql .= "           SUM( \n";
+    $sql .= "               CASE \n";
+    $sql .= "                   WHEN \n";
+    $sql .= "                       t_payin_h.renew_flg = 't' \n";
+    $sql .= "                   THEN \n";
+    $sql .= "                       COALESCE(t_payin_d.amount, 0) \n";
+    $sql .= "                   ELSE 0 \n";
+    $sql .= "               END \n";
+    $sql .= "           ) AS halfway_amount, \n";
+    $sql .= "           COUNT( \n";
+    $sql .= "               t_payin_d.pay_d_id \n";
+    $sql .= "           ) AS monthly_count, \n";
+    $sql .= "           SUM( \n";
+    $sql .= "               COALESCE(t_payin_d.amount, 0) \n";
+    $sql .= "           ) AS monthly_amount \n";
+    $sql .= "       FROM \n";
+    $sql .= "           t_payin_h \n";
+    if ($branch_id != null){
+    $sql .= "           INNER JOIN t_client \n";
+    $sql .= "           ON t_payin_h.client_id = t_client.client_id AND t_client.charge_branch_id = $branch_id \n";
+    }
+    $sql .= "           INNER JOIN t_payin_d ON t_payin_h.pay_id = t_payin_d.pay_id \n";
+    $sql .= "       AND \n";
+    $sql .= "           t_payin_h.shop_id = $shop_id \n";
+    $sql .= "       AND \n";
+    $sql .= "           t_payin_d.trade_id = $trade \n";
+    $sql .= "       AND \n";
+    $sql .= "           t_payin_h.pay_day >= '$monthly_renew_day' \n";
+    if ($end_day != null){
+    $sql .= "       AND \n";
+    $sql .= "           t_payin_h.pay_day <= '$end_day' \n";
+    }
+    if ($staff_id == "0"){
+    $sql .= "       AND \n";
+    $sql .= "           t_payin_h.act_client_id IS NOT NULL \n";
+    $sql .= "       AND \n";
+    $sql .= "           t_payin_h.collect_staff_id IS NULL \n";
+    }
+    $sql .= "       GROUP BY \n";
+    if ($staff_id != null && $staff_id != "0"){
+    $sql .= "           t_payin_h.shop_id, \n";
+    $sql .= "           t_payin_h.collect_staff_id \n";
+    }else{
+    $sql .= "           t_payin_h.shop_id \n";
+    }
+    $sql .= "   ) \n";
+    $sql .= "   AS t_payin_data \n";
+    $sql .= "   ON t_attach_staff.shop_id = t_payin_data.shop_id \n";
+    if ($staff_id != null && $staff_id != "0"){
+    $sql .= "   AND t_attach_staff.staff_id = t_payin_data.staff_id \n";
+    }
+    $sql .= ";";
+
+    // クエリを返す
+    return $sql;
+
+}
+
+// 支払明細 - 銀行情報取得
+function Bank_Payout_Sql($shop_id, $branch_id, $trade, $monthly_renew_day, $end_day){
+
+    $sql  = "SELECT \n";
+    $sql .= "   t_payout_d.trade_id, \n";
+    $sql .= "   t_payout_d.bank_cd, \n";
+    $sql .= "   t_payout_d.bank_name, \n";
+    $sql .= "   t_payout_d.b_bank_cd, \n";
+    $sql .= "   t_payout_d.b_bank_name, \n";
+    $sql .= "   t_payout_d.account_no \n";
+    $sql .= "FROM \n";
+    // 所属
+    $sql .= "   ( \n";
+    $sql .= "       SELECT \n";
+    $sql .= "           t_attach.shop_id \n";
+    $sql .= "       FROM \n";
+    $sql .= "           t_attach \n";
+    $sql .= "       WHERE \n";
+    $sql .= "           t_attach.shop_id = $shop_id \n";
+    $sql .= "       GROUP BY \n";
+    $sql .= "           t_attach.shop_id \n";
+    $sql .= "   ) \n";
+    $sql .= "   AS t_attach_staff \n";
+    // 支払ヘッダ
+    $sql .= "   LEFT JOIN \n";
+    $sql .= "   ( \n";
+    $sql .= "       SELECT \n";
+    $sql .= "           t_payout_h.pay_id, \n";
+    $sql .= "           t_payout_h.shop_id \n";
+    $sql .= "       FROM \n";
+    $sql .= "           t_payout_h \n";
+    if ($branch_id != null){
+    $sql .= "           INNER JOIN t_client \n";
+    $sql .= "           ON t_payout_h.client_id = t_client.client_id AND t_client.charge_branch_id = $branch_id \n";
+    }
+    $sql .= "       WHERE \n";
+    $sql .= "           t_payout_h.pay_day >= '$monthly_renew_day' \n";
+    if ($end_day != null){
+    $sql .= "       AND \n";
+    $sql .= "           t_payout_h.pay_day <= '$end_day' \n";
+    }
+    $sql .= "   ) \n";
+    $sql .= "   AS t_payout_monthly \n";
+    $sql .= "   ON t_attach_staff.shop_id = t_payout_monthly.shop_id \n";
+    $sql .= "   INNER JOIN t_payout_d \n";
+    $sql .= "   ON t_payout_monthly.pay_id = t_payout_d.pay_id \n";
+    $sql .= "   AND trade_id = ".$trade." \n";
+    $sql .= "GROUP BY \n";
+    $sql .= "   t_payout_d.trade_id, \n";
+    $sql .= "   t_payout_d.bank_cd, \n";
+    $sql .= "   t_payout_d.bank_name, \n";
+    $sql .= "   t_payout_d.b_bank_cd, \n";
+    $sql .= "   t_payout_d.b_bank_name, \n";
+    $sql .= "   account_no \n";
+    $sql .= "ORDER BY \n";
+    $sql .= "   t_payout_d.trade_id, \n";
+    $sql .= "   t_payout_d.bank_cd, \n";
+    $sql .= "   t_payout_d.bank_name, \n";
+    $sql .= "   t_payout_d.b_bank_cd, \n";
+    $sql .= "   t_payout_d.b_bank_name, \n";
+    $sql .= "   account_no \n";
+    $sql .= ";";
+
+    // クエリを返す
+    return $sql;
+
+}
+
+// 支払明細 - 銀行出力用
+function Particular_Payout_Bank_Sql($shop_id, $branch_id, $value, $monthly_renew_day, $end_day){
+
+    $sql  = "SELECT \n";
+    $sql .= "   t_payout_data.bank_cd, \n";
+    $sql .= "   t_payout_data.bank_name, \n";
+    $sql .= "   t_payout_data.b_bank_cd, \n";
+    $sql .= "   t_payout_data.b_bank_name, \n";
+    $sql .= "   t_payout_data.account_no, \n";
+    $sql .= "   COALESCE(t_payout_data.daily_amount, 0)      AS daily_amount, \n";
+    $sql .= "   COALESCE(t_payout_data.halfway_amount, 0)    AS halfway_amount, \n";
+    $sql .= "   COALESCE(t_payout_data.monthly_count, 0)     AS monthly_count, \n";
+    $sql .= "   COALESCE(t_payout_data.monthly_amount, 0)    AS monthly_amount \n";
+    $sql .= "FROM \n";
+    // 所属
+    $sql .= "   ( \n";
+    $sql .= "       SELECT \n";
+    $sql .= "           t_attach.shop_id \n";
+    $sql .= "       FROM \n";
+    $sql .= "           t_attach \n";
+    $sql .= "       WHERE \n";
+    $sql .= "           t_attach.shop_id = $shop_id \n";
+    $sql .= "       GROUP BY \n";
+    $sql .= "           t_attach.shop_id \n";
+    $sql .= "   ) \n";
+    $sql .= "   AS t_attach_staff \n";
+    // 支払ヘッダ（JOIN 支払データ）
+    $sql .= "   LEFT JOIN \n";
+    $sql .= "   ( \n";
+    $sql .= "       SELECT \n";
+    $sql .= "           t_payout_h.shop_id, \n";
+    $sql .= "           t_payout_d.bank_cd, \n";
+    $sql .= "           t_payout_d.bank_name, \n";
+    $sql .= "           t_payout_d.b_bank_cd, \n";
+    $sql .= "           t_payout_d.b_bank_name, \n";
+    $sql .= "           t_payout_d.account_no, \n";
+    $sql .= "           SUM( \n";
+    $sql .= "               CASE \n";
+    $sql .= "                   WHEN \n";
+    $sql .= "                       t_payout_h.renew_flg = 'f' \n";
+    $sql .= "                   THEN \n";
+    $sql .= "                       COALESCE(t_payout_d.pay_amount, 0) \n";
+    $sql .= "                   ELSE 0 \n";
+    $sql .= "               END \n";
+    $sql .= "           ) AS daily_amount, \n";
+    $sql .= "           SUM( \n";
+    $sql .= "               CASE \n";
+    $sql .= "                   WHEN \n";
+    $sql .= "                       t_payout_h.renew_flg = 't' \n";
+    $sql .= "                   THEN \n";
+    $sql .= "                       COALESCE(t_payout_d.pay_amount, 0) \n";
+    $sql .= "                   ELSE 0 \n";
+    $sql .= "               END \n";
+    $sql .= "           ) AS halfway_amount, \n";
+    $sql .= "           COUNT( \n";
+    $sql .= "               t_payout_d.pay_d_id \n";
+    $sql .= "           ) AS monthly_count, \n";
+    $sql .= "           SUM( \n";
+    $sql .= "               COALESCE(t_payout_d.pay_amount, 0) \n";
+    $sql .= "           ) AS monthly_amount \n";
+    $sql .= "       FROM \n";
+    $sql .= "           t_payout_h \n";
+    if ($branch_id != null){
+    $sql .= "           INNER JOIN t_client \n";
+    $sql .= "           ON t_payout_h.client_id = t_client.client_id AND t_client.charge_branch_id = $branch_id \n";
+    }
+    $sql .= "           INNER JOIN t_payout_d ON t_payout_h.pay_id = t_payout_d.pay_id \n";
+    $sql .= "       AND \n";
+    $sql .= "           t_payout_h.pay_day >= '$monthly_renew_day' \n";
+    if ($end_day != null){
+    $sql .= "       AND \n";
+    $sql .= "           t_payout_h.pay_day <= '$end_day' \n";
+    }
+    $sql .= "       AND \n";
+    $sql .= "           t_payout_d.trade_id = ".$value["trade_id"]." \n";
+    $sql .= "       AND \n";
+    $sql .= "           t_payout_d.bank_cd = '".$value["bank_cd"]."' \n";
+    $sql .= "       AND \n";
+    $sql .= "           t_payout_d.bank_name = '".addslashes($value["bank_name"])."' \n";
+    $sql .= "       AND \n";
+    $sql .= "           t_payout_d.b_bank_cd = '".$value["b_bank_cd"]."' \n";
+    $sql .= "       AND \n";
+    $sql .= "           t_payout_d.b_bank_name = '".addslashes($value["b_bank_name"])."' \n";
+    $sql .= "       AND \n";
+    $sql .= "           t_payout_d.account_no = '".$value["account_no"]."' \n";
+    $sql .= "       GROUP BY \n";
+    $sql .= "           t_payout_h.shop_id, \n";
+    $sql .= "           t_payout_d.bank_cd, \n";
+    $sql .= "           t_payout_d.bank_name, \n";
+    $sql .= "           t_payout_d.b_bank_cd, \n";
+    $sql .= "           t_payout_d.b_bank_name, \n";
+    $sql .= "           t_payout_d.account_no \n";
+    $sql .= "   ) \n";
+    $sql .= "   AS t_payout_data \n";
+    $sql .= "   ON t_attach_staff.shop_id = t_payout_data.shop_id \n";
+    $sql .= "   ORDER BY \n";
+    $sql .= "       t_payout_data.bank_cd, \n";
+    $sql .= "       t_payout_data.b_bank_cd, \n";
+    $sql .= "       t_payout_data.account_no \n";
+    $sql .= ";";
+
+    // クエリを返す
+    return $sql;
+
+}
+
+// 支払明細 - 銀行未出力用
+function Particular_Payout_Nobank_Sql($shop_id, $branch_id, $trade, $monthly_renew_day, $end_day){
+
+    $sql  = "SELECT \n";
+    $sql .= "   COALESCE(t_payout_data.daily_amount, 0)      AS daily_amount, \n";
+    $sql .= "   COALESCE(t_payout_data.halfway_amount, 0)    AS halfway_amount, \n";
+    $sql .= "   COALESCE(t_payout_data.monthly_count, 0)     AS monthly_count, \n";
+    $sql .= "   COALESCE(t_payout_data.monthly_amount, 0)    AS monthly_amount \n";
+    $sql .= "FROM \n";
+    // 所属
+    $sql .= "   ( \n";
+    $sql .= "       SELECT \n";
+    $sql .= "           t_attach_payout.shop_id \n";
+    $sql .= "       FROM \n";
+    $sql .= "           ( \n";
+    $sql .= "               ( \n";
+    $sql .= "                   SELECT \n";
+    $sql .= "                       t_attach.shop_id \n";
+    $sql .= "                   FROM \n";
+    $sql .= "                       t_attach \n";
+    $sql .= "               ) \n";
+    $sql .= "               UNION ALL \n";
+    $sql .= "               ( \n";
+    $sql .= "                   SELECT \n";
+    $sql .= "                       t_payout_h.shop_id \n";
+    $sql .= "                   FROM \n";
+    $sql .= "                       t_payout_h \n";
+    if ($branch_id != null){
+    $sql .= "                       INNER JOIN t_client \n";
+    $sql .= "                       ON t_payout_h.client_id = t_client.client_id AND t_client.charge_branch_id = $branch_id \n";
+    }
+    $sql .= "               ) \n";
+    $sql .= "           ) \n";
+    $sql .= "           AS t_attach_payout \n";
+    $sql .= "       WHERE \n";
+    $sql .= "           t_attach_payout.shop_id = $shop_id \n";
+    $sql .= "       GROUP BY \n";
+    $sql .= "           t_attach_payout.shop_id \n";
+    $sql .= "   ) \n";
+    $sql .= "   AS t_attach_staff \n";
+    // 支払ヘッダ(join 支払データ)
+    $sql .= "   LEFT JOIN \n";
+    $sql .= "   ( \n";
+    $sql .= "       SELECT \n";
+    $sql .= "           t_payout_h.shop_id, \n";
+    $sql .= "           SUM( \n";
+    $sql .= "               CASE \n";
+    $sql .= "                   WHEN \n";
+    $sql .= "                       t_payout_h.renew_flg = 'f' \n";
+    $sql .= "                   THEN \n";
+    $sql .= "                       COALESCE(t_payout_d.pay_amount, 0) \n";
+    $sql .= "                   ELSE 0 \n";
+    $sql .= "               END \n";
+    $sql .= "           ) AS daily_amount, \n";
+    $sql .= "           SUM( \n";
+    $sql .= "               CASE \n";
+    $sql .= "                   WHEN \n";
+    $sql .= "                       t_payout_h.renew_flg = 't' \n";
+    $sql .= "                   THEN \n";
+    $sql .= "                       COALESCE(t_payout_d.pay_amount, 0) \n";
+    $sql .= "                   ELSE 0 \n";
+    $sql .= "               END \n";
+    $sql .= "           ) AS halfway_amount, \n";
+    $sql .= "           COUNT( \n";
+    $sql .= "               t_payout_d.pay_d_id \n";
+    $sql .= "           ) AS monthly_count, \n";
+    $sql .= "           SUM( \n";
+    $sql .= "               COALESCE(t_payout_d.pay_amount, 0) \n";
+    $sql .= "           ) AS monthly_amount \n";
+    $sql .= "       FROM \n";
+    $sql .= "           t_payout_h \n";
+    if ($branch_id != null){
+    $sql .= "           INNER JOIN t_client \n";
+    $sql .= "           ON t_payout_h.client_id = t_client.client_id AND t_client.charge_branch_id = $branch_id \n";
+    }
+    $sql .= "           INNER JOIN t_payout_d ON t_payout_h.pay_id = t_payout_d.pay_id \n";
+    $sql .= "       AND \n";
+    $sql .= "           t_payout_h.shop_id = $shop_id \n";
+    $sql .= "       AND \n";
+    $sql .= "           t_payout_d.trade_id = $trade \n";
+    $sql .= "       AND \n";
+    $sql .= "           t_payout_h.pay_day >= '$monthly_renew_day' \n";
+    if ($end_day != null){
+    $sql .= "       AND \n";
+    $sql .= "           t_payout_h.pay_day <= '$end_day' \n";
+    }
+    $sql .= "       GROUP BY \n";
+    $sql .= "           t_payout_h.shop_id \n";
+    $sql .= "   ) \n";
+    $sql .= "   AS t_payout_data \n";
+    $sql .= "   ON t_attach_staff.shop_id = t_payout_data.shop_id \n";
+    $sql .= ";";
+
+    // クエリを返す
+    return $sql;
+
+}
+
+// 銀行出力する取引区分毎の該当銀行毎明細を取得 - 入金用
+function Get_Payin_Bank($db_con, $value, $shop_id, $branch_id, $monthly_renew_day, $end_day){
+
+    // 該当取引区分にデータがある場合
+    if ($value != null){
+        // 取得した銀行情報でループ
+        for ($i=0; $i<count($value); $i++){
+            // 該当銀行の明細を取得
+            $sql                = Particular_Payin_Bank_Sql($shop_id, $branch_id, $value[$i], $monthly_renew_day, $end_day);
+            $res_payin_bank     = Db_Query($db_con, $sql);
+            $num_payin_bank     = pg_num_rows($res_payin_bank);
+            $ary_payin_bank[]   = Two_To_Linear(Get_Data($res_payin_bank, "2", "ASSOC"));
+        }
+    // 該当取引区分にデータがない場合
+    }else{
+        // 空の値を代入
+        $ary_payin_bank = null;
+    }
+
+    return $ary_payin_bank;
+
+}
+
+// 銀行出力しない取引区分毎の明細を取得 - 入金用
+function Get_Payin_Nobank($db_con, $trade, $shop_id, $branch_id, $staff_id, $monthly_renew_day, $end_day){
+
+    // 銀行を出力しない取引区分毎の明細取得
+    $sql = Particular_Payin_Nobank_Sql($shop_id, $branch_id, $staff_id, $trade, $monthly_renew_day, $end_day);
+    $res_payin_nobank   = Db_Query($db_con, $sql);
+    $num_payin_nobank   = pg_num_rows($res_payin_nobank);
+    $ary_payin_nobank   = Two_To_Linear(Get_Data($res_payin_nobank, "2", "ASSOC"));
+
+    return $ary_payin_nobank;
+
+}
+
+// 銀行出力する取引区分毎の該当銀行毎明細を取得 - 支払用
+function Get_Payout_Bank($db_con, $value, $shop_id, $branch_id, $monthly_renew_day, $end_day){
+
+    // 該当取引区分にデータがある場合
+    if ($value != null){
+        // 取得した銀行情報でループ
+        for ($i=0; $i<count($value); $i++){
+            // 該当銀行の明細を取得
+            $sql                = Particular_Payout_Bank_Sql($shop_id, $branch_id, $value[$i], $monthly_renew_day, $end_day);
+            $res_payout_bank    = Db_Query($db_con, $sql);
+            $num_payout_bank    = pg_num_rows($res_payout_bank);
+            $ary_payout_bank[]  = Two_To_Linear(Get_Data($res_payout_bank, "2", "ASSOC"));
+        }
+    // 該当取引区分にデータがない場合
+    }else{
+        // 空の値を代入
+        $ary_payout_bank = null;
+    }
+
+    return $ary_payout_bank;
+
+}
+
+// 銀行出力しない取引区分毎の明細を取得 - 入金用
+function Get_Payout_Nobank($db_con, $trade, $shop_id, $branch_id, $monthly_renew_day, $end_day){
+
+    // 銀行を出力しない取引区分毎の明細取得
+    $sql                = Particular_Payout_Nobank_Sql($shop_id, $branch_id, $trade, $monthly_renew_day, $end_day);
+    $res_payout_nobank  = Db_Query($db_con, $sql);
+    $num_payout_nobank  = pg_num_rows($res_payout_nobank);
+    $ary_payout_nobank  = Two_To_Linear(Get_Data($res_payout_nobank, "2", "ASSOC"));
+
+    return $ary_payout_nobank;
+
+}
+
+
+/****************************/
+// その他の関数
+/****************************/
+// 金額が負数の場合にセル内の文字色を赤にする関数
+function Font_Color($num){
+    return ((int)$num < 0) ? " style=\"color: #ff0000;\"" : null;
+}
+
+// Get_Data関数で2次元配列になっている配列を1次元配列にする
+function Two_To_Linear($ary){
+    return $ary[0];
+}
+
+
+/****************************/
+// 日次更新実施関数
+/****************************/
+#function Renew_Operate($db_con, $end_day, $branch_id){
+function Renew_Operate($db_con, $start_day, $end_day, $branch_id){
+
+    // トランザクション開始
+    Db_Query($db_con, "BEGIN;");
+
+    // UPDATE 仕入ヘッダ
+    $sql  = "UPDATE \n";
+    $sql .= "   t_buy_h \n";
+    $sql .= "SET \n";
+    $sql .= "   renew_flg = 't', \n";
+    $sql .= "   renew_day = CURRENT_TIMESTAMP \n";
+    $sql .= "WHERE \n";
+    $sql .= "   buy_id IN \n";
+    $sql .= "   ( \n";
+    $sql .= "       SELECT \n";
+    $sql .= "           t_buy_h.buy_id \n";
+    $sql .= "       FROM \n";
+    $sql .= "           t_buy_h \n";
+    $sql .= "           LEFT OUTER JOIN \n";
+    $sql .= "           ( \n";
+    $sql .= "               SELECT \n";
+    $sql .= "                   ord_id \n";
+    $sql .= "               FROM \n";
+    $sql .= "                   t_order_h \n";
+    $sql .= "               WHERE \n";
+    $sql .= "                   ps_stat = '3' \n";
+    $sql .= "           ) \n";
+    $sql .= "           AS t_order_h \n";
+    $sql .= "           ON t_buy_h.ord_id = t_order_h.ord_id \n";
+    $sql .= "           INNER JOIN t_client ON  t_buy_h.client_id = t_client.client_id \n";
+    $sql .= "                               AND t_client.charge_branch_id = $branch_id \n";
+    $sql .= "       WHERE \n";
+    $sql .= "           t_buy_h.renew_flg = 'f' \n";
+    //2009-10-12 aoyama-n
+    $sql .= "       AND \n";
+    $sql .= "           t_buy_h.buy_day >= '$start_day' \n";
+
+    $sql .= "       AND \n";
+    $sql .= "           t_buy_h.buy_day <= '$end_day' \n";
+    $sql .= "       AND \n";
+    $sql .= "           t_buy_h.shop_id = ".$_SESSION["client_id"]." \n";
+// とりあえず対策
+// FCに対する仕入伝票も日次更新対象にする
+// t_buy_h.client_idが得意先として存在しないため、t_client.charge_branch_idがない伝票
+if ($_POST["form_branch"] == "1"){
+    $sql .= "       UNION \n";
+    $sql .= "       SELECT \n";
+    $sql .= "           t_buy_h.buy_id \n";
+    $sql .= "       FROM \n";
+    $sql .= "           t_buy_h \n";
+    $sql .= "           LEFT OUTER JOIN \n";
+    $sql .= "           ( \n";
+    $sql .= "               SELECT \n";
+    $sql .= "                   ord_id \n";
+    $sql .= "               FROM \n";
+    $sql .= "                   t_order_h \n";
+    $sql .= "               WHERE \n";
+    $sql .= "                   ps_stat = '3' \n";
+    $sql .= "           ) \n";
+    $sql .= "           AS t_order_h \n";
+    $sql .= "           ON t_buy_h.ord_id = t_order_h.ord_id \n";
+    $sql .= "           INNER JOIN t_client ON  t_buy_h.client_id = t_client.client_id \n";
+    $sql .= "                               AND t_client.charge_branch_id IS NULL \n";
+    $sql .= "       WHERE \n";
+    $sql .= "           t_buy_h.renew_flg = 'f' \n";
+    //2009-10-12 aoyama-n
+    $sql .= "       AND \n";
+    $sql .= "           t_buy_h.buy_day >= '$start_day' \n";
+
+    $sql .= "       AND \n";
+    $sql .= "           t_buy_h.buy_day <= '$end_day' \n";
+    $sql .= "       AND \n";
+    $sql .= "           t_buy_h.shop_id = ".$_SESSION["client_id"]." \n";
+}
+    $sql .= "   ) \n";
+    $sql .= ";";
+    $res  = Db_Query($db_con, $sql);
+    if ($res === false){
+        Db_Query($db_con, "ROLLBACK;");
+        exit;
+    }
+
+    // UPDATE 発注ヘッダ
+    $sql  = "UPDATE \n";
+    $sql .= "   t_order_h \n";
+    $sql .= "SET \n";
+    $sql .= "   ps_stat = '4', \n";
+    $sql .= "   renew_day = CURRENT_TIMESTAMP \n";
+    $sql .= "WHERE \n";
+    $sql .= "   ord_id IN \n";
+    $sql .= "   ( \n";
+    $sql .= "       SELECT \n";
+    $sql .= "           t_order_h.ord_id \n";
+    $sql .= "       FROM \n";
+    $sql .= "           t_order_h \n";
+    $sql .= "           LEFT  JOIN t_buy_h  ON  t_order_h.ord_id = t_buy_h.ord_id \n";
+    $sql .= "           INNER JOIN t_client ON  t_order_h.client_id = t_client.client_id \n";
+    $sql .= "                               AND t_client.charge_branch_id = $branch_id \n";
+    $sql .= "       WHERE \n";
+    $sql .= "           t_order_h.ps_stat ='3' \n";
+    //2009-10-12 aoyama-n
+    $sql .= "       AND \n";
+    $sql .= "           t_buy_h.buy_day >= '$start_day' \n";
+
+    $sql .= "       AND \n";
+    $sql .= "           t_buy_h.buy_day <= '$end_day' \n";
+    $sql .= "       AND \n";
+    $sql .= "           t_order_h.shop_id = ".$_SESSION["client_id"]." \n";
+    $sql .= "   ) \n";
+    $sql .= ";";
+    $res  = Db_Query($db_con, $sql);
+    if ($res === false){
+        Db_Query($db_con, "ROLLBACK;");
+        exit;
+    }
+
+    // UPDATE 売上ヘッダ
+    $sql  = "UPDATE \n";
+    $sql .= "   t_sale_h \n";
+    $sql .= "SET \n";
+    $sql .= "   renew_flg = 't', \n";
+    $sql .= "   renew_day = CURRENT_TIMESTAMP \n";
+    $sql .= "WHERE \n";
+    $sql .= "   sale_id IN \n";
+    $sql .= "   ( \n";
+    $sql .= "       SELECT \n";
+    $sql .= "           t_sale_h.sale_id \n";
+    $sql .= "       FROM \n";
+    $sql .= "           t_sale_h \n";
+// 2007-07-19 fukuda
+/*
+    $sql .= "           LEFT OUTER JOIN \n";
+    $sql .= "           ( \n";
+    $sql .= "               SELECT \n";
+    $sql .= "                   aord_id \n";
+    $sql .= "               FROM \n";
+    $sql .= "                   t_aorder_h \n";
+    $sql .= "               WHERE \n";
+    $sql .= "                   ps_stat = '3' \n";
+    $sql .= "           ) \n";
+    $sql .= "           AS t_aorder_h \n";
+    $sql .= "           ON t_sale_h.aord_id = t_aorder_h.aord_id \n";
+*/
+    $sql .= "           INNER JOIN t_client ON  t_sale_h.client_id = t_client.client_id \n";
+    $sql .= "                               AND t_client.charge_branch_id = $branch_id \n";
+    $sql .= "       WHERE \n";
+    $sql .= "           t_sale_h.renew_flg = 'f' \n";
+    //2009-10-12 aoyama-n
+    $sql .= "       AND \n";
+    $sql .= "           t_sale_h.sale_day >= '$start_day' \n";
+
+    $sql .= "       AND \n";
+    $sql .= "           t_sale_h.sale_day <= '$end_day' \n";
+    $sql .= "       AND \n";
+    $sql .= "           t_sale_h.shop_id = ".$_SESSION["client_id"]." \n";
+    $sql .= "   ) \n";
+    // 直営でない場合（オンライン代行時、受託先側の売上伝票で、委託先による承認が行われていない伝票は日次更新しない）
+    if ($_SESSION["group_kind"] != "2"){
+    $sql .= "AND \n";
+    $sql .= "   sale_id NOT IN \n";
+    $sql .= "   ( \n";
+    $sql .= "       SELECT \n";
+    $sql .= "           t_sale_h.sale_id \n";
+    $sql .= "       FROM \n";
+    $sql .= "           t_sale_h \n";
+    $sql .= "           INNER JOIN t_aorder_h \n";
+    $sql .= "               ON  t_sale_h.aord_id = t_aorder_h.aord_id \n";
+    //$sql .= "               AND t_aorder_h.contract_div = '2' \n";      // オンライン代行
+    //$sql .= "               AND t_aorder_h.ps_stat     != '3' \n";      // 処理済でない
+    $sql .= "               AND t_aorder_h.confirm_flg  = 'f' \n";      // 未承認
+    $sql .= "       WHERE \n";
+    $sql .= "           t_sale_h.act_request_flg = 't' \n";             // 代行料伝票
+    $sql .= "       AND \n";
+    $sql .= "           t_sale_h.renew_flg != 't' \n";                  // 日次更新未実施
+    //2009-10-12 aoyama-n
+    $sql .= "       AND \n";
+    $sql .= "           t_sale_h.sale_day >= '$start_day' \n";            // 指定日以前
+
+    $sql .= "       AND \n";
+    $sql .= "           t_sale_h.sale_day <= '$end_day' \n";            // 指定日以前
+    $sql .= "       AND \n";
+    $sql .= "           t_sale_h.shop_id = ".$_SESSION["client_id"]." \n";
+    $sql .= "   ) \n";
+    }
+    $sql .= ";";
+    $res  = Db_Query($db_con, $sql);
+    if ($res === false){
+        Db_Query($db_con, "ROLLBACK;");
+        exit;
+    }
+
+    // UPDATE 受注ヘッダ
+    $sql  = "UPDATE \n";
+    $sql .= "   t_aorder_h \n";
+    $sql .= "SET \n";
+    $sql .= "   ps_stat = '4', \n";
+    $sql .= "   renew_day = CURRENT_TIMESTAMP \n";
+    $sql .= "WHERE \n";
+    $sql .= "   aord_id IN \n";
+    $sql .= "   ( \n";
+    $sql .= "       SELECT \n";
+    $sql .= "           t_aorder_h.aord_id \n";
+    $sql .= "       FROM \n";
+    $sql .= "           t_aorder_h \n";
+    $sql .= "           LEFT OUTER JOIN t_sale_h ON  t_aorder_h.aord_id = t_sale_h.aord_id \n";
+    $sql .= "           INNER      JOIN t_client ON  t_aorder_h.client_id = t_client.client_id \n";
+    $sql .= "                                    AND t_client.charge_branch_id = $branch_id \n";
+    $sql .= "       WHERE \n";
+    $sql .= "           t_aorder_h.ps_stat = '3' \n";
+   //2009-10-12 aoyama-n
+    $sql .= "       AND \n";
+    $sql .= "           t_sale_h.sale_day >= '$start_day' \n";
+
+    $sql .= "       AND \n";
+    $sql .= "           t_sale_h.sale_day <= '$end_day' \n";
+    $sql .= "       AND \n";
+    $sql .= "           t_aorder_h.shop_id = ".$_SESSION["client_id"]." \n";
+    $sql .= "   ) \n";
+    $sql .= ";";
+    $res  = Db_Query($db_con, $sql);
+    if ($res === false){
+        Db_Query($db_con, "ROLLBACK;");
+        exit;
+    }
+
+    // UPDATE 入金ヘッダ
+    $sql  = "UPDATE \n";
+    $sql .= "   t_payin_h \n";
+    $sql .= "SET \n";
+    $sql .= "   renew_flg = 't', \n";
+    $sql .= "   renew_day = CURRENT_TIMESTAMP \n";
+    $sql .= "WHERE \n";
+    $sql .= "   pay_id IN \n";
+    $sql .= "   ( \n";
+    $sql .= "       SELECT \n";
+    $sql .= "           t_payin_h.pay_id \n";
+    $sql .= "       FROM \n";
+    $sql .= "           t_payin_h \n";
+// 2007-07-19 fukuda
+/*
+    $sql .= "           LEFT OUTER JOIN \n";
+    $sql .= "           ( \n";
+    $sql .= "               SELECT \n";
+    $sql .= "                   sale_id \n";
+    $sql .= "               FROM \n";
+    $sql .= "                   t_sale_h \n";
+    $sql .= "               WHERE \n";
+    $sql .= "                   renew_flg = 'f' \n";
+    $sql .= "           ) \n";
+    $sql .= "           AS t_sale_h \n";
+    $sql .= "           ON t_payin_h.sale_id = t_sale_h.sale_id \n";
+*/
+    $sql .= "           INNER JOIN t_client ON  t_payin_h.client_id = t_client.client_id \n";
+    $sql .= "                               AND t_client.charge_branch_id = $branch_id \n";
+    $sql .= "       WHERE \n";
+    $sql .= "           t_payin_h.renew_flg = 'f' \n";
+    //2009-10-12 aoyama-n
+    $sql .= "       AND \n";
+    $sql .= "           t_payin_h.pay_day >= '$start_day' \n";
+
+    $sql .= "       AND \n";
+    $sql .= "           t_payin_h.pay_day <= '$end_day' \n";
+    $sql .= "       AND \n";
+    $sql .= "           t_payin_h.shop_id = ".$_SESSION["client_id"]." \n";
+    $sql .= "   ) \n";
+    $sql .= ";";
+    $res  = Db_Query($db_con, $sql);
+    if ($res === false){
+        Db_Query($db_con, "ROLLBACK;");
+        exit;
+    }
+
+    // UPDATE 支払ヘッダ
+    $sql  = "UPDATE \n";
+    $sql .= "   t_payout_h \n";
+    $sql .= "SET \n";
+    $sql .= "   renew_flg = 't', \n";
+    $sql .= "   renew_day = CURRENT_TIMESTAMP \n";
+    $sql .= "WHERE \n";
+    $sql .= "   pay_id IN \n";
+    $sql .= "   ( \n";
+    $sql .= "       SELECT \n";
+    $sql .= "           t_payout_h.pay_id \n";
+    $sql .= "       FROM \n";
+    $sql .= "           t_payout_h \n";
+// 2007-07-19 fukuda
+/*
+    $sql .= "           LEFT OUTER JOIN \n";
+    $sql .= "           ( \n";
+    $sql .= "               SELECT \n";
+    $sql .= "                   buy_id \n";
+    $sql .= "               FROM \n";
+    $sql .= "                   t_buy_h \n";
+    $sql .= "               WHERE \n";
+    $sql .= "                   renew_flg = 'f' \n";
+    $sql .= "           ) \n";
+    $sql .= "           AS t_buy_h \n";
+    $sql .= "           ON t_payout_h.buy_id = t_buy_h.buy_id \n";
+*/
+    $sql .= "           INNER JOIN t_client ON  t_payout_h.client_id = t_client.client_id \n";
+    $sql .= "                               AND t_client.charge_branch_id = $branch_id \n";
+    $sql .= "       WHERE \n";
+    $sql .= "           t_payout_h.renew_flg = 'f' \n";
+    //2009-10-12 aoyama-n
+    $sql .= "       AND \n";
+    $sql .= "           t_payout_h.pay_day >= '$start_day' \n";
+
+    $sql .= "       AND \n";
+    $sql .= "           t_payout_h.pay_day <= '$end_day' \n";
+    $sql .= "       AND \n";
+    $sql .= "           t_payout_h.shop_id = ".$_SESSION["client_id"]." \n";
+// とりあえず対策
+// FCに対する支払伝票も日次更新対象にする
+// t_payout_h.client_idが得意先として存在しないため、t_client.charge_branch_idがない伝票
+if ($_POST["form_branch"] == "1"){
+    $sql .= "       UNION \n";
+    $sql .= "       SELECT \n";
+    $sql .= "           t_payout_h.pay_id \n";
+    $sql .= "       FROM \n";
+    $sql .= "           t_payout_h \n";
+// 2007-07-19 fukuda
+/*
+    $sql .= "           LEFT OUTER JOIN \n";
+    $sql .= "           ( \n";
+    $sql .= "               SELECT \n";
+    $sql .= "                   buy_id \n";
+    $sql .= "               FROM \n";
+    $sql .= "                   t_buy_h \n";
+    $sql .= "               WHERE \n";
+    $sql .= "                   renew_flg = 'f' \n";
+    $sql .= "           ) \n";
+    $sql .= "           AS t_buy_h ON t_payout_h.buy_id = t_buy_h.buy_id \n";
+*/
+    $sql .= "           INNER JOIN t_client ON  t_payout_h.client_id = t_client.client_id \n";
+    $sql .= "                               AND t_client.charge_branch_id IS NULL \n";
+    $sql .= "       WHERE \n";
+    $sql .= "           t_payout_h.renew_flg = 'f' \n";
+    //2009-10-12 aoyama-n
+    $sql .= "       AND \n";
+    $sql .= "           t_payout_h.pay_day >= '$start_day' \n";
+
+    $sql .= "       AND \n";
+    $sql .= "           t_payout_h.pay_day <= '$end_day' \n";
+    $sql .= "       AND \n";
+    $sql .= "           t_payout_h.shop_id = ".$_SESSION["client_id"]." \n";
+}
+    $sql .= "   ) \n";
+    $sql .= ";";
+    $res  = Db_Query($db_con, $sql);
+    if ($res === false){
+        Db_Query($db_con, "ROLLBACK;");
+        exit;
+    }
+
+    // INSERT 更新処理履歴テーブル
+    $sql  = "INSERT INTO \n";
+    $sql .= "   t_sys_renew \n";
+    $sql .= "(\n";
+    $sql .= "   renew_id, \n";
+    $sql .= "   renew_div, \n";
+    $sql .= "   renew_time, \n";
+    $sql .= "   close_day, \n";
+    $sql .= "   shop_id, \n";
+    $sql .= "   operation_staff_name, \n";
+    $sql .= "   branch_id ";
+    $sql .= ") \n";
+    $sql .= "   VALUES \n";
+    $sql .= "( \n";
+    $sql .= "   (SELECT COALESCE(MAX(renew_id), 0)+1 FROM t_sys_renew), \n";
+    $sql .= "   '1', \n";
+    $sql .= "   CURRENT_TIMESTAMP, \n";
+    $sql .= "   '$end_day', \n";
+    $sql .= "   ".$_SESSION["client_id"].", \n";
+    $sql .= "   '".addslashes($_SESSION["staff_name"])."', \n";
+    $sql .= "   $branch_id \n";
+    $sql .= ") \n";
+    $sql .= ";";
+    $res  = Db_Query($db_con, $sql);
+    if ($res === false){
+        Db_Query($db_con, "ROLLBACK;");
+        exit;
+    }
+
+    // トランザクション完結
+    Db_Query($db_con, "COMMIT;");
+
+    return true;
+
+}
+
+
+?>

@@ -1,0 +1,5 @@
+AddDefaultCharset Shift_JIS
+
+#order deny,allow
+#deny from all
+allow from all

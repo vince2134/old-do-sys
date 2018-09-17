@@ -1,0 +1,10 @@
+<?php
+//読み込みファイル一覧
+require_once(PATH."config/global.php");
+require_once(PATH."config/config.php");
+require_once(PATH."config/define.php");
+require_once(PATH."function/function.fnc");
+require_once(PATH."function/html.fnc");
+require_once(PATH."function/menu.fnc");
+require_once(PATH."function/db_con.php");
+?>

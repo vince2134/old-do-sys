@@ -1,0 +1,1312 @@
+<?php
+/**
+ *
+ * FC予定・売上あたりの部品生成
+ *
+ * 呼出元
+ * ・2-2-107（予定データ訂正）
+ * ・2-2-201（手書伝票発行）
+ * ・2-2-202（売上伝票訂正）
+ * ・2-2-118（予定手書）
+ *
+ */
+/*
+ * 履歴：
+ *  日付            B票No.      担当者      内容
+ *  -----------------------------------------------------------
+ *  2007/06/05      xx-xxx      kajioka-h   代行料の仕様が再度変更になった件
+ *  2007/06/13      その他14    kajioka-h   前受金
+ *  2007/06/27      xx-xxx      kajioka-h   商品マスタ同期フラグのhiddenを追加
+ *  2007/08/20                  kajioka-h   予定データ訂正でオフライン代行、固定額の場合に営業原価を変更できるように変更
+ *  2007/08/29                  kajioka-h   代行伝票で代行料が売上％ので一式○の場合、原価合計額は原価単価と同じにする
+ *  2009/09/08                  aoyama-n    値引機能追加
+ *  2009/09/22                  hashimoto-y 値引き商品を赤字表示
+ *
+ */
+
+//-------------------------------------------------
+// 委託先（東陽）のまるめ区分取得
+//-------------------------------------------------
+if($_SESSION["group_kind"] != "2" && $hand_slip_flg != true && $hand_plan_flg != true){
+    $sql = "SELECT coax FROM t_client WHERE shop_id = ".$_SESSION["client_id"]." AND act_flg = true;";
+    $result = Db_Query($db_con, $sql);
+    $toyo_coax = pg_fetch_result($result, 0, "coax");
+}
+
+
+/**************************************************
+基本情報
+**************************************************/
+
+//手書伝票、予定手書だけで使う
+if($hand_slip_flg == true || $hand_plan_flg == true){
+
+    //伝票番号
+    $form->addElement("text", "form_sale_no", "", "size=\"8\"");
+
+
+    //得意先
+    $form_client[] =& $form->createElement(
+        "text", "cd1", "", 
+        "size=\"7\" maxLength=\"6\" style=\"$g_form_style\" onChange=\"javascript:Change_Submit('client_search_flg','#','true','form_client[cd2]')\" onkeyup=\"changeText(this.form,'form_client[cd1]','form_client[cd2]',6)\"".$g_form_option."\""
+    );
+    $form_client[] =& $form->createElement("static", "", "", "-");
+    $form_client[] =& $form->createElement(
+        "text", "cd2", "", 
+        "size=\"4\" maxLength=\"4\" style=\"$g_form_style\" onChange=\"javascript:Button_Submit('client_search_flg','#','true')\"".$g_form_option."\""
+    );
+    $form_client[] =& $form->createElement("text", "name", "テキストフォーム", "size=\"34\" $g_text_readonly");
+    $form->addGroup( $form_client, "form_client", "");
+
+
+    //出荷倉庫
+    if($hand_slip_flg == true){
+        //手書伝票ではセレクトボックス
+        $ware_where  = " WHERE ";
+        if($_SESSION["group_kind"] == "2"){
+            $ware_where .= "    shop_id IN (".Rank_Sql().") ";
+        }else{
+            $ware_where .= "    shop_id = ".$_SESSION["client_id"]." ";
+        }
+        $ware_where .= " AND ";
+        $ware_where .= "    staff_ware_flg = false ";
+        $ware_where .= " AND ";
+        $ware_where .= "    nondisp_flg = false ";
+
+        $select_value = Select_Get($db_con, 'ware', $ware_where);
+        $form->addElement('select', 'form_ware_select', 'セレクトボックス', $select_value, "onkeydown=\"chgKeycode();\" $g_form_option_select");
+
+    }else{
+        //予定手書ではhidden（hiddenの値をJSで表示）
+        $form->addElement("hidden", "hdn_ware_name");
+    }
+
+    //hidden
+    //$form->addElement("hidden", "hdn_client_id");       //得意先ID
+    $form->addElement("hidden", "hdn_ware_id");         //出荷倉庫ID
+    //$form->addElement("hidden", "hdn_rank_cd");         //顧客区分コード
+    $form->addElement("hidden", "client_shop_id");      //得意先のショップID
+    $form->addElement("hidden", "client_search_flg");   //得意先コード入力フラグ
+    $form->addElement("hidden", "hdn_coax");            //丸め区分
+    $form->addElement("hidden", "hdn_tax_franct");      //端数区分
+    $form->addElement("hidden", "del_row");             //削除行
+    $form->addElement("hidden", "add_row_flg");         //追加行フラグ
+    $form->addElement("hidden", "max_row");             //最大行数
+    //$form->addElement("hidden", "goods_search_row");    //商品コード入力行
+    $form->addElement("hidden", "sum_button_flg");      //合計ボタン押下フラグ
+    $form->addElement("hidden", "trans_check_flg");     //グリーン指定チェックフラグ
+    $form->addElement("hidden", "show_button_flg");     //表示ボタン押下判定
+    //$form->addElement("hidden", "stock_search_flg");    //現在個数検索フラグ
+    $form->addElement("hidden", "hdn_cclient_id");      //担当支店ID
+    $form->addElement("hidden", "hdn_intro_account_id");    //紹介口座ID
+    $form->addElement("hidden", "hdn_new_entry");       //新規登録フラグ（戻るボタン用）
+    $form->addElement("hidden", "hdn_enter_day");       //登録日
+    $form->addElement("hidden", "hdn_staff_ware");      //スタッフ選択したら出荷倉庫を拠点倉庫にする用
+
+}
+
+
+//税抜金額
+$form->addElement("text", "form_sale_total", "", "size=\"25\"");
+//消費税
+$form->addElement("text", "form_sale_tax", "", "size=\"25\"");
+//税込金額
+$form->addElement("text", "form_sale_money", "", "size=\"25\"");
+
+//伝票番号、税抜金額、消費税、税込金額をフリーズ
+$freeze_data = array(
+    "form_sale_no",
+    "form_sale_total",
+    "form_sale_tax",
+    "form_sale_money",
+);
+$form->freeze($freeze_data);
+
+
+
+//フリーズ判定
+$select_value = Select_Get($db_con, "trade_aord");
+//if($contract_div == '1'){
+//if($contract_div == '1' || $hand_plan_flg == true){
+	//契約区分が通常、または予定手書画面では変更可
+
+	// 取引区分
+	$form->addElement("select", 'trade_aord', "", $select_value, "onKeyDown=\"chgKeycode();\" onChange =\"window.focus();\"");
+
+/*
+}else{
+	//代行は変更不可
+
+	// 取引区分
+	$freeze_data2 = $form->addElement("select", 'trade_aord', "", $select_value, "onKeyDown=\"chgKeycode();\" onChange =\"window.focus();\"");
+	$freeze_data2->freeze();
+}
+*/
+
+
+//FCが代行伝票を開く場合はなし、それ以外は配送日が変わると請求日も変える
+if($_SESSION["group_kind"] != "2" && $contract_div != "1"){
+    $change_js = "";
+}else{
+    $change_js = " onChange=\"Claim_Day_Change('form_delivery_day', 'form_request_day')\" ";
+}
+
+//配送日
+$form_delivery_day[] =& $form->createElement(
+    "text", "y", "テキストフォーム", 
+    "style=\"ime-mode:disabled;\" size=\"4\" maxLength=\"4\" 
+     onkeyup=\"changeText(this.form,'form_delivery_day[y]','form_delivery_day[m]',4)\" 
+     onFocus=\"onForm_today(this,this.form,'form_delivery_day[y]','form_delivery_day[m]','form_delivery_day[d]');\" 
+     $change_js $g_form_option "
+);
+$form_delivery_day[] =& $form->createElement(
+    "text", "m", "テキストフォーム", 
+    "style=\"ime-mode:disabled;\" size=\"1\" maxLength=\"2\" 
+     onkeyup=\"changeText(this.form,'form_delivery_day[m]','form_delivery_day[d]',2)\" 
+     onFocus=\"onForm_today(this,this.form,'form_delivery_day[y]','form_delivery_day[m]','form_delivery_day[d]');\" 
+     $change_js $g_form_option "
+);
+$form_delivery_day[] =& $form->createElement(
+    "text", "d", "テキストフォーム", 
+    "style=\"ime-mode:disabled;\" size=\"1\" maxLength=\"2\" 
+     onFocus=\"onForm_today(this,this.form,'form_delivery_day[y]','form_delivery_day[m]','form_delivery_day[d]');\" 
+     $change_js $g_form_option "
+);
+$form->addGroup( $form_delivery_day,"form_delivery_day","form_delivery_day","-");
+
+/*
+//売上計上日
+$form_sale_day[] =& $form->createElement(
+    "text", "y", "テキストフォーム", 
+    "style=\"ime-mode:disabled;\" size=\"4\" maxLength=\"4\" 
+     onkeyup=\"changeText(this.form,'form_sale_day[y]','form_sale_day[m]',4)\" 
+     onFocus=\"onForm_today(this,this.form,'form_sale_day[y]','form_sale_day[m]','form_sale_day[d]');\" 
+     $g_form_option "
+);
+$form_sale_day[] =& $form->createElement(
+    "text", "m", "テキストフォーム", 
+    "style=\"ime-mode:disabled;\" size=\"1\" maxLength=\"2\" 
+     onkeyup=\"changeText(this.form,'form_sale_day[m]','form_sale_day[d]',2)\" 
+     onFocus=\"onForm_today(this,this.form,'form_sale_day[y]','form_sale_day[m]','form_sale_day[d]');\" 
+     $g_form_option "
+);
+$form_sale_day[] =& $form->createElement(
+    "text", "d", "テキストフォーム", 
+    "style=\"ime-mode:disabled;\" size=\"1\" maxLength=\"2\" 
+     onFocus=\"onForm_today(this,this.form,'form_sale_day[y]','form_sale_day[m]','form_sale_day[d]');\" 
+     $g_form_option "
+);
+$form->addGroup( $form_sale_day,"form_sale_day","form_sale_day","-");
+*/
+
+//請求日
+$form_request_day[] =& $form->createElement(
+    "text", "y", "テキストフォーム", 
+    "style=\"ime-mode:disabled;\" size=\"4\" maxLength=\"4\" 
+     onkeyup=\"changeText(this.form,'form_request_day[y]','form_request_day[m]',4)\" 
+     onFocus=\"onForm_today(this,this.form,'form_request_day[y]','form_request_day[m]','form_request_day[d]');\" 
+     $g_form_option "
+);
+$form_request_day[] =& $form->createElement(
+    "text", "m", "テキストフォーム", 
+    "style=\"ime-mode:disabled;\" size=\"1\" maxLength=\"2\" 
+     onkeyup=\"changeText(this.form,'form_request_day[m]','form_request_day[d]',2)\" 
+     onFocus=\"onForm_today(this,this.form,'form_request_day[y]','form_request_day[m]','form_request_day[d]');\" 
+     $g_form_option "
+);
+$form_request_day[] =& $form->createElement(
+    "text", "d", "テキストフォーム", 
+    "style=\"ime-mode:disabled;\" size=\"1\" maxLength=\"2\" 
+     onFocus=\"onForm_today(this,this.form,'form_request_day[y]','form_request_day[m]','form_request_day[d]');\" 
+     $g_form_option "
+);
+$form->addGroup( $form_request_day,"form_request_day","form_request_day","-");
+
+//請求先
+$select_value = NULL;
+//手書伝票で得意先が入力されてない場合は請求先表示なし
+if(!(($hand_slip_flg == true || $hand_plan_flg == true) && $client_id == null)){
+    $sql  = "SELECT";
+    $sql .= "   t_claim.claim_id || ',' || t_claim.claim_div, ";      //請求先ID,請求先区分
+    $sql .= "   t_client.client_cd1 || '-' ||t_client.client_cd2, ";  //請求先CD
+    $sql .= "   t_client.client_cname,";                              //請求先１
+    $sql .= "   t_claim.claim_div ";                                  //請求先区分
+    $sql .= " FROM";
+    $sql .= "   t_claim ";
+    $sql .= "   INNER JOIN t_client ON t_client.client_id = t_claim.claim_id ";
+    $sql .= " WHERE";
+    $sql .= "   t_claim.claim_div = '1' ";
+    $sql .= " AND ";
+    $sql .= "   t_claim.client_id = $client_id ";
+    $sql .= "UNION ";
+    $sql .= "SELECT";
+    $sql .= "   t_claim.claim_id || ',' || t_claim.claim_div, "; //請求先ID,請求先区分
+    $sql .= "   t_client.client_cd1 || '-' || t_client.client_cd2, ";   //請求先CD
+    $sql .= "   t_client.client_cname,";                         //請求先２
+    $sql .= "   t_claim.claim_div ";                             //請求先区分
+    $sql .= " FROM";
+    $sql .= "   t_claim ";
+    $sql .= "   INNER JOIN t_client ON t_client.client_id = t_claim.claim_id ";
+    $sql .= " WHERE";
+    $sql .= "   t_claim.claim_div = '2' ";
+    $sql .= " AND ";
+    $sql .= "   t_claim.client_id = $client_id";
+    $sql .= " ORDER BY claim_div ";
+    $sql .= ";";
+    $result = Db_Query($db_con, $sql); 
+    while($claim_list = pg_fetch_array($result)){
+        $claim_list[0] = htmlspecialchars($claim_list[0]);
+        $claim_list[1] = htmlspecialchars($claim_list[1]);
+	    $claim_list[2] = htmlspecialchars($claim_list[2]);
+        $select_value[$claim_list[0]] = $claim_list[1]." ： ".$claim_list[2];
+    }
+}
+$form->addElement('select', 'form_claim','セレクトボックス',$select_value, $g_form_option_select);
+
+//直送先
+$select_value_direct = Select_Get($db_con,'direct');
+$form->addElement('select', 'form_direct_select', 'セレクトボックス', $select_value_direct, "Class=\"Tohaba\"".$g_form_option_select);
+
+/**************************************************
+巡回担当者
+**************************************************/
+//契約区分が通常orＦＣのみ巡回担当者・順路変更可
+if($contract_div == '1' || $group_kind == 3 || $hand_plan_flg == true){
+	//通常
+
+	//巡回担当
+	//$form_c_staff_id = Select_Get($db_con,'cstaff');
+	$form_c_staff_id = Select_Get($db_con,'round_staff_m');
+	$form->addElement('select', 'form_c_staff_id1', 'セレクトボックス', $form_c_staff_id, $g_form_option_select);
+	$form->addElement('select', 'form_c_staff_id2', 'セレクトボックス', $form_c_staff_id, $g_form_option_select);
+	$form->addElement('select', 'form_c_staff_id3', 'セレクトボックス', $form_c_staff_id, $g_form_option_select);
+	$form->addElement('select', 'form_c_staff_id4', 'セレクトボックス', $form_c_staff_id, $g_form_option_select);
+
+	//売上率
+	$form->addElement("text","form_sale_rate1","テキストフォーム",'style="ime-mode:disabled;text-align:right;" size="3" maxLength="3"' .$g_form_option);
+	$form->addElement("text","form_sale_rate2","テキストフォーム",'style="ime-mode:disabled;text-align:right;" size="3" maxLength="3"' .$g_form_option);
+	$form->addElement("text","form_sale_rate3","テキストフォーム",'style="ime-mode:disabled;text-align:right;" size="3" maxLength="3"' .$g_form_option);
+	$form->addElement("text","form_sale_rate4","テキストフォーム",'style="ime-mode:disabled;text-align:right;" size="3" maxLength="3"' .$g_form_option);
+
+
+	//順路
+	$form_route[] =& $form->createElement("text","1","テキストフォーム",'style="ime-mode:disabled;" size="1" maxLength="2" onkeyup="changeText(this.form,\'form_route_load[1]\',\'form_route_load[2]\',2)" '.$g_form_option);
+	$form_route[] =& $form->createElement("text","2","テキストフォーム",'style="ime-mode:disabled;" size="1" maxLength="2" '.$g_form_option);
+	$form->addGroup( $form_route,"form_route_load","form_route_load","-");
+
+}
+
+//訂正理由
+$form->addElement("text","form_reason","テキストフォーム","size=\"34\" maxLength=\"20\"".$g_form_option."\"");
+
+//備考
+if($hand_slip_flg == true){
+    //手書のとき
+    $form->addElement("text","form_note","","size=\"40\" maxLength=\"100\" $g_form_option");
+}else{
+    //予定データ訂正とか
+    $form->addElement("textarea","form_note","",'size="30" maxLength="40" cols="40"'.$g_form_option_area);
+}
+
+//紹介料の有無
+$intro_ary1[] =& $form->createElement("radio",NULL,NULL, "発生する：固定額","2");
+$freeze_ac_data = $form->addGroup($intro_ary1, "intro_ac_div[]", "紹介口座料");
+($trust_confirm_flg == "t" && $contract_div == "2") ? $freeze_ac_data->freeze() : "";
+
+$intro_ary2[] =& $form->createElement("radio",NULL,NULL, "発生する：売上の","3");
+$freeze_ac_data = $form->addGroup($intro_ary2, "intro_ac_div[]", "紹介口座料");
+($trust_confirm_flg == "t" && $contract_div == "2") ? $freeze_ac_data->freeze() : "";
+
+$intro_ary3[] =& $form->createElement("radio",NULL,NULL, "発生する：商品別に指定","4");
+$freeze_ac_data = $form->addGroup($intro_ary3, "intro_ac_div[]", "紹介口座料");
+($trust_confirm_flg == "t" && $contract_div == "2") ? $freeze_ac_data->freeze() : "";
+
+$intro_ary4[] =& $form->createElement("radio",NULL,NULL, "発生しない","1");
+$freeze_ac_data = $form->addGroup($intro_ary4, "intro_ac_div[]", "紹介口座料");
+($trust_confirm_flg == "t" && $contract_div == "2") ? $freeze_ac_data->freeze() : "";
+
+//紹介料
+$form->addElement("text","intro_ac_price","円",'class="money_num" size="7" maxLength="6"'.$g_form_option);
+$form->addElement("text","intro_ac_rate" ,"％",'class="num"       size="7" maxLength="3"'.$g_form_option);
+
+/*
+$freeze_ac_data = array(
+    "intro_ac_div[]",
+    "intro_ac_price",
+    "intro_ac_rate",
+);
+($contract_div != "1" && $group_kind != "2") ? $form->freeze($freeze_ac_data) : "";
+*/
+
+
+//前受金集計ボタン
+$form->addElement("button","form_ad_sum_btn","集　計","onClick=\"javascript:Button_Submit('ad_sum_button_flg','#','true')\"");
+//前受金残高
+$form->addElement("text", "form_ad_rest_price");
+//前受相殺額合計
+$form->addElement("text", "form_ad_offset_total");
+
+$freeze_data2 = array(
+    "form_ad_rest_price",
+    "form_ad_offset_total",
+);
+
+/**************************************************
+巡回商品
+**************************************************/
+$f_option_read = " style=\"color : #000000; border : #ffffff 1px solid; background-color: #ffffff; text-align: right\" readonly";
+$f_option_read2 = " style=\"color : #000000; border : #ffffff 1px solid; background-color: #ffffff; text-align: right\" readonly";
+$g_form_option_num = $g_form_option." style=\"text-align: right\"";
+
+$num = 5;
+$type = $g_form_option;
+$array_divide = Select_Get($db_con, "divide_con");
+
+#2009-09-19 hashimoto-y
+for ($i=1; $i<=$num; $i++){
+    $form->addElement("hidden", "hdn_discount_flg[$i]");
+}
+
+
+//フリーズ判定
+//if($contract_div == '1'){
+if($contract_div == '1' || $hand_slip_flg == true || $hand_plan_flg == true){
+	//契約区分が通常のみ変更可
+
+	for ($i=1; $i<=$num; $i++){
+
+        #2009-09-15 hashimoto-y
+        //値引商品を選択した場合には赤字に変更
+        $font_color = "";
+
+        #2009-09-18 hashimoto-y
+        #手書伝票作成の場合は「trade_sale_select」elementが存在する
+
+        #予定データ訂正からincludeされている場合
+        #2009-09-26 hashimoto-y
+        #売上伝票訂正2-2-202からincludeされている場合
+        if($plan_edit_flg === 't'){
+
+            $hdn_discount_flg = $form->getElementValue("hdn_discount_flg[$i]");
+            /*
+            if($hdn_discount_flg === 't' ){
+                $font_color = "color: red; ";
+            }else{
+                $font_color = "color: #000000; ";
+            }
+            */
+
+            //初期表示
+            if($hdn_discount_flg === 't' && $_POST["hdn_discount_flg"][$i] == ""){
+                $font_color = "color: red; ";
+            //商品コード入力時
+            }elseif($plan_edit_goods_data["hdn_discount_flg"][$i] === 't'){
+                $font_color = "color: red; ";
+            //$plan_edit_goods_dataが空でPOSTが有る場合は商品コードの変更はされていない
+            }elseif( $plan_edit_goods_data["form_goods_cd1"][$i] == "" && $_POST["hdn_discount_flg"][$i] === 't' && $_POST["clear_flg"] != true && $_POST["clear_line"] != $i
+            #}elseif( $plan_edit_goods_data["form_goods_cd1"][$i] == "" && $_POST["hdn_discount_flg"][$i] === 't' 
+            ){
+                $font_color = "color: red; ";
+            }else{
+                $font_color = "color: #000000; ";
+            }
+
+        }else{
+            if($form->elementExists("trade_sale_select")){
+                $trade_sale_select = $form->getElementValue("trade_sale_select");
+            }
+            $hdn_discount_flg = $form->getElementValue("hdn_discount_flg[$i]");
+
+            #$trade_sale_selectは手書伝票作成の場合、値がセットされている
+            if( ($hdn_discount_flg === 't' ||
+               $trade_sale_select[0] == '13' || $trade_sale_select[0] == '14' || $trade_sale_select[0] == '63' || $trade_sale_select[0] == '64' )
+               && $_POST["clear_line"] != $i
+            ){
+                $font_color = "color: red; ";
+            }else{
+                $font_color = "color: #000000; ";
+            }
+
+        }
+
+        #echo "hdn_discount_flg:" .$hdn_discount_flg ."<br>";
+        #echo "hdn_discount_flg:" .$_POST["hdn_discount_flg"][$i] ."<br>";
+
+
+		//販売区分
+        #2009-09-18 hashimoto-y
+		#$form->addElement('select', "form_divide[".$i."]", "", $array_divide, $g_form_option_select);
+		$form->addElement('select', "form_divide[".$i."]", "", $array_divide, "style=\"$font_color\" $g_form_option_select");
+
+
+		//サービス一式（チェックボックス）
+        if($hand_slip_flg == true || $hand_plan_flg == true){
+            if($_SESSION["group_kind"] == "2"){
+    		    $form->addElement("checkbox","form_issiki[".$i."]" ,"" ,"","onClick=\"Mult_double_All('$coax', false, '$daiko_coax', $i);\"");
+            }else{
+    		    $form->addElement("checkbox","form_issiki[".$i."]" ,"" ,"","onClick=\"Set_num('$i', '$coax', '$daiko_coax');\"");
+            }
+        }else{
+    		$form->addElement("checkbox","form_issiki[".$i."]" ,"" ,"","onClick=\"Set_num('$i','$coax');\"");
+        }
+
+		//サービス
+		$array_serv = Select_Get($db_con, "serv_con");
+        #2009-09-18 hashimoto-y
+		#$form->addElement('select', "form_serv[".$i."]", "", $array_serv, $g_form_option_select);
+		$form->addElement('select', "form_serv[".$i."]", "", $array_serv, "style=\"$font_color\" $g_form_option_select");
+
+		//商品正式名称（アイテム）
+		//変更不可判定
+	    if($_POST["hdn_name_change1"][$i] == '2' || $hdn_name_change[1][$i] == '2'){
+			//不可
+		    $form->addElement(
+		        "text","official_goods_name[$i]", "正式",
+		        "size=\"42\" style=\"$font_color\" $g_text_readonly" 
+		    );
+	    }else{
+			//可
+		    $form->addElement(
+		        "text","official_goods_name[$i]", "正式",
+		        "size=\"42\" maxLength=\"41\" 
+		        style=\"$font_color $style\" $type"
+		    );
+	    }
+
+		for($s=1;$s<=3;$s++){
+
+			//伝票印字
+			$form->addElement( "checkbox","form_print_flg".$s."[".$i."]" ,"");
+
+			//商品コード      
+		    $form->addElement(
+		        "text","form_goods_cd".$s."[$i]","","size=\"10\" maxLength=\"8\"
+		        style=\"$font_color $g_form_style;$style\" $type
+		        onChange=\"c_goods_search(this.form, 'form_goods_cd".$s."', 'goods_search_row', $i$s,'hand')\""
+		    );
+
+			//商品名
+			//変更不可判定
+		    if($_POST["hdn_name_change".$s][$i] == '2' || $hdn_name_change[$s][$i] == '2'){
+				//不可
+			    $form->addElement(
+			        "text","form_goods_name".$s."[$i]", "略称",
+			        "size=\"30\" style=\"$font_color\" $g_text_readonly" 
+			    );
+		    }else{
+				//可
+			    $form->addElement(
+			        "text","form_goods_name".$s."[$i]", "略称",
+			        "size=\"30\" maxLength=\"20\" 
+			        style=\"$font_color $style\" $type"
+			    );
+		    }
+
+			//商品識別判定
+			if($s == 2){
+/*
+				//本体商品
+                if($hand_slip_flg == true || $hand_plan_flg == true){
+                    //手書
+    				$form->addElement(
+	    		        "link", "form_search".$s."[".$i."]", "", $_SERVER["PHP_SELF"], "検索",
+		    	        "onClick=\"return Open_SubWin('../dialog/2-0-210.php', Array('form_goods_cd".$s."[$i]', 'goods_search_row'), 500, 450, 7, $client_h_id, $i$s, 'hand', 'daiko_check');\""
+			        );
+                }else{
+*/
+                    //予定データ訂正、売上伝票訂正
+				    $form->addElement(
+			            "link", "form_search".$s."[".$i."]", "", $_SERVER["PHP_SELF"], "検索",
+    			        "onClick=\"return Open_SubWin_Plan('../dialog/2-0-210.php', Array('form_goods_cd".$s."[$i]', 'goods_search_row'), 500, 450, 7, $client_h_id, $i$s, 'hand', $contract_div);\""
+	    		    );
+//                }
+			}else{
+/*
+				//アイテム・消耗品
+                if($hand_slip_flg == true || $hand_plan_flg == true){
+                    //手書
+                    $form->addElement(
+                        "link", "form_search".$s."[".$i."]", "", $_SERVER["PHP_SELF"], "検索",
+                        "onClick=\"return Open_SubWin('../dialog/2-0-210.php', Array('form_goods_cd".$s."[$i]', 'goods_search_row'), 500, 450, 6, $client_h_id, $i$s, 'hand', 'daiko_check');\""
+                    );
+                }else{
+*/
+                    //予定データ訂正、売上伝票訂正
+                    $form->addElement(
+                        "link", "form_search".$s."[".$i."]", "", $_SERVER["PHP_SELF"], "検索",
+                        "onClick=\"return Open_SubWin_Plan('../dialog/2-0-210.php', Array('form_goods_cd".$s."[$i]', 'goods_search_row'), 500, 450, 6, $client_h_id, $i$s, 'hand', $contract_div);\""
+                    );
+//                }
+			}
+
+
+			//商品数
+			if($s == 1){
+				//アイテム
+                if(($hand_slip_flg == true || $hand_plan_flg == true) && $_SESSION["group_kind"] == "2"){
+                    //直営の手書
+        			$form->addElement(
+	        	        "text","form_goods_num".$s."[$i]","",
+		    	        "class=\"money_num\" size=\"6\" maxLength=\"5\" 
+    		            onKeyup=\"Act_Request_Rate('$coax',false,'$daiko_coax','$i');\"
+		                style=\"$font_color $g_form_style;$style\" $type"
+			        );
+                }else{
+                    //FCの手書、予定データ訂正等
+    			 	$form->addElement(
+	    		        "text","form_goods_num".$s."[$i]","",
+		    	        "class=\"money_num\" size=\"6\" maxLength=\"5\" 
+			            onKeyup=\"Mult_double2('form_goods_num1[$i]','form_sale_price[$i][1]','form_sale_price[$i][2]','form_sale_amount[$i]','form_trade_price[$i][1]','form_trade_price[$i][2]','form_trade_amount[$i]','form_issiki[$i]','$coax',false);\"
+			            style=\"$font_color $g_form_style;$style\" $type"
+    			    );
+                }
+			}else{
+				//消耗品・本体
+				$form->addElement(
+		            "text","form_goods_num".$s."[$i]","",
+		            " size=\"3\" maxLength=\"3\" 
+		            style=\"text-align:right; $font_color $g_form_style;$style\" $type"
+		        );
+			}
+
+			//商品ID
+			$form->addElement("hidden","hdn_goods_id".$s."[$i]");
+			//品名変更フラグ
+			$form->addElement("hidden","hdn_name_change".$s."[$i]");
+
+			///////////////////////////////////////////////////
+			//エラー表示部品定義
+			///////////////////////////////////////////////////
+			//消耗品エラー表示
+			$form->addElement("text","error_goods_num3[".$i."]","","size=\"17\" maxLength=\"10\"");
+			//本体商品エラー表示
+			$form->addElement("text","error_goods_num2[".$i."]","","size=\"17\" maxLength=\"10\"");
+
+		}
+
+		//営業原価
+        if(($hand_slip_flg == true || $hand_plan_flg == true) && $_SESSION["group_kind"] == "2"){
+            //直営の手書
+    		$form_cost_price[$i][] =& $form->createElement(
+	    	        "text","1","",
+		            "size=\"9\" maxLength=\"8\"
+		            class=\"money\"
+    		        onKeyup=\"Act_Request_Rate('$coax',false,'$daiko_coax','$i');\"
+    		        style=\"$font_color $g_form_style;text-align: right; $style\"
+	    	        $type"
+		    );
+    		$form_cost_price[$i][] =& $form->createElement(
+	    	        "text","2","","size=\"1\" maxLength=\"2\" 
+    		        onKeyup=\"Act_Request_Rate('$coax',false,'$daiko_coax','$i');\"
+		            style=\"$font_color $g_form_style;text-align: left; $style\"
+		            $type"
+    		);
+        }else{
+            //FCの手書、予定データ訂正
+    		$form_cost_price[$i][] =& $form->createElement(
+	    	        "text","1","",
+		            "size=\"9\" maxLength=\"8\"
+		            class=\"money\"
+		            onKeyup=\"Mult_double2('form_goods_num1[$i]','form_sale_price[$i][1]','form_sale_price[$i][2]','form_sale_amount[$i]','form_trade_price[$i][1]','form_trade_price[$i][2]','form_trade_amount[$i]','form_issiki[$i]','$coax',false);\"
+    		        style=\"$font_color $g_form_style;text-align: right; $style\"
+	    	        $type"
+		    );
+    		$form_cost_price[$i][] =& $form->createElement(
+	    	        "text","2","","size=\"1\" maxLength=\"2\" 
+		            onKeyup=\"Mult_double2('form_goods_num1[$i]','form_sale_price[$i][1]','form_sale_price[$i][2]','form_sale_amount[$i]','form_trade_price[$i][1]','form_trade_price[$i][2]','form_trade_amount[$i]','form_issiki[$i]','$coax',true);\"
+		            style=\"$font_color $g_form_style;text-align: left; $style\"
+		            $type"
+    		);
+        }
+		$form->addGroup( $form_cost_price[$i], "form_trade_price[$i]", "",".");
+
+		//原価合計額
+		$form->addElement(
+		    "text","form_trade_amount[$i]","",
+		    "size=\"17\" maxLength=\"10\" 
+		    style=\"$font_color 
+		    border : #ffffff 1px solid; 
+		    background-color: #ffffff; 
+		    text-align: right\" readonly'"
+		);
+
+		//売上単価
+        if(($hand_slip_flg == true || $hand_plan_flg == true) && $_SESSION["group_kind"] == "2"){
+    		$form_sale_price[$i][] =& $form->createElement(
+	    	        "text","1","",
+		            "size=\"9\" maxLength=\"8\"
+		            class=\"money\"
+    		        onKeyup=\"Act_Request_Rate('$coax',false,'$daiko_coax','$i');\"
+    		        style=\"$font_color $g_form_style;text-align: right; $style\"
+	    	        $type"
+		    );
+    		$form_sale_price[$i][] =& $form->createElement(
+	    	        "text","2","","size=\"1\" maxLength=\"2\" 
+    		        onKeyup=\"Act_Request_Rate('$coax',false,'$daiko_coax','$i');\"
+		            style=\"$font_color $g_form_style;text-align: left; $style\"
+		            $type"
+    		);
+        }else{
+    		$form_sale_price[$i][] =& $form->createElement(
+	    	        "text","1","",
+		            "size=\"9\" maxLength=\"8\"
+		            class=\"money\"
+		            onKeyup=\"Mult_double2('form_goods_num1[$i]','form_sale_price[$i][1]','form_sale_price[$i][2]','form_sale_amount[$i]','form_trade_price[$i][1]','form_trade_price[$i][2]','form_trade_amount[$i]','form_issiki[$i]','$coax',false);\"
+    		        style=\"$font_color $g_form_style;text-align: right; $style\"
+	    	        $type"
+		    );
+    		$form_sale_price[$i][] =& $form->createElement(
+	    	        "text","2","","size=\"1\" maxLength=\"2\" 
+		            onKeyup=\"Mult_double2('form_goods_num1[$i]','form_sale_price[$i][1]','form_sale_price[$i][2]','form_sale_amount[$i]','form_trade_price[$i][1]','form_trade_price[$i][2]','form_trade_amount[$i]','form_issiki[$i]','$coax',true);\"
+		            style=\"$font_color $g_form_style;text-align: left; $style\"
+		            $type"
+    		);
+        }
+		$form->addGroup( $form_sale_price[$i], "form_sale_price[$i]", "",".");
+
+		//売上合計額
+		$form->addElement(
+		     "text","form_sale_amount[$i]","",
+		     "size=\"17\" maxLength=\"10\" 
+		     style=\"$font_color 
+		     border : #ffffff 1px solid; 
+		     background-color: #ffffff; 
+		     text-align: right\" readonly'"
+		);
+
+        //前受相殺額
+        $form_ad_offset_radio = NULL;
+        $form_ad_offset_radio[$i][] =& $form->createElement("radio", NULL, NULL, "なし", "1", "onClick=\"ad_offset_radio_disable($i);\"");
+        $form_ad_offset_radio[$i][] =& $form->createElement("radio", NULL, NULL, "あり", "2", "onClick=\"ad_offset_radio_disable($i);\"");
+        $form->addGroup($form_ad_offset_radio[$i], "form_ad_offset_radio[$i]", "前受相殺フラグ");
+        $form->addElement("text", "form_ad_offset_amount[$i]", "", 
+            "size=\"11\" maxLength=\"9\" ".$g_form_option." class=\"money\" style='text-align:right; ime-mode:disabled;'"
+        );
+
+		//口座料
+        #2009-09-18 hashimoto-y
+		#$form_aprice_div0[$i][] =& $form->createElement("radio",NULL,NULL, "<font color=#555555>なし</font>","1");
+		$form_aprice_div0[$i][] =& $form->createElement("radio",NULL,NULL, "なし","1");
+
+		//紹介口座先指定判定
+		//if($client_ac_id == NULL){
+		if($intro_account_id == NULL){
+			//口座料指定不可
+            #2009-09-18 hashimoto-y
+			#$form_aprice_div0[$i][] =& $form->createElement("radio",NULL,NULL, "<font color=#555555>固定額</font>","2","disabled");
+			#$form_aprice_div0[$i][] =& $form->createElement("radio",NULL,NULL, "<font color=#555555>売上の</font>","3","disabled");
+			$form_aprice_div0[$i][] =& $form->createElement("radio",NULL,NULL, "固定額","2","disabled");
+			$form_aprice_div0[$i][] =& $form->createElement("radio",NULL,NULL, "売上の","3","disabled");
+
+			$form->addElement("text","form_account_price[$i]","",'size="7" maxLength="6"'.$g_form_option." class=\"money_num\" style='text-align:right; ime-mode:disabled; background-color:gainsboro;' disabled");
+	        $form->addElement("text","form_account_rate[$i]","",'size="7" maxLength="6" '.$g_form_option." style='text-align:right; ime-mode:disabled; background-color:gainsboro;' disabled");
+		}else{
+			//口座料指定可
+            #2009-09-18 hashimoto-y
+			#$form_aprice_div0[$i][] =& $form->createElement("radio",NULL,NULL, "<font color=#555555>固定額</font>","2");
+			#$form_aprice_div0[$i][] =& $form->createElement("radio",NULL,NULL, "<font color=#555555>売上の</font>","3");
+			$form_aprice_div0[$i][] =& $form->createElement("radio",NULL,NULL, "固定額","2");
+			$form_aprice_div0[$i][] =& $form->createElement("radio",NULL,NULL, "売上の","3");
+
+			$form->addElement("text","form_account_price[$i]","",'size="7" maxLength="6"'.$g_form_option." class=\"money_num\" style='text-align:right; ime-mode:disabled;'");
+            $form->addElement("text","form_account_rate[$i]","",'size="7" maxLength="3" '.$g_form_option." style='text-align:right; ime-mode:disabled;'");
+		}
+		$form->addGroup($form_aprice_div0[$i], "form_aprice_div[$i]","","<br>");
+
+		//口座料の空白
+		$text = NULL;
+		$text[] =& $form->createElement(
+		    "text","name","",
+		    "size=\"7\" maxLength=\"10\" 
+		    style=\"color : #000000; 
+		    border : #ffffff 1px solid; 
+		    background-color: #ffffff; 
+		    text-align: right\" readonly'"
+		);
+		$form->addGroup($text, "form_br","","");
+
+
+		//受注IDシリアライズ化
+		$detail_id = serialize($array_id);
+		$detail_id = urlencode($detail_id);
+
+/*
+		//内訳
+		if($aord_id != null){
+			$form->addElement(
+				"link","form_breakdown[$i]","","#","内訳",
+				"onClick=\"javascript:return Submit_Page2('./2-2-116.php?client_id=$client_id&aord_id=$aord_id&break_row=$i&keep_flg=$keep_flg&back_display=$back_display&aord_id_array=".$detail_id."'); \""
+			);
+		}else{
+			$form->addElement(
+				"link","form_breakdown[$i]","","#","内訳",
+				"onClick=\"javascript:return Submit_Page2('./2-2-116.php?client_id=$client_id&sale_id=$sale_id&break_row=$i&back_display=$back_display&aord_id_array=".$detail_id."'); \""
+			);
+		}
+*/
+
+        //クリアリンク作成
+        $form->addElement(
+            "link","clear_line[".$i."]","",$_SERVER["PHP_SELF"],"クリア","onClick=\"Javascript:Clear_Line_Data('$i');return false;\""
+        );
+
+
+        //マスタ同期フラグフラグ
+        $form->addElement("hidden", "hdn_mst_sync_flg[$i]");
+
+        //aoyama-n 2009-09-08
+        //値引フラグ
+        #2009-09-15 hashimoto-y
+        #$form->addElement("hidden", "hdn_discount_flg[$i]");
+
+	}
+
+
+
+}else{
+	//直営側での代行伝票は受注データは変更不可
+
+	for ($i=1; $i<=$num; $i++){
+
+        #2009-09-21 hashimoto-y
+        //値引商品を選択した場合には赤字に変更
+        $font_color = "";
+        $font_color_red_flg = "";
+
+        #2009-09-21 hashimoto-y
+        #手書伝票作成の場合は「trade_sale_select」elementが存在する
+
+        #予定データ訂正からincludeされている場合
+        if($plan_edit_flg === 't'){
+
+            $hdn_discount_flg = $form->getElementValue("hdn_discount_flg[$i]");
+            /*
+            if($hdn_discount_flg === 't' ){
+                $font_color = "color: red; ";
+            }else{
+                $font_color = "color: #000000; ";
+            }
+            */
+
+            //初期表示
+            if($hdn_discount_flg === 't' && $_POST["hdn_discount_flg"][$i] == ""){
+                $font_color = "color: red; ";
+                $font_color_red_flg = 't';
+            //商品コード入力時
+            }elseif($plan_edit_goods_data["hdn_discount_flg"][$i] === 't'){
+                $font_color = "color: red; ";
+                $font_color_red_flg = 't';
+            //$plan_edit_goods_dataが空でPOSTが有る場合は商品コードの変更はされていない
+            }elseif( $plan_edit_goods_data["form_goods_cd1"][$i] == "" && $_POST["hdn_discount_flg"][$i] === 't' && $_POST["clear_flg"] != true && $_POST["clear_line"] != $i
+            #}elseif( $plan_edit_goods_data["form_goods_cd1"][$i] == "" && $_POST["hdn_discount_flg"][$i] === 't'
+            ){
+                $font_color = "color: red; ";
+                $font_color_red_flg = 't';
+            }else{
+                $font_color = "color: #000000; ";
+                $font_color_red_flg = 'f';
+            }
+
+        }else{
+            if($form->elementExists("trade_sale_select")){
+                $trade_sale_select = $form->getElementValue("trade_sale_select");
+            }
+            $hdn_discount_flg = $form->getElementValue("hdn_discount_flg[$i]");
+
+            #$trade_sale_selectは手書伝票作成の場合、値がセットされている
+            if( ($hdn_discount_flg === 't' ||
+               $trade_sale_select[0] == '13' || $trade_sale_select[0] == '14' || $trade_sale_select[0] == '63' || $trade_sale_select[0] == '64' )
+               && $_POST["clear_line"] != $i
+            ){
+                $font_color = "color: red; ";
+                $font_color_red_flg = 't';
+            }else{
+                $font_color = "color: #000000; ";
+                $font_color_red_flg = 'f';
+            }
+
+        }
+
+
+
+		//販売区分
+		$form->addElement('select', "form_divide[".$i."]", "", $array_divide, $g_form_option_select);
+		array_push($freeze_data2, "form_divide[".$i."]");
+
+		//サービス一式
+        if($_SESSION["group_kind"] == "2"){
+		    $form->addElement("checkbox","form_issiki[".$i."]" ,"" ,"","onClick=\"Set_num('$i','$coax', '$daiko_coax');\"");
+        }else{
+    		$form->addElement("checkbox","form_issiki[".$i."]" ,"" ,"","onClick=\"Set_num('$i','$coax', '$toyo_coax');\"");
+        }
+
+		//サービス
+		$array_serv = Select_Get($db_con, "serv_con");
+		$form->addElement('select', "form_serv[".$i."]", "", $array_serv, $g_form_option_select);
+		array_push($freeze_data2, "form_serv[".$i."]");
+
+		//商品正式名称（アイテム）
+	    $form->addElement(
+	        "text","official_goods_name[$i]", "正式",
+	        "size=\"42\" maxLength=\"41\" style=\"$style\" $type"
+	    );
+		array_push($freeze_data2, "official_goods_name[$i]");
+
+		for($s=1;$s<=3;$s++){
+
+			//伝票印字
+			$form->addElement("checkbox","form_print_flg".$s."[".$i."]" ,"");
+			array_push($freeze_data2, "form_print_flg".$s."[".$i."]");
+
+			//商品コード
+		    $form->addElement(
+		        "text","form_goods_cd".$s."[$i]","","size=\"10\" maxLength=\"8\"
+		        style=\"$g_form_style;$style\" $type
+		        "
+		    );
+			array_push($freeze_data2, "form_goods_cd".$s."[$i]");
+
+			//商品名
+		    $form->addElement(
+		        "text","form_goods_name".$s."[$i]", "略称",
+		        "size=\"30\" maxLength=\"20\" 
+		        style=\"$font_color $style\" $type"
+		    );
+			array_push($freeze_data2, "form_goods_name".$s."[$i]");
+
+			//商品数
+            if($s == 1){
+                //アイテム
+                if($_SESSION["group_kind"] == "2"){
+                    $form->addElement(
+                        "text","form_goods_num".$s."[$i]","",
+                        "class=\"money_num\" size=\"6\" maxLength=\"5\"
+                        onKeyup=\"Mult_double2('form_goods_num1[$i]','form_sale_price[$i][1]','form_sale_price[$i][2]','form_sale_amount[$i]','form_trade_price[$i][1]','form_trade_price[$i][2]','form_trade_amount[$i]','form_issiki[$i]','$coax',false,'$daiko_coax', '$contract_div', '$act_div');\"
+                        style=\"$font_color $g_form_style;$style\" $type"
+                    );
+                }else{
+                    $form->addElement(
+                        "text","form_goods_num".$s."[$i]","",
+                        "class=\"money_num\" size=\"6\" maxLength=\"5\"
+                        onKeyup=\"Mult_double2('form_goods_num1[$i]','form_sale_price[$i][1]','form_sale_price[$i][2]','form_sale_amount[$i]','form_trade_price[$i][1]','form_trade_price[$i][2]','form_trade_amount[$i]','form_issiki[$i]','$coax',false,'$toyo_coax');\"
+                        style=\"$font_color $g_form_style;$style\" $type"
+                    );
+                }
+            }else{
+                //消耗品・本体
+                $form->addElement(
+                    "text","form_goods_num".$s."[$i]","",
+                    " size=\"3\" maxLength=\"3\"
+                    style=\"text-align:right; $font_color $g_form_style;$style\" $type"
+                );
+            }
+
+
+			//商品ID
+			$form->addElement("hidden","hdn_goods_id".$s."[$i]");
+			//品名変更フラグ
+			$form->addElement("hidden","hdn_name_change".$s."[$i]");
+
+		}
+
+		//FC、または直営でオフライン代行で代行料固定額の場合は原価は変更可
+		if($group_kind == 3 || ($contract_div == "3" && $act_div == "2")){
+			//ＦＣ（入力可）
+
+			//営業原価
+            //FCの場合は委託先東陽の丸め
+            if($group_kind == "3"){
+    			$form_cost_price[$i][] =& $form->createElement(
+	    		        "text","1","",
+		    	        "size=\"9\" maxLength=\"8\"
+			            class=\"money\"
+			            onKeyup=\"Mult2('form_goods_num1[$i]','form_trade_price[$i][1]','form_trade_price[$i][2]','form_trade_amount[$i]','form_issiki[$i]','$toyo_coax',false);\"
+			            style=\"$font_color $g_form_style;text-align: right; $style\"
+    			        $type"
+	    		);
+		        $form_cost_price[$i][] =& $form->createElement(
+			            "text","2","","size=\"1\" maxLength=\"2\" 
+			            onKeyup=\"Mult2('form_goods_num1[$i]','form_trade_price[$i][1]','form_trade_price[$i][2]','form_trade_amount[$i]','form_issiki[$i]','$toyo_coax',true);\"
+			            style=\"$font_color $g_form_style;text-align: left; $style\"
+    			        $type"
+	    	    );
+
+            //直営の場合は受託先の丸め
+            }else{
+    			$form_cost_price[$i][] =& $form->createElement(
+	    		        "text","1","",
+		    	        "size=\"9\" maxLength=\"8\"
+			            class=\"money\"
+			            onKeyup=\"Mult2('form_goods_num1[$i]','form_trade_price[$i][1]','form_trade_price[$i][2]','form_trade_amount[$i]','form_issiki[$i]','$daiko_coax',false);\"
+			            style=\"$font_color $g_form_style;text-align: right; $style\"
+    			        $type"
+	    		);
+		        $form_cost_price[$i][] =& $form->createElement(
+			            "text","2","","size=\"1\" maxLength=\"2\" 
+			            onKeyup=\"Mult2('form_goods_num1[$i]','form_trade_price[$i][1]','form_trade_price[$i][2]','form_trade_amount[$i]','form_issiki[$i]','$daiko_coax',true);\"
+			            style=\"$font_color $g_form_style;text-align: left; $style\"
+    			        $type"
+	    	    );
+            }
+		    $form->addGroup( $form_cost_price[$i], "form_trade_price[$i]", "",".");
+
+			//原価合計額
+		    $form->addElement(
+		        "text","form_trade_amount[$i]","",
+		        "size=\"17\" maxLength=\"10\" 
+		        style=\"$font_color  
+		        border : #ffffff 1px solid; 
+		        background-color: #ffffff; 
+		        text-align: right\" readonly'"
+		    );
+			
+		}else{
+			//直営（入力不可）
+
+			//営業原価
+			$form_cost_price[$i][] =& $form->createElement(
+			        "text","1","",
+			        "size=\"9\" maxLength=\"8\"
+			        class=\"money\"
+			        style=\"$font_color 
+				    border : #ffffff 1px solid; 
+				    background-color: #ffffff; 
+				    text-align: right\" readonly'"
+			    );
+			$form_cost_price[$i][] =& $form->createElement(
+			        "text","2","","size=\"1\" maxLength=\"2\" 
+			        style=\"$font_color 
+				    border : #ffffff 1px solid; 
+				    background-color: #ffffff; 
+				    text-align: right\" readonly'"
+			    );
+			$form->addGroup( $form_cost_price[$i], "form_trade_price[$i]", "",".");
+
+			//原価合計額
+			$form->addElement(
+			    "text","form_trade_amount[$i]","",
+			    "size=\"17\" maxLength=\"10\" 
+			    style=\"$font_color 
+			    border : #ffffff 1px solid; 
+			    background-color: #ffffff; 
+			    text-align: right\" readonly'"
+			);
+		}
+
+		//売上単価
+		$form_sale_price[$i][] =& $form->createElement(
+		     "text","1","",
+		     "size=\"9\" maxLength=\"8\"
+		     class=\"money\"
+			 style=\"$font_color 
+			 border : #ffffff 1px solid; 
+			 background-color: #ffffff; 
+			 text-align: right\" readonly'"
+		);
+
+		$form_sale_price[$i][] =& $form->createElement(
+		    "text","2","","size=\"1\" maxLength=\"2\" 
+		    style=\"$font_color 
+			border : #ffffff 1px solid; 
+			background-color: #ffffff; 
+			text-align: right\" readonly'"
+		);
+		$form->addGroup( $form_sale_price[$i], "form_sale_price[$i]", "",".");
+
+		//売上合計額
+		$form->addElement(
+		    "text","form_sale_amount[$i]","",
+		    "size=\"17\" maxLength=\"10\" 
+		    style=\"$font_color 
+		    border : #ffffff 1px solid; 
+		    background-color: #ffffff; 
+		    text-align: right\" readonly'"
+		);
+
+		//口座料
+		$form_aprice_div0[$i][] =& $form->createElement("radio",NULL,NULL, "なし","1");
+    	$form_aprice_div0[$i][] =& $form->createElement("radio",NULL,NULL, "固定額","2");
+    	$form_aprice_div0[$i][] =& $form->createElement("radio",NULL,NULL, "売上の","3");
+		$form->addGroup($form_aprice_div0[$i], "form_aprice_div[$i]","","<br>");
+		array_push($freeze_data2, "form_aprice_div[$i]");
+
+		$form->addElement("text","form_account_price[$i]","",
+			" size=\"6\" maxLength=\"6\" class=\"money_num\" 
+		    style=\"$font_color 
+			border : #ffffff 1px solid; 
+			margin-top: -3px; 
+			background-color: #ffffff; 
+			text-align: right\" readonly'"
+		);
+	
+		$form->addElement("text","form_account_rate[$i]","",
+			" size=\"6\" maxLength=\"3\" 
+		    style=\"$font_color 
+			border : #ffffff 1px solid;
+			margin-top: -3px; 
+			background-color: #ffffff; 
+			text-align: right\" readonly'"
+		);
+
+
+		//口座料の空白
+		$text = NULL;
+		$text[] =& $form->createElement(
+		    "text","name","",
+		    "size=\"7\" maxLength=\"10\" 
+		    style=\"$font_color
+		    border : #ffffff 1px solid; 
+		    background-color: #ffffff; 
+		    text-align: right\" readonly'"
+		);
+		$form->addGroup($text, "form_br","","");	
+		array_push($freeze_data2, "form_br");
+
+
+        //前受相殺額
+        $form_ad_offset_radio = NULL;
+        $form_ad_offset_radio[$i][] =& $form->createElement("radio", NULL, NULL, "なし", "1", "onClick=\"ad_offset_radio_disable($i);\"");
+        $form_ad_offset_radio[$i][] =& $form->createElement("radio", NULL, NULL, "あり", "2", "onClick=\"ad_offset_radio_disable($i);\"");
+        $form->addGroup($form_ad_offset_radio[$i], "form_ad_offset_radio[$i]", "前受相殺フラグ");
+        $form->addElement("text", "form_ad_offset_amount[$i]", "", 
+            "size=\"11\" maxLength=\"9\" ".$g_form_option." class=\"money\" style=\"$font_color text-align:right; ime-mode:disabled;\""
+        );
+/*
+        $freeze_data2 = array(
+            "form_ad_offset_radio[$i]",
+            "form_ad_offset_amount[$i]",
+        );
+        $form->freeze($freeze_data2);
+*/
+
+/*
+		//内訳指定判定
+		if($sub_data[$i-1][27] != NULL){
+			$sql  = "SELECT aord_d_id FROM t_aorder_detail WHERE aord_d_id = ".$sub_data[$i-1][27].";";
+			$result = Db_Query($db_con, $sql);
+			$row_num = pg_num_rows($result);
+			if(1 <= $row_num){
+				//FC・直営判定
+				if($group_kind == 3){
+					//FCなら入力画面遷移
+
+					//受注IDシリアライズ化
+					$detail_id = serialize($array_id);
+					$detail_id = urlencode($detail_id);
+
+					//内訳
+					if($aord_id != null){
+						$form->addElement(
+							"link","form_breakdown[$i]","","#","内訳",
+							"onClick=\"javascript:return Submit_Page2('./2-2-116.php?client_id=$client_id&aord_id=$aord_id&break_row=$i&back_display=$back_display&aord_id_array=".$detail_id."'); \""
+						);
+					}else{
+						$form->addElement(
+							"link","form_breakdown[$i]","","#","内訳",
+							"onClick=\"javascript:return Submit_Page2('./2-2-116.php?client_id=$client_id&sale_id=$sale_id&break_row=$i&back_display=$back_display&aord_id_array=".$detail_id."'); \""
+						);
+					}
+				}else{
+					//直営なら確認ダイアログ
+
+					//内訳
+					if($aord_id != null){
+						$form->addElement(
+							"link","form_breakdown[$i]","","#","内訳",
+							"onClick=\"Open_mlessDialmg_g('".FC_DIR."system/2-1-116.php',".$sub_data[$i-1][27].",$aord_id,670,470,'sale'); \""
+						);
+					}else{
+						$form->addElement(
+							"link","form_breakdown[$i]","","#","内訳",
+							"onClick=\"Open_mlessDialmg_g('".FC_DIR."system/2-1-116.php',".$sub_data[$i-1][27].",$sale_id,670,470,'sale'); \""
+						);
+					}
+				}
+			}
+		}
+*/
+
+        //クリアリンク作成
+        $form->addElement(
+            "link","clear_line[".$i."]","",$_SERVER["PHP_SELF"],"クリア","onClick=\"Javascript:Clear_Line_Data('$i');return false;\""
+        );
+
+	}
+}
+
+$form->addElement("hidden", "goods_search_row");    //商品コード入力行    
+$form->addElement("hidden", "correction_flg");      //訂正ボタン押下フラグ    
+$form->addElement("hidden", "attach_gid");          //所属グループID
+$form->addElement("hidden", "hdn_aord_id");         //受注ID
+$form->addElement("hidden", "clear_flg");           //クリア判定フラグ
+$form->addElement("hidden", "hdn_client_id");       //得意先
+$form->addElement("hidden", "hdn_contract_id");     //契約情報ID
+$form->addElement("hidden", "hdn_aord_id_array");   //該当日の全ての受注ID
+$form->addElement("hidden", "hdn_back_display");    //予定明細の遷移元
+$form->addElement("hidden", "hdn_contract_div");    //契約区分
+$form->addElement("hidden", "hdn_trust_rate");      //代行依頼料
+$form->addElement("hidden", "hdn_intro_account_id");    //紹介口座先
+$form->addElement("hidden", "hdn_act_id");          //代行者
+$form->addElement("hidden", "ad_sum_button_flg");   //前受金残高集計フラグ
+$form->addElement("hidden", "clear_line");          //クリアする行
+
+/************************************************/
+
+//ボタン
+$form->addElement("button","correction_button","訂　正","onClick=\"return Dialogue_2('訂正します。','2-2-107.php?client_id=$client_id',true,'correction_flg');\" $disabled");
+$form->addElement("button","clear_button","クリア","onClick=\"insert_row('clear_flg');\"");
+
+//予定明細に遷移ボタン
+//受注IDシリアライズ化
+$array_id = serialize($array_id);
+$array_id = urlencode($array_id);
+$form->addElement("button","form_back","戻　る","onClick=\"location.href='".FC_DIR."sale/2-2-106.php?aord_id[0]=$aord_id&aord_id_array=$array_id&back_display=$back_display'\"");
+
+//契約マスタ表示リンク
+if($contract_div == '2' && $group_kind == 3){
+	//代行伝票
+	$form->addElement(
+		"link","form_con_link","","#","契約マスタ表示",
+		"onClick=\"location.href='".FC_DIR."system/2-1-239.php?aord_id=$aord_id&aord_id_array=$array_id&get_flg=reason&back_display=$back_display'\""
+	);
+}else{
+	//通常伝票
+	$form->addElement(
+		"link","form_con_link","","#","契約マスタ表示",
+		"onClick=\"location.href='".FC_DIR."system/2-1-115.php?aord_id=$aord_id&aord_id_array=$array_id&client_id=$client_id&get_flg=reason&back_display=$back_display'\""
+	);
+}
+
+/****************************/
+//部品定義(内訳画面)
+/****************************/
+/*
+//契約登録の行数分
+for($i=1;$i<=5;$i++){
+	//内訳登録の行数分
+	for($j=1;$j<=5;$j++){
+		//商品コード
+		$form->addElement("hidden","break_goods_cd[$i][$j]","");
+		//商品名
+		$form->addElement("hidden","break_goods_name[$i][$j]","");
+		//商品数
+		$form->addElement("hidden","break_goods_num[$i][$j]","");
+		//商品ID
+		$form->addElement("hidden","hdn_bgoods_id[$i][$j]","");
+		//品名変更フラグ
+		$form->addElement("hidden","hdn_bname_change[$i][$j]","");
+
+		//営業原価
+		$form->addElement("hidden","break_trade_price[$i][$j][1]","");
+		$form->addElement("hidden","break_trade_price[$i][$j][2]","");
+		//原価合計
+		$form->addElement("hidden","break_trade_amount[$i][$j]","");
+		//売上単価
+		$form->addElement("hidden","break_sale_price[$i][$j][1]","");
+		$form->addElement("hidden","break_sale_price[$i][$j][2]","");
+		//売上合計
+		$form->addElement("hidden","break_sale_amount[$i][$j]","");
+	}
+}
+*/
+
+
+
+//-------------------------------------------------
+// フリーーズ
+//-------------------------------------------------
+
+$form->freeze($freeze_data2);
+
+
+
+//-------------------------------------------------
+// 共通JS
+//-------------------------------------------------
+
+$plan_data_js = <<<PLAN_DATA_JS
+
+//前受金相殺フラグ
+function ad_offset_radio_disable(line)
+{
+    if(line == undefined){
+        var min = 1;
+        var max = 5;
+    }else{
+        var min = line;
+        var max = line;
+    }
+
+
+    for(i=min; i<=max; i++){
+
+        check = document.dateForm.elements["form_ad_offset_radio[" + i + "]"][0].checked;
+
+        //なし
+        if(check){
+            document.dateForm.elements["form_ad_offset_amount[" + i + "]"].disabled = true;
+            document.dateForm.elements["form_ad_offset_amount[" + i + "]"].style.backgroundColor = "gainsboro";
+
+        //あり
+        }else{
+            document.dateForm.elements["form_ad_offset_amount[" + i + "]"].disabled = false;
+            document.dateForm.elements["form_ad_offset_amount[" + i + "]"].style.backgroundColor = "white";
+        }
+    }
+
+    return true;
+
+}
+
+
+function Clear_Line_Data(clear_line) {
+    if (confirm(clear_line+"行目の入力をクリアします。\\nよろしいですか？")==true) {
+        document.forms[0].action="#";
+        document.forms[0].clear_line.value=clear_line;
+        document.forms[0].submit();
+    }
+}
+
+
+PLAN_DATA_JS;
+
+
+//行クリア（仮）
+function Clear_Line_Data2($form, $line)
+{
+
+    //入力クリアするフォーム名
+    for($f=1;$f<=3;$f++){
+        $data["form_print_flg".$f][$line]      = "";
+        $data["hdn_goods_id".$f][$line]        = "";
+        $data["hdn_name_change".$f][$line]     = "";
+        $data["form_goods_cd".$f][$line]       = "";
+        $data["form_goods_name".$f][$line]     = "";
+        $data["form_goods_num".$f][$line]      = "";
+    }
+    $data["form_serv"][$line]             = "";
+    $data["form_divide"][$line]           = "";
+    $data["form_issiki"][$line]           = "";
+    $data["form_trade_price"][$line]["1"] = "";
+    $data["form_trade_price"][$line]["2"] = "";
+    $data["form_trade_amount"][$line]     = "";
+    $data["form_sale_price"][$line]["1"]  = "";
+    $data["form_sale_price"][$line]["2"]  = "";
+    $data["form_sale_amount"][$line]      = "";
+    $data["form_account_price"][$line]    = "";
+    $data["form_account_rate"][$line]     = "";
+    $data["form_aprice_div[$line]"]       = "1";
+    $data["official_goods_name"][$line]   = "";
+
+    $data["form_ad_offset_radio"][$line]    = "1";
+    $data["form_ad_offset_amount"][$line]   = "";
+
+    $data["clear_line"] = "";    //クリア行
+
+    $form->setConstants($data);
+
+}
+
+
+
+?>

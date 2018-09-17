@@ -1,0 +1,671 @@
+<?php
+// 2006/9/25 morita-d 
+// 代行処理は、呼び出し元がないため削除しました。
+// ・（2006-10-31）ログイン者名に\マークを追加<suzuki>
+// ・ (2006/12/04) 商品分類名・正式名称の抽出SQLを変更(suzuki-t)
+
+/*
+ * 履歴：
+ *  日付            B票No.      担当者      内容
+ *  -----------------------------------------------------------
+ *  2006/11/08      02-055      suzuki      変更チェックコード初期化
+ *  2006-12-10      03-090      suzuki      商品ＣＤ抽出条件修正
+ *  2007/02/05      要件26-1    kajioka-h   代行伝票の場合に数量を変更できるように変更
+ *                                          （出庫品テーブル、受払の登録処理をplan_data_sql_stock_hand.incに移動）
+ *  2007/02/16      要件5-1     kajioka-h   商品出荷予定で在庫移動済の予定データは出荷倉庫を担当者(メイン)の担当倉庫にする処理追加
+ *  2007/02/27      B0702-012   kajioka-h   アイテムがない場合に数量が登録されないバグ修正
+ *  2007/03/02      要望6-3     kajioka-h   アイテム名を「正式（商品分類＋商品名）」と「略称」表示に
+ *  2007/04/16                  morita-d    伝票訂正時に伝票出力日をNULLに変更するように修正
+ *  2007/06/16      その他14    kajioka-h   前受金を追加
+ *  2007/06/27      xx-xxx      kajioka-h   商品マスタの同期フラグ登録処理を追加
+ *  2009/12/22                  aoyama-n    税率をTaxRateクラスから取得
+ */
+
+//受注ヘッダ・受注データ・巡回担当者・内訳・出庫品・受払、訂正処理
+/****************************/
+//得意先コード入力処理
+/****************************/
+//得意先の情報を抽出
+$sql  = "SELECT";
+$sql .= "   t_client.coax, ";
+$sql .= "   t_client.trade_id,";
+$sql .= "   t_client.tax_franct,";
+$sql .= "   t_client.slip_out ";
+//$sql .= "   t_client.intro_ac_price,";
+//$sql .= "   t_client.intro_ac_rate ";
+$sql .= " FROM";
+$sql .= "   t_client ";
+$sql .= " WHERE";
+$sql .= "   client_id = $client_id";
+$sql .= ";";
+
+$result = Db_Query($db_con, $sql); 
+Get_Id_Check($result);
+$data_list = Get_Data($result,3);
+
+$coax           = $data_list[0][0];        //丸め区分（商品）
+$trade_id       = $data_list[0][1];        //取引コード
+$tax_franct     = $data_list[0][2];        //消費税（端数区分）
+$slip_out       = $data_list[0][3];        //伝票形式
+//$intro_ac_price = $data_list[0][4];        //紹介口座料
+//$intro_ac_rate  = $data_list[0][5];        //紹介口座率
+
+//取引先情報取得
+$sql  = "SELECT";
+$sql .= "   t_client_info.cclient_shop ";       //担当支店ID
+$sql .= " FROM";
+$sql .= "   t_client_info ";
+$sql .= " WHERE";
+$sql .= "   t_client_info.client_id = $client_id";
+$sql .= ";";
+$result = Db_Query($db_con, $sql); 
+$info_list = Get_Data($result,3);
+
+$cshop_id        = $info_list[0][0];        //担当支店ID
+
+/****************************/
+//ログインユーザ情報取得処理
+/****************************/
+//得意先の情報を抽出
+$sql  = "SELECT";
+$sql .= "   t_ware.ware_name,";
+$sql .= "   t_ware.ware_id,";
+$sql .= "   t_client.tax_rate_n,";
+$sql .= "   t_client.rank_cd ";
+$sql .= " FROM";
+$sql .= "   t_client LEFT JOIN t_ware ON t_client.ware_id = t_ware.ware_id ";
+$sql .= " WHERE";
+$sql .= "   client_id = $cshop_id";
+$sql .= ";";
+$result = Db_Query($db_con, $sql); 
+Get_Id_Check($result);
+$data_list = Get_Data($result,3);
+
+$ware_name      = $data_list[0][0];        //商品出荷倉庫名
+$ware_id        = $data_list[0][1];        //出荷倉庫ID
+#2009-12-22 aoyama-n
+#呼び出し元（2-2-107）でクラスから取得
+#$tax_num        = $data_list[0][2];        //消費税(現在)
+$rank_cd        = $data_list[0][3];        //顧客区分CD
+
+/****************************/
+//データ削除処理
+/****************************/
+//巡回担当者テーブル削除
+$sql  = "DELETE FROM ";
+$sql .= "    t_aorder_staff ";
+$sql .= "WHERE ";
+$sql .= "    aord_id = $aord_id;";
+$result = Db_Query($db_con, $sql);
+if($result === false){
+    Db_Query($db_con, "ROLLBACK");
+    exit;
+}
+
+//在庫受払テーブル削除
+$sql  = "DELETE FROM ";
+$sql .= "    t_stock_hand ";
+$sql .= "WHERE ";
+$sql .= "    aord_d_id IN(SELECT aord_d_id FROM t_aorder_d WHERE aord_id = $aord_id);";
+$result = Db_Query($db_con, $sql);
+if($result === false){
+    Db_Query($db_con, "ROLLBACK");
+    exit;
+}
+
+//受注データテーブル削除
+$sql  = "DELETE FROM ";
+$sql .= "    t_aorder_d ";
+$sql .= "WHERE ";
+$sql .= "    aord_id = $aord_id;";
+$result = Db_Query($db_con, $sql);
+if($result === false){
+    Db_Query($db_con, "ROLLBACK");
+    exit;
+}
+
+/****************************/
+//受注ヘッダー更新処理
+/****************************/
+//受注ヘッダー更新SQL
+$sql  = "UPDATE t_aorder_h SET ";
+$sql .= "    ord_time = '$delivery_day',";      //受注日
+$sql .= "    trade_id = '$trade_aord',";        //取引区分コード
+$sql .= "    arrival_day = '$request_day',";    //出荷予定日
+$sql .= "    route = $route,";                  //順路
+$sql .= "    note = '$note',";                  //備考
+$sql .= "    reason_cor = '$reason',";          //訂正理由
+//商品予定出荷で移動済の場合は出荷倉庫も変更
+if($move_flg == "t"){
+    $sql .= "    ware_id = (SELECT ware_id FROM t_attach WHERE staff_id = ".$staff_check[0]." AND ";
+    $sql .= ($group_kind == 2) ? "shop_id IN (".Rank_Sql().")), " : "shop_id = ".$_SESSION["client_id"]."), ";
+    $sql .= "    ware_name = (SELECT ware_name FROM t_ware WHERE ware_id = ";
+    $sql .= "(SELECT ware_id FROM t_attach WHERE staff_id = ".$staff_check[0]." AND ";
+    $sql .= ($group_kind == 2) ? "shop_id IN (".Rank_Sql()."))), " : "shop_id = ".$_SESSION["client_id"].")), ";
+}
+$sql .= "    change_flg = 't',";                //確定前変更フラグ
+$sql .= "    slip_flg = 'f',";                  //伝票出力フラグ
+$sql .= "    slip_out_day = NULL,";             //伝票出力日
+$sql .= "    ord_staff_id = $staff_id,";        //入力者ID
+
+/*
+ * 履歴：
+ * 　日付　　　　B票No.　　　　担当者　　　内容　
+ * 　2006/10/31　02-026　　　　suzuki-t　　ログイン者名に\マークを追加
+ *
+*/
+$sql .= "    ord_staff_name = '".addslashes($_SESSION["staff_name"])."', ";   //入力者名
+$sql .= "    claim_id = $claim_id,";            //請求先ID
+$sql .= "    claim_div = '$claim_div', ";       //請求区分
+$sql .= ($ad_offset_flg) ? "    advance_offset_totalamount = $ad_offset_total_amount, " : "    advance_offset_totalamount = null, ";
+$sql .= "    ship_chk_cd = NULL ";              //変更チェックコード
+$sql .= "WHERE ";
+$sql .= "    aord_id = $aord_id ";
+$sql .= ";";
+$result = Db_Query($db_con, $sql);
+if($result === false){
+    Db_Query($db_con, "ROLLBACK");
+    exit;
+}
+
+/****************************/
+//巡回担当者テーブル登録
+/****************************/
+for($c=0;$c<=3;$c++){
+	//スタッフが指定されているか判定
+	if($staff_check[$c] != NULL){
+		//履歴用
+		$sql = "SELECT staff_name FROM t_staff WHERE staff_id = ".$staff_check[$c].";";
+		$result = Db_Query($db_con, $sql);
+		$staff_data = Get_Data($result,3);
+
+		$sql  = "INSERT INTO t_aorder_staff( ";
+		$sql .= "    aord_id,";
+		$sql .= "    staff_div,";
+		$sql .= "    staff_id,";
+		$sql .= "    sale_rate, ";
+		$sql .= "    staff_name ";
+		$sql .= "    )VALUES(";
+		$sql .= "    $aord_id,";                          //受注ID
+		$sql .= "    '$c',";                              //巡回担当者識別
+		$sql .= "    ".$staff_check[$c].",";              //巡回担当者ID
+		//売上率指定判定
+		if($staff_rate[$c] != NULL){
+			$sql .= "    ".$staff_rate[$c].",";           //売上率
+		}else{
+			$sql .= "    NULL,";
+		}
+		$sql .= "    '".$staff_data[0][0]."'";            //担当者名
+		$sql .= ");";
+		$result = Db_Query($db_con, $sql);
+		if($result === false){
+		    Db_Query($db_con, "ROLLBACK");
+		    exit;
+		}
+	}
+}
+
+/****************************/
+//受注データ登録処理
+/****************************/
+for($s=1;$s<=5;$s++){
+	//行にデータが入力されていた場合、受注データ登録
+	if($divide[$s] != NULL){
+		//受注データID取得
+		$microtime2 = NULL;
+		$microtime2 = explode(" ",microtime());
+		$aord_d_id   = $microtime2[1].substr("$microtime2[0]", 2, 5); 
+
+		//サービス指定判定
+		$serv_data = NULL;
+		if($serv_id[$s] != NULL){
+			//履歴用カラムデータ取得
+			$sql  = "SELECT ";
+			$sql .= "    t_serv.serv_name,";
+			$sql .= "    t_serv.serv_cd ";
+			$sql .= "FROM ";
+			$sql .= "    t_serv ";
+			$sql .= "WHERE ";
+			$sql .= "    t_serv.serv_id = ".$serv_id[$s].";";
+			$result = Db_Query($db_con, $sql);
+			$serv_data = Get_Data($result,3);
+		}
+
+		//商品指定判定
+		$item_data = NULL;
+		if($goods_item_id[$s] != NULL){ 
+			//履歴用カラムデータ取得
+			$sql  = "SELECT ";
+			$sql .= "    t_goods.goods_cd, ";
+			$sql .= "    t_goods.compose_flg, ";
+			$sql .= "    t_goods.public_flg, ";
+			$sql .= "    t_goods.tax_div, ";
+			$sql .= "    t_g_product.g_product_name,";
+			$sql .= "    t_goods.goods_name ";
+			$sql .= "FROM ";
+			$sql .= "    t_goods ";
+			$sql .= "    LEFT JOIN t_g_product ON t_goods.g_product_id = t_g_product.g_product_id ";
+			$sql .= "WHERE ";
+			$sql .= "    t_goods.goods_id = ".$goods_item_id[$s].";";
+			$result = Db_Query($db_con, $sql);
+			$item_data = Get_Data($result,3);
+
+			//構成品判定
+			if($item_data[0][1] == 't'){
+				//構成品親の在庫単価取得
+				$price_array = NULL;
+				$price_array = Compose_price($db_con,$cshop_id,$goods_item_id[$s]);
+				$buy_price = $price_array[2];
+			}else{
+				//アイテムの在庫単価取得
+				$sql  = "SELECT ";
+				$sql .= "   t_price.r_price ";
+				$sql .= " FROM";
+    			$sql .= "   t_goods INNER JOIN t_price ON t_goods.goods_id = t_price.goods_id ";
+				$sql .= " WHERE ";
+				$sql .= "    t_goods.goods_id = ".$goods_item_id[$s];
+				$sql .= " AND";
+    			$sql .= "    t_goods.accept_flg = '1' ";
+				$sql .= " AND";
+			    //直営判定
+				if($_SESSION["group_kind"] == '2'){
+					//直営
+				    $sql .= "    t_price.shop_id IN (".Rank_Sql().") \n";
+				}else{
+					//FC
+					$sql .= "    t_price.shop_id = $cshop_id  \n";
+				}
+				$sql .= " AND ";
+				//本部判定
+				if($item_data[0][2] == 't'){
+					//本部商品
+					$sql .= "    t_goods.public_flg = 't' ";
+				}else{
+					//自社商品
+					$sql .= "    t_goods.public_flg = 'f' ";
+				}
+				$sql .= " AND";
+			    $sql .= "    t_price.rank_cd = '3';";
+				$result = Db_Query($db_con, $sql);
+				$buy_data = Get_Data($result,3);
+				$buy_price = $buy_data[0][0];
+			}
+		}
+
+		//本体商品指定判定
+		$body_data = NULL;
+		if($goods_body_id[$s] != NULL){ 
+			//履歴用カラムデータ取得
+			$sql  = "SELECT ";
+			$sql .= "    t_goods.goods_cd ";
+			$sql .= "FROM ";
+			$sql .= "    t_goods ";
+			$sql .= "WHERE ";
+			$sql .= "    t_goods.goods_id = ".$goods_body_id[$s].";";
+			$result = Db_Query($db_con, $sql);
+			$body_data = Get_Data($result,3);
+		}
+
+		//消耗品指定判定
+		$egoods_data = NULL;
+		if($goods_expend_id[$s] != NULL){ 
+			//履歴用カラムデータ取得
+			$sql  = "SELECT ";
+			$sql .= "    t_goods.goods_cd ";
+			$sql .= "FROM ";
+			$sql .= "    t_goods ";
+			$sql .= "WHERE ";
+			$sql .= "    t_goods.goods_id = ".$goods_expend_id[$s].";";
+			$result = Db_Query($db_con, $sql);
+			$egoods_data = Get_Data($result,3);
+		}
+
+		//受注データ登録SQL
+		$sql  = "INSERT INTO t_aorder_d (";
+		$sql .= "    aord_d_id,";            //受注データID
+		$sql .= "    aord_id,";              //受注ID
+		$sql .= "    line,";                 //行
+		$sql .= "    sale_div_cd,";          //販売区分コード
+		$sql .= "    serv_print_flg,";       //サービス印字フラグ
+		$sql .= "    serv_id,";              //サービスID
+		$sql .= "    set_flg,";              //一式フラグ
+		$sql .= "    goods_print_flg,";      //アイテム印字フラグ
+		$sql .= "    num,";                  //アイテム数
+		$sql .= "    goods_id,";             //アイテム商品ID
+		$sql .= "    goods_name,";           //アイテム名
+		$sql .= "    tax_div,";              //課税区分
+		$sql .= "    buy_price,";            //仕入単価
+		$sql .= "    cost_price,";           //営業原価
+		$sql .= "    sale_price,";           //売上単価
+		$sql .= "    buy_amount,";           //仕入金額
+		$sql .= "    cost_amount,";          //営業金額
+		$sql .= "    sale_amount,";          //売上金額
+		$sql .= "    rgoods_id,";            //本体商品ID
+		$sql .= "    rgoods_name,";          //本体商品名
+		$sql .= "    rgoods_num,";           //本体数
+		$sql .= "    egoods_id,";            //消耗品ID
+		$sql .= "    egoods_name,";          //消耗品名
+		$sql .= "    egoods_num,";           //消耗品数
+		$sql .= "    contract_id, ";         //契約情報ID
+		$sql .= "    account_price,";        //口座単価
+		$sql .= "    account_rate, ";        //口座率
+		$sql .= "    serv_name, \n";           //サービス名
+		$sql .= "    serv_cd, \n";             //サービスCD
+		$sql .= "    goods_cd, \n";            //アイテムCD
+		$sql .= "    rgoods_cd, \n";           //本体CD
+		$sql .= "    egoods_cd, \n";           //消耗品CD
+		$sql .= "    g_product_name, \n";      //商品分類名
+		$sql .= "    official_goods_name, \n";  //正式名称
+        $sql .= "    advance_flg, \n";          //前受相殺フラグ
+        $sql .= "    advance_offset_amount, \n";//前受相殺額
+        $sql .= "    mst_sync_flg \n";          //商品マスタ同期フラグ
+		$sql .= ")VALUES(";
+		$sql .= "    $aord_d_id,";
+		$sql .= "    $aord_id,";
+		$sql .= "    '$s',";
+		$sql .= "    '".$divide[$s]."',";
+		$sql .= "    '".$slip_flg[$s]."',";
+		//サービスID
+		if($serv_id[$s] != NULL){
+			$sql .= "    ".$serv_id[$s].",";
+		}else{
+			$sql .= "    NULL,";
+		}
+		$sql .= "    '".$set_flg[$s]."',";
+		$sql .= "    '".$goods_item_flg[$s]."',";
+		$sql .= ($goods_item_num[$s] != null) ? "    ".$goods_item_num[$s]."," : "    NULL,"; 
+		//アイテム商品
+		if($goods_item_id[$s] != NULL){
+			$sql .= "    ".$goods_item_id[$s].",";
+			$sql .= "    '".$goods_item_name[$s]."',";
+		}else{
+			$sql .= "    NULL,";
+			$sql .= "    NULL,";
+		}
+		//課税区分判定
+		if($item_data[0][3] == NULL){
+			//アイテムの課税区分が無い場合は、サービスの課税区分を登録
+			$serv_sql  = "SELECT tax_div FROM t_serv WHERE serv_id = ".$serv_id[$s].";";
+			$result = Db_Query($db_con, $serv_sql);
+			$serv_tax_div = pg_fetch_result($result,0,0);
+			$sql .= "    '$serv_tax_div',";
+			//仕入単価には営業原価を登録
+			$sql .= "    ".$trade_price[$s].",";
+		}else{
+			//アイテムの課税区分
+			$sql .= "    '".$item_data[0][3]."',";
+			//仕入単価指定判定
+			if($buy_price != NULL){
+				$sql .= "    ".$buy_price.",";
+			}else{
+				$sql .= "    NULL,\n";
+			}
+		}
+		$sql .= "    ".$trade_price[$s].",";
+		$sql .= "    ".$sale_price[$s].",";
+
+		//仕入金額判定
+		if($buy_price != NULL){
+			//仕入金額計算処理
+			$buy_amount = bcmul($buy_price,$goods_item_num[$s],2);
+			$buy_amount = Coax_Col($coax, $buy_amount);
+			$sql .= "    $buy_amount,";
+		}else{
+			//アイテム商品指定判定
+			if($goods_item_id[$s] != NULL){ 
+				//アイテムはあるが在庫単価がない
+
+				//仕入金額には0を登録
+				$sql .= "    0,\n";
+			}else{
+				//サービスのみは、営業金額を入れる
+				$sql .= "    ".$trade_amount[$s].",";
+			}
+		}
+
+		$sql .= "    ".$trade_amount[$s].",";
+		$sql .= "    ".$sale_amount[$s].",";
+		//本体商品
+		if($goods_body_id[$s] != NULL){
+			$sql .= "    ".$goods_body_id[$s].",";
+			$sql .= "    '".$goods_body_name[$s]."',";
+			$sql .= "    ".$goods_body_num[$s].",";
+		}else{
+			$sql .= "    NULL,";
+			$sql .= "    NULL,";
+			$sql .= "    NULL,";
+		}
+
+		//消耗品
+		if($goods_expend_id[$s] != NULL){
+			$sql .= "    ".$goods_expend_id[$s].",";
+			$sql .= "    '".$goods_expend_name[$s]."',";
+			$sql .= "    ".$goods_expend_num[$s].",";
+		}else{
+			$sql .= "    NULL,";
+			$sql .= "    NULL,";
+			$sql .= "    NULL,";
+		}
+
+		$sql .= "    ".$contract_id.",";
+		$sql .= "    ".$ac_price[$s].",";
+		$sql .= "    '".$ac_rate[$s]."',";
+
+		$sql .= "    '".$serv_data[0][0]."', \n";
+		$sql .= "    '".$serv_data[0][1]."', \n";
+		$sql .= "    '".$item_data[0][0]."', \n";
+		$sql .= "    '".$body_data[0][0]."', \n";
+		$sql .= "    '".$egoods_data[0][0]."', \n";
+		$sql .= "    '".$item_data[0][4]."', \n";
+		//$sql .= "    '".$item_data[0][5]."' \n";
+        $sql .= "    '".$official_goods_name[$s]."', \n";
+        $sql .= "    '".$ad_flg[$s]."', \n";
+        $sql .= ($ad_offset_amount[$s] != null) ? "    ".$ad_offset_amount[$s].", \n" : "    null, \n";
+        $sql .= ($_POST["hdn_mst_sync_flg"][$s] == "f" || $_POST["hdn_mst_sync_flg"][$s] == "") ? "    false \n" : "    true \n";
+        $sql .= ");";
+
+		$result = Db_Query($db_con, $sql);
+		if($result == false){
+		    Db_Query($db_con, "ROLLBACK;");
+		    exit;
+		}
+
+		/****************************/
+		//出庫品テーブル登録
+		/****************************/
+		require(INCLUDE_DIR."plan_data_sql_stock_hand.inc");
+	}
+}
+
+/****************************/
+//受注ヘッダー（原価金額・売上金額・消費税額）登録処理
+/****************************/
+//受注ヘッダ取得
+/*
+$sql  = "SELECT ";
+$sql .= "    intro_ac_price,";     //口座単価(得意先)
+$sql .= "    intro_ac_rate, ";     //口座率(得意先)
+$sql .= "    intro_account_id ";   //紹介者ID
+$sql .= "FROM ";
+$sql .= "    t_aorder_h ";
+$sql .= "WHERE ";
+$sql .= "    aord_id = $aord_id;";
+$result = Db_Query($db_con, $sql);
+$intro_data = Get_Data($result,3);
+
+$intro_account_id = $intro_data[0][2]; //紹介者ID
+*/
+
+//受注データ取得
+$sql  = "SELECT ";
+$sql .= "    tax_div,";        //課税区分
+$sql .= "    cost_amount,";    //営業金額
+$sql .= "    sale_amount ";   //売上金額
+//$sql .= "    account_price,";  //口座単価
+//$sql .= "    account_rate ";   //口座率
+$sql .= "FROM ";
+$sql .= "    t_aorder_d ";
+$sql .= "WHERE ";
+$sql .= "    aord_id = $aord_id;";
+$result = Db_Query($db_con, $sql);
+$m_data = Get_Data($result,3);
+
+/*
+ * 履歴：
+ * 　日付　　　　B票No.　　担当者　　　内容　
+ * 　2006/10/31　02-030　　kajioka-h　 紹介料の計算に紹介者ではなく得意先のの丸め区分を使っていたのを修正
+ *
+*/
+//紹介者の丸め区分、端数区分を取得
+/*
+if($intro_account_id != null){
+    $sql  = "SELECT ";
+    $sql .= "    coax ";       //丸め区分
+    $sql .= "FROM ";
+    $sql .= "    t_client ";
+    $sql .= "WHERE ";
+    $sql .= "    client_id = ".$intro_account_id." ";
+    $sql .= ";";
+    $result = Db_Query($db_con, $sql);
+    $intro_account_coax = pg_fetch_result($result,0,0);  //紹介者の丸め区分 
+}
+*/
+
+//合計金額の計算に使用する配列を初期化
+$tax_div = NULL;
+$cost_data = NULL;
+$sale_data = NULL;
+//$intro_amount = NULL;
+
+//ヘッダーに掛かるデータの金額を取得
+for($c=0;$c<count($m_data);$c++){
+	$tax_div[$c]   = $m_data[$c][0];
+	$cost_data[$c] = $m_data[$c][1];
+	$sale_data[$c] = $m_data[$c][2];
+
+	//紹介料計算処理
+/*
+	if($m_data[$c][3] != NULL){
+		//口座単価
+		$intro_amount = bcadd($intro_amount,$m_data[$c][3]); 
+	}else if($m_data[$c][4] != NULL && $m_data[$c][4] > 0){
+		//口座率
+		$rate_money = bcmul($m_data[$c][2],bcdiv($m_data[$c][4],100,2),2);
+		$rate_money = Coax_Col($intro_account_coax,$rate_money);
+		$intro_amount = bcadd($intro_amount,$rate_money); 
+	}
+*/
+}
+
+//営業金額の合計処理
+$total_money = Total_Amount($cost_data, $tax_div,$coax,$tax_franct,$tax_num,$client_id,$db_con);
+$cost_money  = $total_money[0];
+
+//売上金額・消費税額の合計処理
+$total_money = Total_Amount($sale_data, $tax_div,$coax,$tax_franct,$tax_num,$client_id,$db_con);
+$sale_money  = $total_money[0];
+$sale_tax    = $total_money[1];
+
+//得意先紹介料指定判定
+/*
+if($intro_data[0][0] != NULL || ($intro_data[0][1] != NULL && $intro_data[0][1] > 0)){
+	$intro_amount = NULL;
+
+	//紹介料計算処理
+	if($intro_data[0][0] != NULL){
+		//口座単価
+		$intro_amount = $intro_data[0][0]; 
+	}else if($intro_data[0][1] != NULL && $intro_data[0][1] > 0){
+		//口座率
+		$rate_money = bcmul($sale_money,bcdiv($intro_data[0][1],100,2),2);
+		$rate_money = Coax_Col($intro_account_coax,$rate_money);
+		$intro_amount = $rate_money; 
+	}
+}
+*/
+
+$sql  = "UPDATE t_aorder_h SET ";
+$sql .= "    cost_amount = $cost_money,";
+$sql .= "    net_amount = $sale_money,";
+$sql .= "    tax_amount = $sale_tax ";
+//紹介料指定判定
+/*
+if($intro_amount != NULL){
+	$sql .= "    intro_amount = $intro_amount ";     //紹介料
+}else{
+	$sql .= "    intro_amount = NULL ";             //紹介料
+}
+*/
+$sql .= "WHERE ";
+$sql .= "    aord_id = $aord_id;";
+
+$result = Db_Query($db_con, $sql);
+if($result == false){
+    Db_Query($db_con, "ROLLBACK");
+    exit;
+}
+
+
+//紹介口座を更新
+$sql  = "UPDATE t_aorder_h SET ";
+if($intro_account_id != NULL){
+	$sql .= "    intro_account_id = $intro_account_id, ";       //紹介口座先ID
+	$sql .= "    intro_ac_cd1 = (SELECT client_cd1 FROM t_client WHERE client_id = $intro_account_id), ";       //紹介口座先CD1
+	$sql .= "    intro_ac_cd2 = (SELECT client_cd2 FROM t_client WHERE client_id = $intro_account_id), ";       //紹介口座先CD2
+	$sql .= "    intro_ac_name = (SELECT client_cname FROM t_client WHERE client_id = $intro_account_id), ";    //紹介口座先名
+}else{
+	$sql .= "    intro_account_id = NULL, ";    //紹介口座先ID
+	$sql .= "    intro_ac_cd1 = NULL, ";        //紹介口座先CD1
+	$sql .= "    intro_ac_cd2 = NULL, ";        //紹介口座先CD2
+	$sql .= "    intro_ac_name = NULL, ";       //紹介口座先名
+}
+$sql .= "    intro_ac_div = '$intro_ac_div', ";             //紹介口座区分
+if($intro_ac_price != NULL){
+	$sql .= "    intro_ac_price = $intro_ac_price, ";       //紹介口座単価
+}else{
+	$sql .= "    intro_ac_price = NULL, ";
+}
+if($intro_ac_rate != NULL){
+	$sql .= "    intro_ac_rate = '$intro_ac_rate' ";        //紹介口座率
+}else{
+	$sql .= "    intro_ac_rate = NULL ";
+}
+$sql .= "WHERE ";
+$sql .= "    aord_id = $aord_id;";
+
+$result = Db_Query($db_con, $sql);
+if($result == false){
+    Db_Query($db_con, "ROLLBACK");
+    exit;
+}
+
+//紹介料を計算
+if($intro_ac_div != "1"){
+    $intro_amount = FC_Intro_Amount_Calc($db_con, "aord", $aord_id);
+
+    if($intro_amount === false){
+        Db_Query($db_con, "ROLLBACK");
+        exit;
+    }
+}else{
+    $intro_amount = null;
+}
+
+//紹介料を更新
+$sql  = "UPDATE t_aorder_h SET ";
+if($intro_ac_div != "1"){
+	$sql .= "    intro_amount = $intro_amount ";    //紹介口座料
+}else{
+	$sql .= "    intro_amount = NULL ";
+}
+$sql .= "WHERE ";
+$sql .= "    aord_id = $aord_id;";
+
+$result = Db_Query($db_con, $sql);
+if($result == false){
+    Db_Query($db_con, "ROLLBACK");
+    exit;
+}
+
+
+?>

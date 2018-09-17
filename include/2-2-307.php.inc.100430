@@ -1,0 +1,2332 @@
+<?php
+
+require_once(INCLUDE_DIR."seikyu.inc");
+
+/**
+ * 概要　請求書の出力パターンを調べる
+ *
+ * 説明　戻り値とパターンは以下の通り
+ *　　　　1：「親子関係なし」かつ「明細」
+ *　　　　2：「親子関係なし」かつ「合計」
+ *　　　　3：「親子関係あり」かつ「明細」
+ *　　　　4：「親子関係あり」かつ「合計」
+ *
+ * @param string    $db_con  DB接続リソース
+ * @param string    $db_con  請求ID
+ * @param string    $format  請求書フォーマット
+ *
+ * @return string          請求書の出力パターン
+ *
+ * 2007-12-21   敬称の表示を変更できるように修正 <watanabe-k>
+ */
+function Chk_Claim_Pattern($db_con,$bill_id,$format=null) {
+	
+	$sql = "
+	SELECT 
+		t_bill.bill_id,
+		CASE
+			WHEN COUNT (t_bill.bill_id) =1 THEN 't'
+			ELSE 'f'
+		END AS single_claim_flg,
+		t_bill.bill_format
+	FROM t_bill
+	INNER JOIN t_bill_d ON t_bill.bill_id = t_bill_d.bill_id
+
+	WHERE t_bill.bill_id = $bill_id
+	AND t_bill.shop_id = $_SESSION[client_id]
+
+	GROUP BY t_bill.bill_id,bill_format ;
+	";
+
+	$result      = Db_Query($db_con, $sql);
+	Get_Id_Check($result);
+	$pattern      = pg_fetch_row($result);
+
+    //引数が指定された場合
+    if($format != null){
+        $pattern[2] = $format;
+    }
+	//親子関係なし・個別明細
+	if ($pattern[1] == "t" && $pattern[2] == "1"){
+		$claim_pattern = 1;
+	//親子関係なし・合計
+	}elseif ($pattern[1] == "t" && $pattern[2] == "2"){
+		$claim_pattern = 2;
+
+	//親子関係あり・明細
+	} elseif( $pattern[1] == "f" && $pattern[2] == "1"){
+		$claim_pattern = 5;
+
+	//親子関係あり・合計
+	} elseif( $pattern[1] == 'f' && $pattern[2] == "2"){
+		$claim_pattern = 4;
+
+    //親子関係なし・個別明細
+	} elseif( $pattern[1] == 't' && $pattern[2] == "5"){
+		$claim_pattern = 1;
+
+	//親子関係あり・個別明細
+	} elseif( $pattern[1] == 'f' && $pattern[2] == "5"){
+		$claim_pattern = 3;
+	} 
+
+	return $claim_pattern;
+}
+
+/**
+ * 概要　請求書のヘッダデータを取得する
+ *
+ * 説明　戻り値は、得意先単位でキーを生成します。
+ *
+ * @param string    $db_con  DB接続リソース
+ * @param string    $db_con  請求ID
+ *
+ * @return array          請求書のヘッダデータ
+ */
+function Get_Claim_Header ($db_con,$bill_id) {
+
+	/****************************/
+	//鑑部分のデータを抽出
+	/****************************/
+	$sql = "
+	SELECT
+		t_bill.bill_no,
+		t_bill_d.bill_close_day_this,
+		t_bill.close_day,
+		t_bill.collect_day,
+		t_bill.claim_id,
+		t_bill.claim_cd1,
+		t_bill.claim_cd2,
+        t_bill.claim_cd1||'-'||claim_cd2 AS claim_cd,
+    ";
+
+    if($_SESSION["group_kind"] == "1"){
+        $sql .= "t_client.shop_name AS claim_name1, 
+                t_client.shop_name2 AS claim_name2, ";
+    }else{
+        $sql .=	"t_bill.claim_name1,
+		        t_bill.claim_name2,";
+        ;
+    }
+
+    $sql .= "
+		t_bill.claim_cname,
+		t_bill.bill_format,
+		t_bill.issue_staff_name,
+		t_bill.fix_staff_name,
+		t_bill.tax_div,
+		t_bill.post_no1,
+		t_bill.post_no2,
+        t_bill.post_no1||'-'||t_bill.post_no2 AS post_no,
+		t_bill.address1,
+		t_bill.address2,
+		t_bill.address3,
+		t_bill.compellation,
+		t_bill.c_memo1,
+		t_bill.c_memo2,
+		t_bill.c_memo3,
+		t_bill.c_memo4,
+		t_bill.c_memo5,
+		t_bill.c_memo6,
+		t_bill.c_memo7,
+		t_bill.c_memo8,
+		t_bill.c_memo9,
+		t_bill.c_memo10,
+		t_bill.c_memo11,
+		t_bill.c_memo12,
+		t_bill.c_memo13,
+		t_bill.c_fsize1,
+		t_bill.c_fsize2,
+		t_bill.c_fsize3,
+		t_bill.c_fsize4,
+		t_bill_d.client_cd1,
+		t_bill_d.client_cd2,
+		t_bill_d.client_name1,
+		t_bill_d.client_name2,
+		t_bill_d.bill_data_div,
+		COALESCE(t_bill_d.bill_amount_last, 0) AS bill_amount_last,
+		COALESCE(t_bill_d.pay_amount, 0) AS pay_amount,
+		COALESCE(t_bill_d.rest_amount, 0) AS rest_amount,
+		COALESCE(t_bill_d.sale_amount, 0) AS sale_amount,
+		COALESCE(t_bill_d.tax_amount, 0) AS tax_amount,
+		COALESCE(t_bill_d.intax_amount, 0) AS intax_amount,
+		COALESCE(t_bill_d.bill_amount_this, 0) AS bill_amount_this, 
+		COALESCE(t_bill_d.payment_this, 0) AS payment_this,
+		COALESCE(t_bill_d.split_bill_amount, 0) AS split_bill_amount,
+		COALESCE(t_bill_d.split_bill_rest_amount, 0) AS split_bill_rest_amount,
+		COALESCE(t_bill_d.tune_amount, 0) AS tune_amount, 
+		t_bill_d.client_cd1 || '-' || t_bill_d.client_cd2 AS client_cd,
+		t_bill_d.client_name1 || ' ' || t_bill_d.client_name2 AS client_name,
+        t_client.client_slip1,
+        t_client.client_slip2,
+		COALESCE(t_bill_d.advance_balance, 0) AS advance_balance 
+
+	FROM
+		t_bill
+            INNER JOIN
+        t_bill_d
+		ON t_bill.bill_id = t_bill_d.bill_id
+            INNER JOIN
+        t_client
+        ON t_bill.claim_id = t_client.client_id 
+	WHERE
+		t_bill.bill_id = $bill_id
+		AND
+		t_bill.shop_id = $_SESSION[client_id]
+	ORDER BY t_bill_d.bill_data_div
+	";
+	
+	$result = Db_Query($db_con, $sql);
+	Get_Id_Check($result);
+	
+	while($db_data = pg_fetch_array($result)){
+		$no = $db_data[bill_data_div];
+		$head_data[$no] = $db_data;
+	}
+	
+	if (0) { 
+		echo "<pre>";
+		print_r($head_data);
+		echo "</pre>";	
+	}
+	
+	return $head_data;
+
+}
+
+/**
+ * 履歴　一括消費税の伝票は表示しないように修正
+ * 
+ * 概要　請求書のデータを取得する
+ *
+ * 説明　戻り値は、行単位でキーを生成します。
+ *
+ * @param string    $db_con  DB接続リソース
+ * @param string    $db_con  請求ID
+ *
+ * @return array          請求書のヘッダデータ
+
+
+ * 2009-07-03   FCの請求明細に直送先分が表示される不具合修正 <aoyama-n>
+ * 2009-09-25   FCの請求書に直送先を表示するように修正 <aoyama-n>
+ * 2010-02-01   入金データのソート順を修正 <aoyama-n>
+ */
+function Get_Claim_Data ($db_con,$get_bill_id,$pattern="") {
+
+	/****************************/
+	//得意先データ抽出
+	/****************************/
+	$sql  = "SELECT";
+/*	$sql .= "   t_bill_d.client_id,\n";                   //得意先ID
+	$sql .= "   t_bill_d.client_cd1,\n";                    //得意先CD１
+	$sql .= "   t_bill_d.client_cd2,\n";                    //得意先CD２
+	$sql .= "   t_bill_d.client_cname,\n";                  //得意先名（略称）
+	$sql .= "   t_bill_d.bill_close_day_last,\n";           //請求締日（前回）
+	$sql .= "   t_bill_d.bill_close_day_this,\n";           //請求締日
+	$sql .= "   t_bill_d.claim_div,\n";                     //請求区分
+	$sql .= "   t_bill_d.bill_amount_last,\n";              //前回請求額
+	$sql .= "   t_bill_d.sale_amount,\n";                   //今回買上額
+	$sql .= "   t_bill_d.tax_amount,\n";                    //今回消費税額
+	$sql .= "   t_bill_d.pay_amount,\n";                    //今回入金額
+	$sql .= "   t_bill_d.bill_amount_this \n";              //今回請求額
+*/	
+	$sql .= " t_bill.tax_div,";
+	$sql .= " t_bill_d.*,"; //処理速度が速かったため*を使用
+	$sql .= " COALESCE(t_bill_d.bill_close_day_last, '2005-01-01')AS bill_close_day_last \n";           //請求締日（前回）
+	$sql .= "FROM\n"; 
+	$sql .= "   t_bill_d \n";
+	$sql .= "INNER JOIN t_bill ON t_bill_d.bill_id = t_bill.bill_id \n";
+	$sql .= "WHERE\n";
+	$sql .= "   t_bill_d.bill_id = $get_bill_id\n";
+	$sql .= "   AND\n";
+	
+	//請求の親子関係がある場合
+	if($pattern == "3" || $pattern == "4" || $pattern == "5"){
+		$sql .= "   t_bill_d.bill_data_div != 0 \n";
+	}else{
+		$sql .= "   t_bill_d.bill_data_div = 0 \n";
+	}
+
+	$sql .= "ORDER BY t_bill_d.client_cd1, t_bill_d.client_cd2";
+	$sql .= ";\n";
+	
+	$result = Db_Query($db_con, $sql);
+	Get_Id_Check($result);
+	$client_data = pg_fetch_all($result);
+
+	
+//	print_array ($client_data);
+
+	/****************************/
+	//得意先明細データ抽出
+	/****************************/
+	//売上データを抽出
+
+	//本部の場合
+	if ($_SESSION[group_kind] == "1") {
+		//売上伝票データ（掛売上・掛返品・掛値引・割賦売上）
+		$sql  = "SELECT\n";
+		$sql .= "   t_sale_h.sale_day AS  trading_day,\n";
+		$sql .= "   t_sale_h.sale_no  AS slip_no,\n";
+		$sql .= "   t_trade.trade_cname,\n";
+		$sql .= "   t_trade.trade_id,\n";
+		$sql .= "   v_sale_d.formal_name,\n";
+		$sql .= "   v_sale_d.quantity,\n";
+		$sql .= "   v_sale_d.unit,\n";
+		$sql .= "   v_sale_d.sale_price,\n";
+		$sql .= "   v_sale_d.sale_amount,\n";
+		$sql .= "   CASE v_sale_d.tax_div\n";
+//		$sql .= "       WHEN '1' THEN '課税'\n";
+		$sql .= "       WHEN '1' THEN ''\n";
+		$sql .= "       ELSE '非課'\n";
+		$sql .= "   END AS tax_div,\n";                         //課税区分
+		$sql .= "   NULL AS pay_amount,\n";
+		$sql .= "   v_sale_d.line, \n";
+		$sql .= "   'L' AS align,\n";                            //商品名を左寄せ
+        $sql .= "   NULL AS rest_amount, \n";
+        $sql .= "   '1' AS sort, \n";
+        $sql .= "   t_sale_h.direct_cd, \n";
+        $sql .= "   t_sale_h.direct_name || '　直送分' AS direct_name\n";
+		$sql .= "FROM\n";
+		$sql .= "   t_sale_h\n";
+		$sql .= "       INNER JOIN\n";
+		$sql .= "   v_sale_d \n";
+		$sql .= "   ON t_sale_h.sale_id = v_sale_d.sale_id\n";
+		$sql .= "       INNER JOIN\n";
+		$sql .= "   t_trade\n";
+		$sql .= "   ON t_sale_h.trade_id = t_trade.trade_id\n";
+		$sql .= "WHERE  \n";
+		$sql .= "   t_sale_h.client_id = $1\n";
+		$sql .= "   AND \n";
+		$sql .= "   t_sale_h.claim_div = $2\n";
+		$sql .= "   AND \n";
+		$sql .= "   t_sale_h.claim_day > $3\n";
+		$sql .= "   AND \n";
+		$sql .= "   t_sale_h.claim_day <= $4\n";
+		$sql .= "   AND \n";
+//		$sql .= "   t_sale_h.trade_id IN (11,13,14,15)\n";
+        //割賦の伝票は抽出しない。
+		$sql .= "   t_sale_h.trade_id IN (11,13,14)\n";
+		$sql .= "   AND \n";
+		$sql .= "   t_sale_h.renew_flg = 't'\n";
+
+	//FCの場合
+	} else {
+		$sql  = "SELECT\n";
+		$sql .= "   t_sale_h.sale_day AS  trading_day,\n";      //売上計上日
+		$sql .= "   t_sale_h.sale_no  AS slip_no,\n";           //伝票番号
+		$sql .= "   t_trade.trade_cname,\n";                    //取引区分
+		$sql .= "   t_trade.trade_id,\n";                       //取引区分ID
+		$sql .= "   v_sale_d.formal_name,\n";                   //商品名
+		$sql .= "   v_sale_d.quantity,\n";                      //売上数
+		$sql .= "   v_sale_d.unit,\n";                          //単位
+		$sql .= "   v_sale_d.sale_price,\n";                    //売上単価
+		$sql .= "   v_sale_d.sale_amount,\n";                   //売上金額
+		$sql .= "   CASE v_sale_d.tax_div\n";
+		$sql .= "       WHEN '1' THEN ''\n";
+		$sql .= "       ELSE '非課'\n";
+		$sql .= "   END AS tax_div,\n";                         //課税区分
+		$sql .= "   NULL AS pay_amount,\n";
+		$sql .= "   v_sale_d.line,\n";                          //行番号
+		$sql .= "   'L' AS align,\n";                           //商品名を左寄せ
+        $sql .= "   NULL AS rest_amount, \n";
+        $sql .= "   '1' AS sort, \n";
+        //aoyama-n 2009-09-25
+        #$sql .= "   null AS direct_cd, ";
+        #$sql .= "   null AS direct_name ";
+        $sql .= "   t_sale_h.direct_cd, \n";
+        $sql .= "   t_sale_h.direct_name || '　直送分' AS direct_name\n";
+		$sql .= "FROM\n";
+		$sql .= "   t_sale_h\n";
+		$sql .= "       INNER JOIN\n";
+		$sql .= "   v_sale_d\n";
+		$sql .= "   ON t_sale_h.sale_id = v_sale_d.sale_id\n";
+		$sql .= "       INNER JOIN\n";
+		$sql .= "   t_trade\n";
+		$sql .= "   ON t_sale_h.trade_id = t_trade.trade_id\n";
+		$sql .= "   AND\n";
+//		$sql .= "   t_sale_h.trade_id IN (11,13,14,15)\n";
+        //割賦の伝票は抽出しない。
+		$sql .= "   t_sale_h.trade_id IN (11,13,14)\n";
+		$sql .= "WHERE\n";
+		$sql .= "   t_sale_h.client_id = $1\n";
+		$sql .= "   AND\n";
+		$sql .= "   t_sale_h.claim_div = $2\n";
+		$sql .= "   AND\n";
+		$sql .= "   t_sale_h.claim_day > $3\n";
+		$sql .= "   AND\n";
+		$sql .= "   t_sale_h.claim_day <= $4 \n";
+		$sql .= "   AND\n";
+		$sql .= "   t_sale_h.renew_flg = 't'\n";
+	}
+	
+	$sql .= "UNION ALL \n";
+    $sql .= "SELECT\n";
+    $sql .= "   t_payin.pay_day  AS trading_day,\n";      //入金日
+    $sql .= "   t_payin.pay_no AS slip_no,\n";            //伝票番号
+    $sql .= "   t_trade.trade_cname,\n";                       //取引区分
+    $sql .= "   t_trade.trade_id,\n";
+    $sql .= "   CASE t_trade.trade_id\n";
+    $sql .= "       WHEN '31' THEN '入金（現金）'\n";
+    $sql .= "       WHEN '32' THEN '入金（振込）'\n";
+    $sql .= "       WHEN '33' THEN '入金（手形）'\n";
+    $sql .= "       WHEN '34' THEN '相殺'\n";
+    $sql .= "       WHEN '35' THEN '手数料'\n";
+    $sql .= "       WHEN '36' THEN '入金（その他）'\n";
+    $sql .= "       WHEN '37' THEN 'スイット相殺'\n";
+    $sql .= "       WHEN '38' THEN '調整'\n";
+    $sql .= "       WHEN '40' THEN '入金（前受相殺）'\n";
+    $sql .= "   END || '　' || CASE WHEN note IS NULL THEN '' ELSE note END AS formal_name,\n";
+    $sql .= "   NULL,\n";
+    $sql .= "   NULL,\n";
+    $sql .= "   NULL,\n";
+    $sql .= "   NULL,\n";
+    $sql .= "   NULL,\n";
+    $sql .= "   t_payin.amount,\n";                       //入金額
+    #2010-02-01 aoyama-n
+    #$sql .= "   NULL, \n";
+    $sql .= "   t_payin.pay_d_id AS line, \n";
+	$sql .= "   'L' AS align, \n";    
+    $sql .= "   NULL, \n";
+//aoyama-n 2009-07-03
+//    $sql .= "   '1' AS sort, \n";
+    $sql .= "   '2' AS sort, \n";
+    $sql .= "   null, ";
+    $sql .= "   null ";
+    $sql .= "FROM\n";
+    $sql .= "( ";
+    $sql .= "   SELECT ";
+    $sql .= "       t_payin_h.pay_day,\n";      //入金日
+    $sql .= "       t_payin_h.pay_no,\n";            //伝票番号
+    $sql .= "       t_payin_d.trade_id, \n";
+    #2010-02-01 aoyama-n
+    $sql .= "       t_payin_d.pay_d_id, \n";
+    $sql .= "       t_payin_d.amount, \n";
+    $sql .= "       t_payin_d.note \n";
+    $sql .= "   FROM ";
+    $sql .= "       t_payin_h\n";
+    $sql .= "           INNER JOIN\n";
+    $sql .= "       t_payin_d\n";
+    $sql .= "       ON t_payin_h.pay_id = t_payin_d.pay_id\n";
+    $sql .= "       AND t_payin_h.payin_div = '1' \n";
+    $sql .= "   WHERE\n";
+    $sql .= "       t_payin_h.client_id = $1\n";
+    $sql .= "       AND\n";
+    $sql .= "       t_payin_h.claim_div = $2\n";
+    $sql .= "       AND\n";
+    $sql .= "       t_payin_h.pay_day > $3\n";
+    $sql .= "       AND\n";
+    $sql .= "       t_payin_h.pay_day <= $4\n";
+    $sql .= "       AND\n";
+//    $sql .= "       t_payin_h.sale_id IS NULL\n";
+    $sql .= "       t_payin_d.trade_id != '39'\n";
+    $sql .= "       AND\n";
+    $sql .= "       t_payin_h.renew_flg = 't' \n";
+    $sql .= "   UNION ALL \n";
+    $sql .= "   SELECT ";
+    $sql .= "       t_payin_h.pay_day,\n";      //入金日
+    $sql .= "       t_payin_h.pay_no,\n";            //伝票番号
+    $sql .= "       t_payallocation_d.trade_id,\n";
+    #2010-02-01 aoyama-n
+    $sql .= "       t_payallocation_d.payallocation_id AS pay_d_id, \n";
+    $sql .= "       t_payallocation_d.amount, \n";
+    $sql .= "       t_payallocation_d.note \n";
+    $sql .= "   FROM ";
+    $sql .= "       t_payin_h\n";
+    $sql .= "           INNER JOIN\n";
+    $sql .= "       t_payallocation_d\n";
+    $sql .= "       ON t_payin_h.pay_id = t_payallocation_d.pay_id\n";
+    $sql .= "       AND t_payin_h.payin_div = '2' \n";
+    $sql .= "   WHERE\n";
+    $sql .= "       t_payallocation_d.client_id = $1\n";
+    $sql .= "       AND\n";
+    $sql .= "       t_payallocation_d.claim_div = $2\n";
+    $sql .= "       AND\n";
+    $sql .= "       t_payin_h.pay_day > $3\n";
+    $sql .= "       AND\n";
+    $sql .= "       t_payin_h.pay_day <= $4\n";
+    $sql .= "       AND\n";
+    $sql .= "       t_payin_h.sale_id IS NULL\n";
+    $sql .= "       AND\n";
+    $sql .= "       t_payin_h.renew_flg = 't' \n";
+    $sql .= "       AND \n";
+    $sql .= "       t_payallocation_d.amount IS NOT NULL \n";
+    $sql .= ") AS t_payin ";
+    $sql .= "       INNER JOIN ";
+    $sql .= "   t_trade ";
+    $sql .= "   ON t_payin.trade_id = t_trade.trade_id ";
+	
+	//売上伝票単位の消費税を抽出
+	$sql .= "UNION ALL  \n";
+	$sql .= "SELECT \n";
+	$sql .= "   t_sale_h.sale_day AS  trading_day,\n";
+	$sql .= "   t_sale_h.sale_no  AS slip_no,\n";
+	$sql .= "   t_trade.trade_cname,\n";
+	$sql .= "   t_trade.trade_id,\n";
+	$sql .= "   '消費税金額' AS formal_name,\n";
+	$sql .= "   NULL,\n";
+	$sql .= "   NULL,\n";
+	$sql .= "   NULL AS pay_amount,\n";
+	$sql .= "   CASE\n";
+	$sql .= "       WHEN t_trade.trade_id IN (13,14,63,64) THEN tax_amount * -1\n";
+	$sql .= "       ELSE tax_amount\n";
+	$sql .= "   END AS sale_price,\n";
+	$sql .= "   NULL,\n";
+	$sql .= "   NULL,\n";
+	$sql .= "   MAX(v_sale_d.line) + 1,\n";
+	$sql .= "   'R' AS align, \n";    
+    $sql .= "   NULL, \n";
+    $sql .= "   '1' AS sort, \n";
+    //aoyama-n 2009-0703
+	//本部の場合
+	if ($_SESSION[group_kind] == "1") {
+        $sql .= "   t_sale_h.direct_cd, ";
+        $sql .= "   t_sale_h.direct_name || '　直送分' ";
+	//FCの場合
+	} else {
+        //aoyama-n 2009-09-15
+        #$sql .= "   NULL, ";
+        #$sql .= "   NULL ";
+        $sql .= "   t_sale_h.direct_cd, ";
+        $sql .= "   t_sale_h.direct_name || '　直送分' ";
+    }
+	$sql .= "FROM\n";
+	$sql .= "   t_sale_h\n";
+	$sql .= "       INNER JOIN\n";
+	$sql .= "   v_sale_d\n";
+	$sql .= "   ON t_sale_h.sale_id = v_sale_d.sale_id\n";
+	$sql .= "       INNER JOIN\n";
+	$sql .= "   t_trade\n";
+	$sql .= "   ON t_sale_h.trade_id = t_trade.trade_id\n";                        
+	$sql .= "WHERE\n";
+	$sql .= "   t_sale_h.client_id = $1\n";
+	$sql .= "   AND\n";
+	$sql .= "   t_sale_h.claim_div = $2\n";
+	$sql .= "   AND\n";
+	$sql .= "   t_sale_h.claim_day > $3\n";
+	$sql .= "   AND\n";
+	$sql .= "   t_sale_h.claim_day <= $4\n";
+	$sql .= "   AND\n";
+
+	//課税単位が伝票単位の場合は全区分の消費税を取得
+	if($client_data[0]["tax_div"] == "2"){
+		$sql .= "   t_sale_h.trade_id IN (11,13,14)\n";
+	//締日単位の場合は割賦売上の消費税のみ取得
+	}else{
+        //締日単位の場合は割賦の消費税は抽出しない。
+        $sql .= "   t_sale_h.trade_id = 0 \n";
+	}
+	$sql .= "   AND\n";
+	$sql .= "   t_sale_h.renew_flg = 't'\n";
+	$sql .= "GROUP BY\n";
+	$sql .= "   t_sale_h.sale_day,\n";
+	$sql .= "   t_sale_h.sale_no,\n";
+	$sql .= "   t_trade.trade_id,\n";
+	$sql .= "   t_trade.trade_cname,\n";
+	$sql .= "   t_sale_h.tax_amount, \n";
+    $sql .= "   t_sale_h.direct_cd, \n";
+    $sql .= "   t_sale_h.direct_name \n";
+
+    //ロイヤリティを抽出
+    $sql .= "UNION ALL \n";
+    $sql .= "SELECT \n";
+    $sql .= "   t_lump_amount.allocate_day AS trading_day, \n";
+    $sql .= "   NULL,\n";
+    $sql .= "   NULL,\n";
+    $sql .= "   NULL,\n";
+    $sql .= "   t_lump_amount.goods_name, \n";
+    $sql .= "   NULL,\n";
+    $sql .= "   NULL,\n";
+    $sql .= "   NULL,\n";
+    $sql .= "   t_lump_amount.net_amount, \n";
+    $sql .= "   '',\n";
+    $sql .= "   NULL, \n";
+    $sql .= "   NULL, \n";
+	$sql .= "   'L' AS align, \n";    
+    $sql .= "   NULL, \n";
+//aoyama-n 2009-07-03
+//    $sql .= "   '1' AS sort, \n";
+    $sql .= "   '3' AS sort, \n";
+    $sql .= "   null, ";
+    $sql .= "   null ";
+    $sql .= "FROM \n";
+    $sql .= "   t_lump_amount ";
+    $sql .= "WHERE \n";
+    $sql .= "   t_lump_amount.client_id = $1 \n";
+    $sql .= "   AND \n";
+    $sql .= "   t_lump_amount.allocate_day = $4 \n";
+    $sql .= "   AND \n";
+    $sql .= "   t_lump_amount.data_div = '1' \n";
+    $sql .= "UNION ALL \n";
+    $sql .= "SELECT \n";
+    $sql .= "   t_lump_amount.allocate_day AS trading_day, \n";
+    $sql .= "   NULL,\n";
+    $sql .= "   NULL,\n";
+    $sql .= "   NULL,\n";
+    $sql .= "   '消費税金額' AS goods_name, \n";
+    $sql .= "   NULL,\n";
+    $sql .= "   NULL,\n";
+    $sql .= "   NULL,\n";
+    $sql .= "   t_lump_amount.tax_amount, \n";
+    $sql .= "   '',\n";
+    $sql .= "   NULL, \n";
+    $sql .= "   NULL, \n";
+	$sql .= "   'R' AS align, \n";    
+    $sql .= "   NULL, \n";
+//aoyama-n 2009-07-03
+//    $sql .= "   '1' AS sort, \n";
+    $sql .= "   '3' AS sort, \n";
+    $sql .= "   null, ";
+    $sql .= "   null ";
+    $sql .= "FROM \n";
+    $sql .= "   t_lump_amount ";
+    $sql .= "WHERE \n";
+    $sql .= "   t_lump_amount.client_id = $1 \n";
+    $sql .= "   AND \n";
+    $sql .= "   t_lump_amount.allocate_day = $4 \n";
+    $sql .= "   AND \n";
+    $sql .= "   t_lump_amount.data_div = '1' \n";
+
+
+    $sql .= "UNION ALL ";
+    //今回の割賦請求額を抽出
+    $sql .= "SELECT \n";
+    $sql .= "   t_bill_sale.collect_day AS  trading_day,\n";      //売上計上日
+    $sql .= "   t_sale_h.sale_no  AS slip_no,\n";           //伝票番号
+    $sql .= "   NULL,\n";                       //取引区分ID
+    $sql .= "   NULL,\n";                    //取引区分
+//    $sql .= "   CAST(t_bill_sale.collect_day AS text) || ' 分割請求額',\n";                   //商品名
+    $sql .= "   CAST(t_bill_sale.collect_day AS text) || ' 分割回収額',\n";                   //商品名
+    $sql .= "   NULL,\n";                      //売上数
+    $sql .= "   NULL,\n";                          //単位
+    $sql .= "   NULL,\n";                    //売上単価
+    $sql .= "   NULL,\n";                         //課税区分
+    $sql .= "   NULL,\n";                         //課税区分
+    $sql .= "   NULL,\n";
+    $sql .= "   NULL, \n";                          //行番号
+	$sql .= "   'L' AS align, \n";    
+    $sql .= "   CAST(t_bill_sale.collect_amount AS text) AS rest_amount, \n";
+//aoyama-n 2009-07-03
+//    $sql .= "   '2' AS sort, \n";
+    $sql .= "   '4' AS sort, \n";
+    $sql .= "   null, ";
+    $sql .= "   null ";
+    $sql .= "FROM \n";
+    $sql .= "    (SELECT \n";
+    $sql .= "        sale_id, \n";
+    $sql .= "        collect_amount, \n";
+    $sql .= "        collect_day \n";
+    $sql .= "    FROM \n";
+    $sql .= "        t_installment_sales \n";
+    $sql .= "    WHERE \n";
+    $sql .= "        bill_id = $5 \n";
+    $sql .= "    ) as t_bill_sale \n";
+    $sql .= "        INNER JOIN \n";
+    $sql .= "    t_sale_h \n";
+    $sql .= "    ON t_bill_sale.sale_id = t_sale_h.sale_id \n";
+    $sql .= "WHERE ";
+    $sql .= "   t_sale_h.client_id = $1 ";
+
+	$sql .= "ORDER BY\n";
+//aoyama-n 2009-07-03
+//    $sql .= "   sort, \n";
+//    $sql .= "   direct_cd DESC, \n";
+//    $sql .= "   trading_day,\n";
+//    $sql .= "   slip_no,\n";
+//    $sql .= "   trade_id\n";
+
+    $sql .= "   direct_cd DESC, \n";
+	$sql .= "   trading_day,\n";
+    $sql .= "   sort, \n";
+	$sql .= "   slip_no,\n"; 
+    #2010-02-01 aoyama-n
+	#$sql .= "   line,\n"; 
+    #$sql .= "   trade_id\n";
+	$sql .= "   line\n"; 
+	$sql .= ";\n";
+	
+	$sql = "PREPARE get_client_data(int,varchar,date,date,int) AS $sql ";
+		
+	Db_Query($db_con, $sql);
+
+	$s = 0;
+	//抽出した得意先分ループ
+	for($i = 0; $i < count($client_data); ++$i){
+	    
+		$sql  = "EXECUTE get_client_data(\n";
+		$sql .= "   ".$client_data[$i][client_id].",\n";
+		$sql .= "   '".$client_data[$i][claim_div]."',\n";
+		$sql .= "   '".$client_data[$i][bill_close_day_last]."',\n";
+		$sql .= "   '".$client_data[$i][bill_close_day_this]."',\n";
+        $sql .= "   $get_bill_id \n";
+		$sql .= ");\n";
+		$result = Db_Query($db_con, $sql);
+		//請求書の出力順を取得
+		$no = $client_data[$i][bill_data_div];
+
+		//請求データ（ヘッダ）を追加
+		$bill_data[$no][] = array(
+			formal_name =>  "繰越",
+			rest_amount =>  $client_data[$i][bill_amount_last],
+			align =>  "R",
+		);
+		
+		//請求データ（商品）
+		while($db_data = pg_fetch_array($result)){
+
+            //直送分はまとめて表示
+            if($db_data["direct_cd"] != null && $direct_cd != $db_data["direct_cd"]){
+                $direct_cd = $db_data["direct_cd"];
+                $d_ary = array("formal_name" => $db_data["direct_name"], "d_flg" => true);
+			    $bill_data[$no][] = $d_ary;
+            }
+
+			$bill_data[$no][] = $db_data;
+		}
+        $bill_data[$no][] = "";
+
+        //フッタを一行にする。
+        $bill_data[$no][footer][] = array(
+            formal_name => "計",
+            sale_amount => $client_data[$i]["installment_out_amount"],
+            pay_amount  => $client_data[$i]["pay_amount"],
+            rest_amount => $client_data[$i]["bill_amount_this"],
+			align =>  "R",
+            //関数に渡す引数
+            client_id   => $client_data[$i]["client_id"],
+            claim_div   => $client_data[$i]["claim_div"],
+            bill_close_day_last => $client_data[$i]["bill_close_day_last"],
+            bill_close_day_this => $client_data[$i]["bill_close_day_this"],
+        );
+    }
+
+	if (0) {
+		echo "<pre>";
+		print_r($client_data);
+		print_r($bill_data);
+		echo "</pre>";
+        exit;
+	}
+	
+	Db_Query($db_con,"DEALLOCATE get_client_data");
+	return $bill_data;
+}
+
+
+//割賦伝票を抽出する関数
+function Installment_Sales_Slip($client_data, $db_con) {
+
+    //割賦の伝票のみを抽出するクエリ
+    $sql  = "SELECT\n";
+    $sql .= "   t_sale_h.sale_day AS  trading_day,\n";      //売上計上日
+    $sql .= "   t_sale_h.sale_no  AS slip_no,\n";           //伝票番号
+    $sql .= "   t_trade.trade_id,\n";                       //取引区分ID
+    $sql .= "   t_trade.trade_cname,\n";                    //取引区分
+    $sql .= "   v_sale_d.formal_name,\n";                   //商品名
+    $sql .= "   v_sale_d.quantity,\n";                      //売上数
+    $sql .= "   v_sale_d.unit,\n";                          //単位
+    $sql .= "   v_sale_d.sale_price,\n";                    //売上単価
+    $sql .= "   v_sale_d.sale_amount,\n";                   //売上金額
+    $sql .= "   CASE v_sale_d.tax_div\n";
+    $sql .= "       WHEN '1' THEN ''\n";
+    $sql .= "       ELSE '非課税'\n";
+    $sql .= "   END AS tax_div,\n";                         //課税区分
+    $sql .= "   NULL AS pay_amount,\n";
+    $sql .= "   v_sale_d.line,\n";                          //行番号
+    $sql .= "   'L' AS align ";
+    $sql .= "FROM\n";
+    $sql .= "   t_sale_h\n";
+    $sql .= "       INNER JOIN\n";
+    $sql .= "   v_sale_d\n";
+    $sql .= "   ON t_sale_h.sale_id = v_sale_d.sale_id\n";
+    $sql .= "       INNER JOIN\n";
+    $sql .= "   t_trade\n";
+    $sql .= "   ON t_sale_h.trade_id = t_trade.trade_id\n";
+    $sql .= "WHERE\n";
+    $sql .= "   t_sale_h.client_id = $client_data[client_id]\n";
+    $sql .= "   AND\n";
+    $sql .= "   t_sale_h.claim_div = '$client_data[claim_div]'\n";
+    $sql .= "   AND\n";
+    $sql .= "   t_sale_h.claim_day > '$client_data[bill_close_day_last]'\n";
+    $sql .= "   AND\n";
+    $sql .= "   t_sale_h.claim_day <= '$client_data[bill_close_day_this]' \n";
+    $sql .= "   AND\n";
+    $sql .= "   t_sale_h.trade_id = 15 \n";
+    $sql .= "   AND\n";
+    $sql .= "   t_sale_h.renew_flg = 't' \n";
+	$sql .= "UNION ALL \n";
+    //売上伝票単位の消費税を抽出
+    $sql .= "SELECT\n";
+    $sql .= "   t_sale_h.sale_day AS  trading_day,\n";
+    $sql .= "   t_sale_h.sale_no  AS slip_no,\n";
+    $sql .= "   NULL,\n";
+    $sql .= "   NULL,\n";
+    $sql .= "   '消費税金額' AS formal_name,\n";
+    $sql .= "   NULL,\n";
+    $sql .= "   NULL,\n";
+    $sql .= "   NULL,\n";
+    $sql .= "   t_sale_h.tax_amount,\n";
+    $sql .= "   NULL,\n";
+    $sql .= "   NULL,\n";
+    $sql .= "   MAX(v_sale_d.line)+1,\n";
+    $sql .= "   'R' AS aline ";
+    $sql .= "FROM\n";
+    $sql .= "   t_sale_h\n";
+    $sql .= "       INNER JOIN\n";
+    $sql .= "   v_sale_d\n";
+    $sql .= "   ON t_sale_h.sale_id = v_sale_d.sale_id\n";
+    $sql .= "       INNER JOIN\n";
+    $sql .= "   t_trade\n";
+    $sql .= "   ON t_sale_h.trade_id = t_trade.trade_id\n";
+    $sql .= "WHERE\n";
+    $sql .= "   t_sale_h.client_id = $client_data[client_id]\n";
+    $sql .= "   AND\n";
+    $sql .= "   t_sale_h.claim_div = '$client_data[claim_div]'\n";
+    $sql .= "   AND\n";
+    $sql .= "   t_sale_h.claim_day > '$client_data[bill_close_day_last]'\n";
+    $sql .= "   AND\n";
+    $sql .= "   t_sale_h.claim_day <= '$client_data[bill_close_day_this]'\n";
+    $sql .= "   AND\n";
+    $sql .= "   t_sale_h.trade_id = 15 \n";
+    $sql .= "GROUP BY\n";
+    $sql .= "   t_sale_h.sale_day,\n";
+    $sql .= "   t_sale_h.sale_no,\n";
+    $sql .= "   t_trade.trade_id,\n";
+    $sql .= "   t_trade.trade_cname,\n";
+    $sql .= "   t_sale_h.tax_amount \n";
+    $sql .= "ORDER BY\n";
+    $sql .= "   trading_day,\n";
+    $sql .= "   slip_no, \n";
+    $sql .= "   trade_cname\n";
+    $sql .= ";";
+
+	$result = Db_Query($db_con, $sql);
+
+    if(pg_num_rows($result) > 0){
+        return pg_fetch_all($result);
+    }else{
+        return;
+    }
+}
+
+
+/**
+ * 概要　請求書のヘッダを表示します
+ *
+ * 説明　表示後は、次の始点座標をセットします。
+ *
+ * @param string    $db_con     DB接続リソース
+ * @param array     $data       請求ID
+ * @param string    $hikae_flg  請求控えフラグ
+ * @param string    $pattern    請求の表示形式
+ * @param string    $page       ページ数
+ * @param string    $xx         始点となるX座標
+ * @param string    $yy         始点となるY座標
+ * 
+ * @return array          請求書のヘッダデータ
+ * 
+ */
+function Write_Claim_Header($pdf, $data ,$hikae_flg="f", $pattern, $page, $xx="", $yy=""){
+
+	if (0) {
+		echo "<pre>";
+		print_r($data);
+		echo "</pre>";
+	}
+
+    //パターンによりヘッダに表示する文字を変更する
+    //合計請求書の場合
+    if($pattern == "0"){
+        $subject = "合 計 請 求 書";
+        $s_line = 0;
+        $e_line = 10;
+    }else{
+        $subject = "明 細 請 求 書";
+        $s_line = 0;
+        $e_line = 10;
+    }
+
+	$cellyy = $yy + 57;
+
+	//表示スペース調整
+	//$spexx = 12;
+	
+	//社名配列設定
+	$bill = array($data['c_memo1'],$data['c_memo2'],$data['c_memo3'],$data['c_memo4']);
+	
+	//社名欄のフォントサイズ設定
+	$c_fsize = array($data['c_fsize1'],$data['c_fsize2'],$data['c_fsize3'],$data['c_fsize4']);
+
+
+	//請求先データ設定
+	$b_id          = "$data[bill_no]";    //プレビューでは空白を表示
+    $c_code        = "$data[claim_cd]";
+	$c_code1       = "$data[claim_cd1]";
+	$c_code2       = "$data[claim_cd2]";
+    $post_no       = "$data[post_no]";
+	$address1      = "$data[address1]";
+	$address2      = "$data[address2]";
+	$address3      = "$data[address3]";
+	$client_cd1    = "$data[client_cd1]";
+	$client_cd2    = "$data[client_cd2]";
+    $client_slip1  = "$data[client_slip1]";
+    $client_slip2  = "$data[client_slip2]";
+	$client_name1  = "$data[client_name1]";
+    $client_name2  = "$data[client_name2]";
+	//watanabe-k
+	$comp		   = ($data["compellation"] == "1")? "御中":"様";	//1：御中　2：様
+
+    //請求書に印字する場合
+    if($client_slip1 != '1'){
+	    $c_name1       = "$data[claim_name1]";
+    }
+
+    //請求書に印字する場合
+    if($client_slip2 != '1'){
+	    $c_name2       = "$data[claim_name2]";
+    }
+
+	$date_y        = substr($data[close_day],0,4);
+	$date_m        = str_pad (substr($data[close_day],5,2), "2"," ", STR_PAD_LEFT);
+	$date_d        = str_pad (substr($data[close_day],8,2), "2"," ", STR_PAD_LEFT);
+	
+	//お客様のコード、住所、会社名
+	if ($hikae_flg == "t") {                  
+		Color_Pallet($pdf, "t1");       //通常はフォントを青に設定
+	}else{                              
+		Color_Pallet($pdf, "t2");       //控えの場合はフォントを緑に設定
+	}
+
+    //Y座標をマイナス
+    $yy = $yy-3;
+
+    #2010-04-16 hashimoto-y
+    #フォントサイズ7⇒9
+	#$pdf->SetFontSize(7);
+	$pdf->SetFontSize(9);
+	$pdf->SetXY($xx+15,$yy+3);
+	$pdf->Write(8,"お客様コード");
+	Color_Pallet($pdf, "t4");           //フォントを黒に設定
+	$pdf->Write(8,$c_code);
+	
+	if ($hikae_flg == "t") {                  
+	    Color_Pallet($pdf, "f3");       //通常はフォントを青に設定
+	}else{                              
+	    Color_Pallet($pdf, "f4" );      //控えの場合はフォントを緑に設定
+	}
+	
+	$pdf->SetXY($xx+15,$yy+10);
+	$pdf->Write(5,"〒");
+	Color_Pallet($pdf, "t4");           //フォントを黒に設定
+	$pdf->Write(5,$post_no."\n");
+    #2010-04-16 hashimoto-y
+    #$pdf->SetXY($xx+16,$yy+10.5);
+    #$pdf->Cell(50,12,$address1,0,2);
+    #$pdf->SetXY($xx+16,$yy+14.5);
+    #$pdf->Cell(50,12,$address2,0,2);
+    #$pdf->SetXY($xx+16,$yy+18.5);
+    #$pdf->Cell(50,12,$address3);
+    #$pdf->SetXY($xx+18,$yy+23);
+
+    #フォントサイズ7⇒9
+	$pdf->SetFontSize(9);
+    $address1 = mb_substr($address1,0,20);
+    $address2 = mb_substr($address2,0,20);
+    $address3 = mb_substr($address3,0,28);
+    $pdf->SetXY($xx+15,$yy+10.5);
+    $pdf->Cell(50,12,$address1,0,2);
+    $pdf->SetXY($xx+15,$yy+14.5);
+    $pdf->Cell(50,12,$address2,0,2);
+    $pdf->SetXY($xx+15,$yy+18.5);
+    $pdf->Cell(50,12,$address3);
+    $pdf->SetXY($xx+18,$yy+23);
+
+    #2010-04-16 hashimoto-y
+	#$pdf->SetFontSize(9);
+    #フォントサイズ9⇒11
+    #得意先名の文字数カット
+	$pdf->SetFontSize(11);
+    $c_name1 = mb_substr($c_name1,0,20);
+    $c_name2 = mb_substr($c_name2,0,20);
+
+	//会社名２が空白の場合は１の後に御中を描画
+	if($c_name1 != null && $c_name2 == null){
+//        $pdf->Cell(50,12,$c_name1."　御中",0,2);
+        $pdf->Cell(50,12,$c_name1."　".$comp,0,2);
+	}elseif($c_name2 != null){
+	//会社名２がある場合は２の後に御中を描画
+        $pdf->Cell(50,12,$c_name1,0,2);
+        $pdf->SetXY($xx+18,$yy+24);
+//        $pdf->Cell(50,20,$c_name2."　御中");
+        $pdf->Cell(50,20,$c_name2."　".$comp);
+    //何も印字しない場合 
+	}else{
+//        $pdf->Cell(50,12,$c_name1."　御中",0,2);
+        $pdf->Cell(50,12,$c_name1."　".$comp,0,2);
+    }
+
+	//中央の"請求書"表示
+	$pdf->SetFont('MS-PGothic','B',18);                               //太字、18ポイントに設定
+	$pdf->SetXY(0,$yy+1);
+
+	if ($hikae_flg == "t") {                  
+		Color_Pallet($pdf,"t1");                                      //フォントを青に設定
+		$pdf->Cell(210,16,$subject." (控)",0,1,"C");                  //横幅いっぱいのセルに中央揃え
+		$pdf->SetLineWidth(0.1);                                      //ラインの太さを0.1mmに設定
+		Color_Pallet($pdf,"d1");                                      //線の色を青に設定
+		$pdf->Line($xx+65+$s_line,$yy+12,$xx+113+$e_line,$yy+12);     //ライン表示
+		$pdf->Line($xx+65+$s_line,$yy+12.5,$xx+113+$e_line,$yy+12.5); //0.5mmあけてもう一本表示
+
+	} else {                                  
+		Color_Pallet($pdf,"t2");                                      //フォントを緑に設定
+		$pdf->Cell(210,16,$subject,0,1,"C");                          //横幅いっぱいのセルに中央揃え
+		$pdf->SetLineWidth(0.1);                                      //ラインの太さを0.1mmに設定
+		Color_Pallet($pdf,"d2");                                      //線の色を緑に設定
+		$pdf->Line($xx+73+$s_line,$yy+12,$xx+110+$e_line,$yy+12);     //ライン表示
+		$pdf->Line($xx+73+$s_line,$yy+12.5,$xx+110+$e_line,$yy+12.5); //0.5mmあけてもう一本表示
+	}
+
+	$pdf->SetLineWidth(0.2);
+
+	//中央の青字だけ表示
+	$pdf->SetFontSize(8);                   //フォントサイズを8ポイントに設定
+	$pdf->SetXY(0,$yy+15);
+	$pdf->Cell(210,5,$date_y."年 ".$date_m."月 ".$date_d."日　締切",0,1,"C");//日付部分
+
+	//"請求番号"を表示
+	$pdf->SetXY($xx+155,$yy);
+	$pdf->Write(8,"請求番号　");
+	Color_Pallet($pdf,"t4");                //フォントを黒に設定
+
+    if($b_id != null){
+	    $pdf->Write(8,$b_id."-".$page);
+    }
+
+	//番号を表示
+	Color_Pallet($pdf,"t4");                //フォントを黒に設定
+	$pdf->SetXY(0,$yy+15);
+
+	//中央の黒字の日付部分表示
+	$pdf->SetXY(0,$yy+15);
+	$pdf->Cell(210,5,$year."　　".$month."　　".$day."　　　　",0,1,"C");
+
+	//会社ロゴ表示
+	$pdf->Image(IMAGE_DIR."company-rogo_clear.png",$xx+134,$yy+17,25);
+
+	//控え伝票でなく、社印が登録されている場合は社印を表示する
+
+	if ($hikae_flg == "f" && file_exists(COMPANY_SEAL_DIR.$_SESSION[client_id].".jpg")) {                  
+	    //社印表示
+	    $pdf->Image(COMPANY_SEAL_DIR.$_SESSION[client_id].".jpg",$xx+158,$yy+23,20);
+	}
+	//会社名表示
+	if ($hikae_flg == "t") {                  
+	    Color_Pallet($pdf, "t1");                    //フォントを青に設定
+	}else{                                           //２枚目の緑請求書の場合
+	    Color_Pallet($pdf, "t2");                    //フォントを緑に設定
+	}
+
+	$pdf->SetFont('MS-Gothic','B',$c_fsize[0]);      //フォントの太字・ポイント設定
+	$pdf->SetXY($xx+133,$yy+24);
+	$pdf->Cell(50,$c_fsize[0]/2,$bill[0],0,1,"L");   //左揃え
+
+	//代表名表示
+	$pdf->SetFont('MS-Mincho','',$c_fsize[1]);       //フォントをMS−P明朝体、ポイントに設定
+	$pdf->SetX($xx+138);                             //会社名からインデント
+	$pdf->Cell(47,$c_fsize[1]/2,$bill[1],0,1,"L");   //右揃え
+
+	//住所、電話番号表示
+	$pdf->SetFont('MS-Gothic','',$c_fsize[2]);       //フォントをMS-Pゴシック体、ポイントに設定
+	$pdf->SetX($xx+140);                             //代表名からインデント
+	$pdf->Cell(42,$c_fsize[2]/2.5,$bill[2],0,2,"L"); //左揃え
+	$pdf->SetFontSize($c_fsize[3]);                  //電話番号のフォントサイズ変更
+	$pdf->Cell(42,$c_fsize[3]/2.5,$bill[3],0,1,"L"); //左揃え
+
+	//請求文表示
+	$pdf->SetFontSize(8);                            //フォントを8ポイントに設定
+//	$pdf->SetXY(0,$cellyy-7);
+	$pdf->SetXY(0,$cellyy-14);
+	$pdf->Cell(204,8,"下記の通り御請求申し上げます",0,1,"R");//右揃え
+
+	//得意先コード表示
+	Color_Pallet($pdf, "t4");                        //フォントを黒に設定
+//	$pdf->SetXY($xx,$cellyy-7);
+	$pdf->SetXY($xx,$cellyy-20);
+
+	if($pattern == "1"){
+		$pdf->Cell(100,8,$client_cd1."-".$client_cd2."　".$client_name1."　".$client_name2."　様分",0,1,"L");//左揃え
+	}
+
+	if ($hikae_flg == "t") {                  
+	    Color_Pallet($pdf,"t1");                     //フォントを青に設定
+	}else{                                           //２枚目の緑請求書の場合
+	    Color_Pallet($pdf,"t2");                     //フォントを緑に設定
+	}
+
+//	$pdf->SetXY($xx,$yy+57);
+	$pdf->SetXY($xx,$yy+47);
+}
+
+/**
+ * 概要　請求書の合計金額ヘッダを表示します
+ *
+ * 説明　表示後は、次の始点座標をセットします。
+ *
+ * @param string    $db_con     DB接続リソース
+ * @param array     $data       請求ID
+ * @param string    $hikae_flg  請求控えフラグ
+ * @param string    $xx         始点となるX座標
+ * @param string    $yy         始点となるY座標
+ * 
+ */
+function Write_Claim_Total($pdf, $data, $hikae_flg="f", $xx="", $yy="", $page=""){
+	//始点のX座標が無い場合は現在のX座標を始点とする
+	if( $xx == NULL ) {
+		$xx = $pdf->GetX();
+	}
+	
+	//始点のY座標が無い場合は現在のY座標を始点とする
+	if( $yy == NULL ) {
+		$yy = $pdf->GetY();
+	}
+
+    $cellwidth = 23;
+
+    $cellname = array(
+        BILL_AMOUNT_LAST,           //前回請求額
+        PAYIN_AMOUNT,               //今回入金額
+        REST_AMOUNT,                //繰越残高額
+        SALE_AMOUNT,                //買上額
+        TAX_AMOUNT,                 //消費税額
+        INTAX_AMOUNT,               //税込買上額
+        INSTALLMENT_AMOUNT_THIS,    //割賦残高額
+        BILL_AMOUNT_THIS,           //今回請求残高額
+        
+    );
+/*お支払額は表示しなくて良い
+    if ($page == 1 || $page == NULL){
+    	$pdf->SetFontSize(11);                                                  //フォントを9ポイントに設定
+	    $pdf->SetXY($xx+65,$yy+3);
+        $pdf->Cell(35,5,PAYMENT_THIS."　","B",0,"C");                           //１つ目の金額
+        $pdf->Cell(25,5,My_Number_Format($data[payment_this]),"B",0,"C");       //１つ目の金額
+    }
+*/
+	$pdf->SetFontSize(9);                                                       //フォントを9ポイントに設定
+
+	$sb_amount   = str_pad(number_format($data[split_bill_amount]),11," ", STR_PAD_LEFT);       //割賦請求額
+	$sbr_amount  = str_pad(number_format($data[split_bill_rest_amount]),11," ", STR_PAD_LEFT);  //割賦残高
+
+
+
+    //割賦の出力の有無を判別
+    //割賦がある場合
+    if($sb_amount != "0" || $sbr_amount != "0"){
+        $installment_flg = true;
+        //項目○角指定
+        $maru1 = array("1","","2","1","","2","1","2");
+        $line1 = array("R","LR","L","R","LR","L","R","L");
+        //金額○角指定
+        $maru2 = array("4","","3","4","","3","4","3");
+        //項目ごとの座標
+        $width = array($xx,
+                        $xx+(1*$cellwidth),
+                        $xx+(2*$cellwidth),
+                        $xx+(3*$cellwidth),
+                        $xx+(4*$cellwidth),
+                        $xx+(5*$cellwidth),
+                        $xx+(6*$cellwidth),
+                        $xx+(7*$cellwidth)
+                    );
+        //金額表示開始セルの位置
+        $start_xx=$xx;
+    }else{
+        $installment_flg = false;
+        //項目○角指定
+        $maru1 = array("1","","2","1","","2","","12");
+        $line1 = array("R","LR","L","R","LR","L","","");
+        //金額○角指定
+        $maru2 = array("4","","3","4","","3","","34");
+        //項目ごとの座標
+        $width = array(
+                        $xx+(0.5*$cellwidth),
+                        $xx+(1.5*$cellwidth),
+                        $xx+(2.5*$cellwidth),
+                        $xx+(3.5*$cellwidth),
+                        $xx+(4.5*$cellwidth),
+                        $xx+(5.5*$cellwidth),
+                        0,
+                        $xx+(6.5*$cellwidth)
+                    );
+
+        //金額表示開始セルの位置
+        $start_xx=$xx+(0.5*$cellwidth);
+    }
+
+
+	//請求額欄の表示
+	for($i=0;$i<8;$i++){
+
+        //割賦額はなければ表示しない
+        if($i == 6 && $installment_flg === false){
+            $op += 4;
+            continue;
+        }elseif($i == 6){
+            $op += 4;
+        }
+
+
+        //本部の場合
+        if($_SESSION["group_kind"] == '1'){
+
+		    //■文字の色を設定
+		    //■項目の色を設定
+            if($i < 3){
+			    if ($hikae_flg == "t") {                  
+                    Color_Pallet($pdf,"t3");
+                    Color_Pallet($pdf,"f1");
+			    }else{
+                    Color_Pallet($pdf,"t3");
+				    Color_Pallet($pdf,"f2");
+                }
+
+            }else{
+			    if ($hikae_flg == "t") {                  
+                    Color_Pallet($pdf,"t1");
+				    Color_Pallet($pdf,"f3");
+			    }else{
+                    Color_Pallet($pdf,"t2");
+                    Color_Pallet($pdf,"f4");
+			    }
+            }
+
+        //FCの場合
+        }else{
+
+		    //■文字の色を設定
+		    //■項目の色を設定
+            if($i < 3){
+			    if ($hikae_flg == "t") {                  
+                    Color_Pallet($pdf,"t1");
+                    Color_Pallet($pdf,"f1");
+			    }else{
+                    Color_Pallet($pdf,"t2");
+				    Color_Pallet($pdf,"f2");
+                }
+            }else{
+                Color_Pallet($pdf,"t3");
+			    if ($hikae_flg == "t") {                  
+				    Color_Pallet($pdf,"f3");
+			    }else{
+                    Color_Pallet($pdf,"f4");
+			    }
+            }
+        }
+
+
+		//■項目間のスペースを設定
+		if($i == 3) {
+			$op += 4;//スペース
+		} else {
+			$op = $op;
+		}
+
+	    $pdf->RoundedRect($width[$i]+$op,$yy+10,$cellwidth,5,2,'DF',$maru1[$i]);    //上の角が丸いセルを描画
+
+        //本部の場合
+        if($_SESSION["group_kind"] == '1' && $i < 3){
+            Color_Pallet($pdf,"d3");
+        //FCの場合
+        }elseif($_SESSION["group_kind"] != '1' && $i > 2){
+            Color_Pallet($pdf,"d3");
+        }
+
+	    $pdf->SetXY($width[$i]+$op,$yy+10.5);                       //セル位置の微調整
+	    $pdf->Cell(23,5,$cellname[$i],$line1[$i],1,'C');                     //中央表示//中央表示
+	    $pdf->SetFillcolor(255,255,255);                            //塗りつぶしの色を設定（白）
+
+    	if ($hikae_flg == "t") {                  
+            Color_Pallet($pdf,"d1");
+	    } else {
+            Color_Pallet($pdf,"d2");              
+        }
+
+	    $pdf->RoundedRect($width[$i]+$op,$yy+15,$cellwidth,10,2,'',$maru2[$i]);     //下が丸い長方形を描画
+	}
+
+	Color_Pallet($pdf,"t4");
+	$pdf->SetXY($start_xx,$yy+15);
+            
+	$tune_amount = str_pad(number_format($data[advance_balance]),11," ", STR_PAD_LEFT);             //調整額
+
+    //1ページ目かページ指定が無ければ金額を表示
+    if ($page == 1 || $page == NULL){
+    	$pdf->Cell(23,10,My_Number_Format($data[bill_amount_last]),0,0,"R");   //１つ目の金額
+    	$pdf->Cell(23,10,My_Number_Format($data[pay_amount]),0,0,"R");         //１つ目の金額
+    	$pdf->Cell(23,10,My_Number_Format($data[rest_amount]),0,0,"R");        //１つ目の金額
+
+    	$pdf->SetXY($start_xx+73,$yy+15);
+    	$pdf->Cell(23,10,My_Number_Format($data[sale_amount]),0,0,"R");        //１つ目の金額
+    	$pdf->Cell(23,10,My_Number_Format($data[tax_amount]),0,0,"R");         //１つ目の金額
+    	$pdf->Cell(23,10,My_Number_Format($data[intax_amount]),0,0,"R");       //１つ目の金額
+        //割賦額はなければ表示しない
+        if($sb_amount != "0" ||  $sbr_amount != "0"){
+    	    $pdf->SetXY($start_xx+146,$yy+15);
+    	    $pdf->Cell(23,10,$sb_amount,0,0,"R");   //１つ目の金額
+    	    $pdf->Cell(23,10,number_format($data[bill_amount_this]),0,0,"R");       //１つ目の金額
+        }else{
+    	    $pdf->SetXY($start_xx+146,$yy+15);
+    	    $pdf->Cell(23,10,My_Number_Format($data[bill_amount_this]),0,0,"R");       //１つ目の金額
+        }
+    }
+
+	Color_Pallet($pdf,"t4");
+	$pdf->SetXY($width[0],$yy+27);	
+
+	//調整額が0の場合は表示しない
+	$tuen_claim="";
+	if ( $tune_amount!="0" && ($page == 1 || $page == NULL)) {
+
+		if ($hikae_flg == "t") {                  
+            Color_Pallet($pdf,"f6");
+		}else{                                              //２枚目の緑請求書の場合
+            Color_Pallet($pdf,"f7");
+		}
+	    $pdf->RoundedRect($width[0],$yy+27,25,5,2,'DF','14');     //上の角が丸いセルを描画
+//    	$pdf->Cell(25,5,TUNE_AMOUNT,"R",0,"R");                //１つ目の金額
+    	$pdf->Cell(25,5,ADBANCE_BALANCE,"R",0,"R");                //１つ目の金額
+         Color_Pallet($pdf,"f5");
+	    $pdf->RoundedRect($width[0]+25,$yy+27,24,5,2,'DF','23');  //上の角が丸いセルを描画
+    	$pdf->Cell(24,5,$tune_amount,0,0,"R");              //１つ目の金額
+	}
+
+	//分割請求額が0の場合は表示しない
+	$division_caim = "";
+	if ( !($sb_amount=="0" && $sbr_amount=="0") && ($page == 1 || $page == NULL)) {
+	    $pdf->SetXY($xx+144,$yy+27);
+
+		if ($hikae_flg == "t") {                  
+            Color_Pallet($pdf,"f6");
+		}else{                                              //２枚目の緑請求書の場合
+            Color_Pallet($pdf,"f7");
+		}
+
+	    $pdf->RoundedRect($xx+144,$yy+27,25,5,2,'DF','14');  //上の角が丸いセルを描画
+    	$pdf->Cell(25,5,INSTALLMENT_REST_AMOUNT,"R",0,"R");            //１つ目の金額
+
+        Color_Pallet($pdf,"f5");
+	    $pdf->RoundedRect($xx+169,$yy+27,24,5,2,'DF','32'); //上の角が丸いセルを描画
+    	$pdf->Cell(24,5,$sbr_amount,0,0,"R");               //１つ目の金額
+	}
+
+	$pdf->SetXY($xx,$yy+35);    //請求データ表示座標をセット
+	
+}
+
+
+/**
+ * 概要　明細請求書のデータを表示します
+ *
+ * 説明　表示後は、次の始点座標をセットします。
+ *
+ * @param string    $db_con     DB接続リソース
+ * @param array     $data       請求データ
+ * @param string    $hikae_flg  請求控えフラグ
+ * 
+ * @return array                ページ内に表示しきれなかった請求書データ
+ * 
+ * 2009-07-07   「計」が表示されない不具合修正 <aoyama-n>
+ * 2009-07-07    ロイヤリティの日付が表示されない不具合修正 <aoyama-n>
+ */
+function Write_Claim_Data_M($pdf, $data ,$hikae_flg="f",  $xx_s="", $yy_s="", $db_con=""){
+
+	//始点のX座標が無い場合は現在のX座標を始点とする
+	if( $xx_s == NULL ) {
+		$xx_s = $pdf->GetX(); //始点（X座標）
+	}
+	
+	//始点のY座標が無い場合は現在のY座標を始点とする
+	if( $yy_s == NULL ) {
+		$yy_s = $pdf->GetY(); //始点（Y座標）
+	}
+
+    //セル幅調整
+    //本部
+    if($_SESSION["group_kind"] == '1'){
+        $tune = 0;
+    }else{
+        $tune = 0.3;
+    }
+
+	$xx        = $xx_s;  //現X座標
+	$yy        = $yy_s;  //現Y座標
+	$max_line  = 29;     //１ページの行数
+	$height_h  = 8;      //ヘッダの高さ
+	$height    = 5;      //データの高さ
+	$width     = array(9,14,9,77,9,19,19,6,16,16); //各項目の横幅
+
+	//テーブルのヘッダ部表示
+    //本部の場合
+    if($_SESSION["group_kind"] == '1'){
+        //■文字の色を設定
+        //■項目の色を設定
+            if ($hikae_flg == "t") {         
+                Color_Pallet($pdf,"t1");
+                Color_Pallet($pdf,"f3");
+            }else{
+                Color_Pallet($pdf,"t2");
+                Color_Pallet($pdf,"f4");
+            }
+    //FCの場合
+    }else{
+        //■文字の色を設定
+        //■項目の色を設定
+            Color_Pallet($pdf,"t3");
+            if ($hikae_flg == "t") {         
+                Color_Pallet($pdf,"f3");
+            }else{
+                Color_Pallet($pdf,"f4");
+            }
+    }       
+
+
+    //本部の場合
+    if($_SESSION["group_kind"] == "1"){
+	    if ($hikae_flg == "t") {                  
+            Color_Pallet($pdf,"d1");
+        }else{
+            Color_Pallet($pdf,"d2");
+        }
+
+    //FCの場合
+    }else{
+        Color_Pallet($pdf,"d3");
+    }
+
+	//データセルの表題
+	$pdf->RoundedRect($xx-$tune,$yy,$width[0]+$tune,$height_h,2.5,'DF',1);  //左上が丸いセル
+	$pdf->SetXY($xx,$yy);                                       //↑の隣に位置指定
+	$pdf->Cell($width[0],$height_h,"月　日",0,0,'C');           //月日セル
+	$pdf->Cell($width[1],$height_h,"伝票番号",1,0,'C',1);       //伝票番号セル
+	$pdf->MultiCell($width[2],4,"取引\n区分",1,"C",1);          //区分セル
+	$pdf->SetXY($xx+32,$yy);                                    //↑の隣に位置指定
+	$pdf->Cell($width[3],$height_h,"商　　品　　名",1,0,'C',1); //商品名セル
+	$pdf->Cell($width[4],$height_h,"数量",1,0,'C',1);           //数量セル
+	$pdf->Cell($width[5],$height_h,"単　価",1,0,'C',1);         //単価セル
+	$pdf->Cell($width[6],$height_h,"金　額",1,0,'C',1);         //金額セル
+	$pdf->Cell($width[7],$height_h,"税区",1,0,'C',1);         //税区分セル
+	$pdf->Cell($width[8],$height_h,"入　金",1,0,'C',1);           //入金セル
+	$pdf->RoundedRect(204-$width[9],$yy,$width[9]+$tune,$height_h,2.5,'DF',2);//右上が丸いセル
+	$pdf->Cell($width[9],$height_h,"残　高",0,0,'C');         //単位セル
+	$yy = ($yy + $height_h);
+
+	$pdf->SetXY($xx,$yy);                //下の行に位置指定
+    Color_Pallet($pdf,"t4");
+
+	//フッターを表示しても改ページされない場合は、フッターを表示用配列に追加する
+    //aoyama-n 2009-07-07
+	//$row = count($data) + count($data[footer]); //データ＋フッターの行数
+	$row = count($data); //データ＋フッターの行数
+
+//aoyama-n  2009-07-07
+if (0) {
+	echo "<pre>";
+	echo "$max_line";
+	echo "<br>";
+	echo count($data);
+	echo "<br>";
+    print_r($data);
+	echo "</pre>";
+}
+	if ($row <= $max_line ) {
+        //フッタがある場合
+        if(is_array($data[footer])){
+		    foreach($data[footer] AS $data[]);
+
+		    unset($data[footer]);
+        }
+	}
+
+	if ($hikae_flg == "t") {                  
+        Color_Pallet($pdf,"d1");
+	} else {                                  
+        Color_Pallet($pdf,"d2");
+    }
+
+	$celco = 0;   
+	for ($i=0; $i<$max_line; $i++) {
+
+		if($celco == "0"){                              //色変数が0の場合
+            Color_Pallet($pdf,"f5");
+		    $celco=1;                                   //次は水色
+		}else{
+			if ($hikae_flg == "t") {                  
+                Color_Pallet($pdf,"f6");
+			}else{                                      //２枚目の緑請求書の場合
+                Color_Pallet($pdf,"f7");
+			}
+			$celco=0;                                   //次は白
+		}
+
+		$bill = each($data);
+		if($bill[1][align] == ""){
+			$bill[1][align] = "L";
+		}
+		
+		//消費税金額の場合は「月日」「伝票番号」「取引区分」を表示しない
+		if ($bill[1][formal_name] == "消費税金額") {
+            //aoyama-n 2009-07-07
+			//$bill[1][trading_day] = "";
+			//$bill[1][slip_no]     = "";
+			$bill[1][trade_cname] = "";
+		}
+		
+		$price = explode(".",$bill[1][sale_price]);
+		$sale_price = my_number_format($price[0]);
+		
+		if($sale_price != NULL) {
+			$sale_price = $sale_price.".".$price[1];
+		}
+
+        $pdf->SetXY($xx,$yy);             //位置設定
+        //直送先名を表示
+        if($bill[1]["d_flg"] == true){
+            $pdf->Cell(array_sum($width), $height,"【".$bill[1][formal_name]."】", 1, 0, 'L', 1);  //月日
+        }else{
+            //同じ伝票番号は表示しない
+            if($current_no == $bill[1][slip_no]){
+                //表示中の伝票番号
+                $current_no = $bill[1][slip_no];
+                $bill[1][slip_no] = null;
+                $bill[1][trading_day] = null;
+            }else{
+                //表示中の伝票番号
+                $current_no = $bill[1][slip_no];
+            }
+
+		    $pdf->SetFontSize(8); 
+		    $pdf->Cell($width[0], $height,substr($bill[1][trading_day],5),          1, 0, 'C', 1);              //月日
+		    $pdf->Cell($width[1], $height,$bill[1][slip_no],                        1, 0, 'C', 1);              //伝票番号
+		    $pdf->Cell($width[2], $height,$bill[1][trade_cname],                    1, 0, "C", 1);              //取引区分
+            if($bill[1]["client_id"] != null){
+		        $pdf->SetFontSize(10); 
+    		    $pdf->Cell($width[3], $height,$bill[1][formal_name],                1, 0,  $bill[1][align],1);  //商品名
+		        $pdf->SetFontSize(8); 
+            }else{
+    		    $pdf->Cell($width[3], $height,$bill[1][formal_name],                1, 0,  $bill[1][align],1);  //商品名
+            }    
+		    $pdf->Cell($width[4], $height,My_Number_Format($bill[1][quantity]),     1, 0, 'R', 1);              //数量
+	    	$pdf->Cell($width[5], $height,$sale_price,                              1 ,0, 'R', 1);              //単価
+		    $pdf->Cell($width[6], $height,My_Number_Format($bill[1][sale_amount]),  1 ,0, 'R', 1);              //金額
+		    $pdf->Cell($width[7], $height,$bill[1][tax_div],                        1, 0, 'C', 1);              //税区分
+		    $pdf->Cell($width[8], $height,My_Number_Format($bill[1][pay_amount]),   1, 0, 'R', 1);              //入金
+		    $pdf->Cell($width[9], $height,My_Number_Format($bill[1][rest_amount]),  1, 0, 'R', 1);              //残高
+        }
+		$yy = $yy+$height;
+
+        //フッタの表示が完了した場合
+        if($bill[1]["client_id"] != null && $db_con != null){
+            //割賦のデータを表示
+            $ins_data = Installment_Sales_Slip($bill[1], $db_con, $celco);
+            //割賦の伝票が合った場合
+            if(count($ins_data) > 0){
+                $j = 0;
+                foreach($ins_data AS $value){
+                    $data[$j] = $value;
+                    $j++;
+                }
+            }
+	    }
+		//表示済のデータを配列から削除
+		unset($data[$bill[key]]); 
+	}
+
+	if (0) {
+		echo "<pre>";
+		print_r($data);
+		echo "</pre>";
+	}
+
+	if ($hikae_flg == "t") {                  
+        Color_Pallet($pdf, "f6");
+	} else {                          
+        Color_Pallet($pdf, "f7");
+	}
+
+	//最終行の丸角セル
+	$pdf->SetXY($xx,$yy);             //位置設定
+	$pdf->RoundedRect($xx,$yy,$width[0],$height,2.5,'DF',4);//月日
+	$pdf->SetXY($xx+$width[0],$yy);
+	$pdf->Cell($width[1],$height,"",1,0,'C',1);   //伝票番号
+	$pdf->Cell($width[2],$height,"",1,0,"C",1);   //取引区分
+	$pdf->Cell($width[3],$height,"",1,0,'L',1);   //商品名
+	$pdf->Cell($width[4],$height,"",1,0,'R',1);   //数量
+	$pdf->Cell($width[5],$height,"",1,0,'L',1);   //単位
+	$pdf->Cell($width[6],$height,"",1,0,'R',1);   //単価
+	$pdf->Cell($width[7],$height,"",1,0,'R',1);   //金額
+	$pdf->Cell($width[8],$height,"",1,0,'C',1);   //税区分
+	$pdf->RoundedRect(204-$width[9],$yy,$width[9],$height,2.5,'DF',3);//入金
+	$yy = $yy+$height;
+
+	//データ開始Y座標
+	$yy_s = $yy_s + $height_h;
+	$pdf->SetXY($xx,$yy+2);             //次の表示座標をセット
+    
+	return $data; //表示しきれなかったデータを返す
+}
+
+/**
+ * 概要　合計請求書のデータを表示します
+ *
+ * 説明　表示後は、次の始点座標をセットします。
+ *
+ * @param string    $db_con     DB接続リソース
+ * @param array     $data       請求データ
+ * @param string    $hikae_flg  請求控えフラグ
+ * @param string    $xx         始点となるX座標
+ * @param string    $yy         始点となるY座標
+ * 
+ * @return array                ページ内に表示しきれなかった請求書データ
+ * 
+ */
+function Write_Claim_Data_G($pdf, $data ,$hikae_flg ="f", $xx_s="", $yy_s="", $head=""){
+
+	//始点のX座標が無い場合は現在のX座標を始点とする
+	if( $xx_s == NULL ) {
+		$xx_s = $pdf->GetX(); //始点（X座標）
+	}
+	
+	//始点のY座標が無い場合は現在のY座標を始点とする
+	if( $yy_s == NULL ) {
+		$yy_s = $pdf->GetY(); //始点（Y座標）
+	}
+	
+    //セル幅調整
+    //本部
+    if($_SESSION["group_kind"] == '1'){
+        $tune = 0;
+    }else{
+        $tune = 0.2;
+    }
+
+	//$xx_s      = "10";   //始点（X座標）
+	//$yy_s      = "83";   //始点（Y座標）
+	$xx        = $xx_s;  //現X座標
+	$yy        = $yy_s;  //現Y座標
+	$max_line  = 19;     //１ページの行数
+	$height_h  = 8;      //ヘッダの高さ
+	$height_d  = 7;      //データの高さ
+	$width = array(116,26,26,25); //各項目の横幅
+	$pdf->SetXY($xx-$tune,$yy);
+	
+    //テーブルのヘッダ部表示
+    //本部の場合
+    if($_SESSION["group_kind"] == '1'){
+        //■文字の色を設定
+        //■項目の色を設定
+            if ($hikae_flg == "t") {
+                Color_Pallet($pdf,"t1");
+                Color_Pallet($pdf,"f3");
+            }else{
+                Color_Pallet($pdf,"t2");
+                Color_Pallet($pdf,"f4");
+            }
+    //FCの場合
+    }else{
+        //■文字の色を設定
+        //■項目の色を設定
+            Color_Pallet($pdf,"t3");
+            if ($hikae_flg == "t") {
+                Color_Pallet($pdf,"f3");
+            }else{
+                Color_Pallet($pdf,"f4");
+            }
+    }      
+
+
+    //本部の場合
+    if($_SESSION["group_kind"] == "1"){
+        if ($hikae_flg == "t") {
+            Color_Pallet($pdf,"d1");
+        }else{
+            Color_Pallet($pdf,"d2");
+        }
+
+    //FCの場合
+    }else{
+        Color_Pallet($pdf,"d3");
+    }
+
+	$pdf->Cell($width[0]+$tune,$height_h,"得意先",1,"0","C",1);           //得意先名
+	$pdf->Cell($width[1],$height_h,SALE_AMOUNT,1,"0","C",1);     //今回御買上額セル
+	$pdf->Cell($width[2],$height_h,TAX_AMOUNT,1,"0","C",1);   //今回消費税額セル
+	$pdf->Cell($width[3]+$tune-0.1,$height_h,INTAX_AMOUNT,1,"0","C",1);     //税込御買上額セル
+	$yy = $yy+$height_h;
+	Color_Pallet($pdf,"t4");
+
+	if ($hikae_flg == "t") {                  
+	    Color_Pallet($pdf,"d1");
+	} else {                                  
+	    Color_Pallet($pdf,"d2");
+    }
+
+	$celco = 0;   
+	for ($i=0; $i<$max_line; $i++) {
+		if($celco == "0"){                      //色変数が0の場合
+	        Color_Pallet($pdf,"f5");
+		    $celco=1;                           //次は水色
+		}else{
+			if ($hikae_flg == "t") {                  
+	            Color_Pallet($pdf,"f6");
+			}else{                              //２枚目の緑請求書の場合
+	            Color_Pallet($pdf,"f7");
+			}
+			$celco=0;                           //次は白
+		}
+
+		$pdf->SetXY($xx,$yy);
+
+		if ($bill = each($data)) {
+			$client_cd   = $bill[1][client_cd];
+			$client_name = $bill[1][client_name];
+			$sale_amount = number_format($bill[1][sale_amount]);
+			$tax_amount  = number_format($bill[1][tax_amount]);
+			$amount      = number_format($bill[1][sale_amount]+$bill[1][tax_amount]);
+    
+            //ページごとの小計
+            $page_sale_amount += $bill[1][sale_amount];
+            $page_tax_amount  += $bill[1][tax_amount];
+            $page_amount      += $bill[1][sale_amount]+$bill[1][tax_amount];
+
+			//表示済のデータを配列から削除
+			unset($data[$bill[key]]);
+
+		}else{
+			$client_cd   = " ";
+			$client_name = " ";
+			$sale_amount = NULL;
+			$tax_amount  = NULL;
+			$amount      = NULL;
+
+            $amount_flg  = true;        //合計表示フラグ
+		}
+
+        //「今回御買上額」「今回消費税」「税込御買上額」が0でない場合はセルを書く
+        if ($sale_amount != "0" && $tax_amount != "0" && $amount != "0"){
+
+    		$pdf->MultiCell($width[0],3.5,$client_cd."\n".$client_name,1,"L",1); //得意先名
+    		$pdf->SetXY($xx+$width[0],$yy);
+    		$pdf->Cell($width[1],$height_d,$sale_amount,1,"0","R",1);            //今回御買上額セル
+    		$pdf->Cell($width[2],$height_d,$tax_amount, 1,"0","R",1);            //今回消費税額セル
+    		$pdf->Cell($width[3],$height_d,$amount,     1,"0","R",1);            //税込御買上額セル
+    		$yy = $yy+$height_d;
+
+        }else{
+            $max_line++; //セルを書かなかったので最大行数を追加
+
+            $celco = ($celco == "0")? "1" : "0" ;
+
+        }
+
+
+        //小計表示
+        if($i+1 == $max_line){
+			if ($hikae_flg == "t") {  
+                Color_Pallet($pdf,"f6");                
+			}else{                              //２枚目の緑請求書の場合
+                Color_Pallet($pdf,"f7");                
+            }
+
+		    $pdf->SetXY($xx,$yy);
+    		$pdf->Cell($width[0],$height_d,"小計\n",1,"0","R",1); //得意先名
+    		$pdf->SetXY($xx+$width[0],$yy);
+    		$pdf->Cell($width[1],$height_d,number_format($page_sale_amount),1,"0","R",1);   //今回御買上額セル
+    		$pdf->Cell($width[2],$height_d,number_format($page_tax_amount),1,"0","R",1);    //今回消費税額セル
+    		$pdf->Cell($width[3],$height_d,number_format($page_amount),1,"0","R",1);        //税込御買上額セル
+
+    		$yy = $yy+$height_d;
+
+
+            //合計行表示
+            Color_Pallet($pdf,"f5");                
+		    $pdf->SetXY($xx,$yy);
+
+            if($amount_flg === true){
+    		    $pdf->Cell($width[0],$height_d,"合計\n",1,"0","R",1); //得意先名
+    		    $pdf->SetXY($xx+$width[0],$yy);
+                $pdf->Cell($width[1],$height_d,number_format($head["sale_amount"]),1,"0","R",1);   //今回御買上額セル
+    	        $pdf->Cell($width[2],$height_d,number_format($head["tax_amount"]),1,"0","R",1);    //今回消費税額セル
+    		    $pdf->Cell($width[3],$height_d,number_format($head["intax_amount"]),1,"0","R",1);        //税込御買上額セル
+            }else{
+    		    $pdf->Cell($width[0],$height_d,"",1,"0","R",1); //得意先名
+    		    $pdf->SetXY($xx+$width[0],$yy);
+                $pdf->Cell($width[1],$height_d,"",1,"0","R",1);     //今回御買上額セル
+    	        $pdf->Cell($width[2],$height_d,"",1,"0","R",1);     //今回消費税額セル
+    		    $pdf->Cell($width[3],$height_d,"",1,"0","R",1);     //税込御買上額セル
+            }
+    	    $yy = $yy+$height_d;
+        }
+	}
+
+
+	$pdf->SetXY($xx,$yy+2); //次の始点座標をセット
+
+	return $data;
+}
+
+/**
+ * 概要　請求書のフッターを表示します
+ *
+ * 説明　
+ *
+ * @param string    $db_con     DB接続リソース
+ * @param array     $data       請求データ
+ * @param string    $hikae_flg  請求控えフラグ
+ * @param string    $xx         始点となるX座標
+ * @param string    $yy         始点となるY座標
+ * 
+ */
+function Write_Claim_Footer($pdf, $data, $hikae_flg="f", $xx="", $yy=""){
+
+	//始点のX座標が無い場合は現在のX座標を始点とする
+	if( $xx == NULL ) {
+		$xx = $pdf->GetX();
+	}
+
+	//始点のY座標が無い場合は現在のY座標を始点とする
+	if( $yy == NULL ) {
+		$yy = $pdf->GetY();
+	}
+
+    //始点の位置をずらす
+    $yy = $yy+2;
+
+	$pdf->SetXY($xx,$yy);
+
+	$pdf->SetFontSize(7.5);
+	if ($hikae_flg == "t") {                  
+        Color_Pallet($pdf,"t1");
+	}else{                                  //２枚目の緑請求書の場合
+        Color_Pallet($pdf,"t2");
+	}
+	$pdf->Write(3,"【取引銀行】");
+	$pdf->SetXY($xx+1,$yy+3);
+	$pdf->Cell(75,3,$data[c_memo5],0);            //銀行名１
+	$pdf->Cell(35,3,$data[c_memo6]);              //銀行名２
+	$pdf->SetXY($xx+1,$yy+6);
+	$pdf->Cell(75,3,$data[c_memo7],0);            //銀行名３
+	$pdf->Cell(35,3,$data[c_memo8]);              //銀行名４
+	$pdf->SetXY($xx+1,$yy+9);
+	$pdf->Cell(75,3,$data[c_memo9],0);            //銀行名５
+	$pdf->Cell(35,3,$data[c_memo10]);              //銀行名６
+	$pdf->SetXY($xx+1,$yy+12);
+	$pdf->Cell(75,3,$data[c_memo11],0);            //銀行名７
+	$pdf->Cell(35,3,$data[c_memo12]);              //銀行名８
+	$pdf->SetXY($xx+1,$yy+15);
+	$pdf->SetFontSize(8);
+	$pdf->Cell(150,6,$data[c_memo13]);             //メッセージ欄
+
+
+    //本部の場合
+    if($_SESSION["group_kind"] == '1'){
+        //■文字の色を設定
+        //■項目の色を設定
+        if ($hikae_flg == "t") {         
+            Color_Pallet($pdf,"d1");
+            Color_Pallet($pdf,"f3");
+        }else{
+            Color_Pallet($pdf,"d2");
+            Color_Pallet($pdf,"f4");
+        }
+    //FCの場合
+    }else{
+	    if ($hikae_flg == "t") {                  
+            Color_Pallet($pdf,"d1");
+            Color_Pallet($pdf,"f1");
+	    } else {                          
+            Color_Pallet($pdf,"d2");
+            Color_Pallet($pdf,"f2");
+	    }
+    }       
+
+
+	//担当者・印欄の描画
+	$pdf->RoundedRect($xx+150-1,$yy,4,15,1.5,'DF',14);
+	$pdf->SetXY($xx+150-1,$yy+1);
+	$pdf->MultiCell(4,2.5,"担\n当\n者",0,'C');
+	$pdf->RoundedRect($xx+150+4-1,$yy,25,15,1.5,'',23);
+	$pdf->RoundedRect($xx+150+4+25-1,$yy,15,4,1.5,'DF',12);
+	$pdf->SetXY($xx+150+4+25-1,$yy);
+	$pdf->Cell(15,4,"印",0,0,'C');
+	$pdf->RoundedRect($xx+150+4+25-1,$yy+4,15,11,1.5,'',34);
+}
+
+/**
+ * 概要　請求書の発行情報を変更します。
+ *
+ * 説明　
+ *
+ * @param string    $db_con  DB接続リソース
+ * @param array     $data  請求ID
+ *
+ */
+function Update_Claim_Data ($db_con, $data) {
+
+    if($data == NULL){
+        return false;
+    }
+
+	Db_Query($db_con, "BEGIN;");
+	foreach($data AS $bill_id){
+		
+		//請求書IDがfの場合は処理しない
+		if($bill_id != "f"){
+			$sql ="
+				UPDATE t_bill 
+				SET 
+				 issue_staff_name ='".addslashes($_SESSION["staff_name"])."', 
+				 issue_day=NOW() 
+				WHERE bill_id=$bill_id 
+				AND issue_staff_name IS NULL 
+				AND issue_day IS NULL
+				;
+			";
+			$result = Db_Query($db_con, $sql);
+		
+			if ($result == false) {
+			    Db_Query($db_con, "ROLLBACK;");
+			    exit;
+			}
+		}
+	}
+	Db_Query($db_con, "COMMIT;");
+}
+
+
+/**
+ * 概要　割賦の売上番号を取得する
+ *
+ * 説明　戻り値は、行単位でキーを生成します。
+ *
+ * @param string    $db_con  DB接続リソース
+ * @param string    $db_con  請求ID
+ *
+ * @return array          請求書のヘッダデータ
+ */
+function Get_Div_Sale($db_con,$bill_id) {
+
+	$shop_id = $_SESSION[client_id];
+
+	$sql = "
+		SELECT 
+		distinct(t_sale_h.sale_no)
+		FROM t_installment_sales 
+		INNER JOIN t_sale_h ON t_installment_sales.sale_id = t_sale_h.sale_id
+		WHERE t_sale_h.shop_id = $shop_id
+		AND t_installment_sales.bill_id = '$bill_id'
+		;
+	";
+	//	--AND flg = 'f'
+
+	$result = Db_Query($db_con, $sql,1);
+    //データがある場合は結果を配列に登録
+	if(pg_num_rows($result) != "0"){
+		$data = pg_fetch_all($result);
+	}
+
+
+//	print_array($data);
+	return $data;
+
+}
+
+//合計明細書形式にデータを変更
+function Make_Bill_Data($bill, $db_con){
+
+    $max_line = 29;
+
+    $page = 1;
+    $line = 0;
+
+    //合計
+    $header = $bill["head"][0];
+    unset($bill["head"][0]);
+
+    //得意先の数だけループ
+    foreach($bill["head"] AS $i => $head){
+        //改行
+        $line++;
+        //行数が最大行数を超えた場合
+        if($line > $max_line){
+            $line = 1;          //行数初期化
+            $page++;            //改ページ
+        }
+
+        $res_data[$page]["head"] = $header;
+
+        //得意先ごとの必要な行数
+        //$client_line = count($bill["data"][$i])+2; 
+        $client_line = count($bill["data"][$i])+1; //顧客名の表示で1行使用するので+1
+        $finish_line = $line-1;                    //書き終わった行数
+
+        //「次の得意先分が表示しきれない」かつ「最初の行でない」の場合
+        if( $max_line < $finish_line + $client_line && $finish_line != "0"){
+        //if($line + $client_line >= $max_line && $client_line <= $max_line){
+            //空白行をセット
+            while($line <= $max_line){
+                $res_data[$page][$line] = null;
+                $line++;        //改行
+            }
+
+            $page++;            //改ページ
+            $res_data[$page]["head"] = $header;
+            $line =1;
+        }
+
+        //得意先情報をセット
+        $res_data[$page][$line] = $head; 
+        $res_data[$page][$line]["client_flg"] = true; 
+
+        //伝票の数だけループ
+//        foreach($bill["data"][$i] AS $j => $data){
+        while($data = each($bill["data"][$i])){
+            $j = $data["key"];
+            //得意先の前回御請求額
+            if($j == "0"){
+                $line++;
+                $res_data[$page][$line]["formal_name"]  = $data["1"]["formal_name"];
+                $res_data[$page][$line]["rest_amount"]  = $data["1"]["rest_amount"];
+                $res_data[$page][$line]["align"]        = $data["1"]["align"];
+                $res_data[$page][$line]["flg"]          = true;        
+            //フッタの場合
+            }elseif($j == "footer"){
+
+                $line++;
+                $res_data[$page][$line]["formal_name"]  = $data[1][0]["formal_name"];
+                $res_data[$page][$line]["sale_amount"]  = $data[1][0]["sale_amount"];
+                $res_data[$page][$line]["pay_amount"]   = $data[1][0]["pay_amount"];
+                $res_data[$page][$line]["rest_amount"]  = $data[1][0]["rest_amount"];
+                $res_data[$page][$line]["align"]        = $data[1][0]["align"];
+                $res_data[$page][$line]["flg"]          = true;
+                //割賦データを抽出
+                $ins_data = Installment_Sales_Slip($data[1][0], $db_con);
+
+                //割賦のデータがある場合
+                if(count($ins_data) > 0){
+                    foreach($ins_data AS $value){
+                        $bill["data"][$i][] = $value;
+                    }
+                }
+            }else{
+                //改行
+                $line++;
+                //行数が最大行数を超えた場合
+                if($line > $max_line){
+                    $line = 1;      //行数初期化
+                    $page++;        //改ページ
+                    $res_data[$page]["head"] = $header;
+                }
+                $res_data[$page][$line] = $data[1];
+            }
+        }
+    }
+
+    //空白行をセット
+    $line++;
+    while($line <= $max_line){
+        $res_data[$page][$line] = null;
+        $line++;
+    }
+    return $res_data;
+}
+
+
+/**
+ * 
+ * 2009-07-07   ロイヤリティの日付が表示されない不具合修正 <aoyama-n>
+ */
+//合計明細請求書出力
+function Write_Claim_Data_MG($pdf,$page_data, $hikae_flg){
+
+	//始点のX座標が無い場合は現在のX座標を始点とする
+	if( $xx_s == NULL ) {
+		$xx_s = $pdf->GetX(); //始点（X座標）
+	}
+	
+
+    //セル幅調整
+    //本部
+    if($_SESSION["group_kind"] == '1'){
+        $tune = 0;
+    }else{
+        $tune = 0.3;
+    }
+
+	//始点のY座標が無い場合は現在のY座標を始点とする
+	if( $yy_s == NULL ) {
+		$yy_s = $pdf->GetY(); //始点（Y座標）
+	}
+
+	$xx        = $xx_s;  //現X座標
+	$yy        = $yy_s;  //現Y座標
+	$height_h  = 8;      //ヘッダの高さ
+	$height    = 5;      //データの高さ
+	$width     = array(9,14,9,77,9,19,19,6,16,16);  //各項目の横幅
+
+	//テーブルのヘッダ部表示
+    Color_Pallet($pdf,"d3");
+	if ($hikae_flg == "t") {                  
+        Color_Pallet($pdf,"f3");
+        Color_Pallet($pdf,"t3");
+	}else{                                  //２枚目の緑請求書の場合
+        Color_Pallet($pdf,"f4");
+        Color_Pallet($pdf,"t3");
+	}
+
+    //テーブルのヘッダ部表示
+    //本部の場合
+    if($_SESSION["group_kind"] == '1'){ 
+        //■文字の色を設定
+        //■項目の色を設定
+        if ($hikae_flg == "t") {
+            Color_Pallet($pdf,"t1");
+            Color_Pallet($pdf,"f3");
+        }else{
+            Color_Pallet($pdf,"t2");
+            Color_Pallet($pdf,"f4");
+        }
+    //FCの場合
+    }else{
+        //■文字の色を設定
+        //■項目の色を設定
+        Color_Pallet($pdf,"t3");
+        if ($hikae_flg == "t") {
+            Color_Pallet($pdf,"f3");
+        }else{
+            Color_Pallet($pdf,"f4");
+        }
+    }     
+
+    
+    //本部の場合
+    if($_SESSION["group_kind"] == "1"){         
+        if ($hikae_flg == "t") {
+            Color_Pallet($pdf,"d1");
+        }else{
+            Color_Pallet($pdf,"d2");
+        }
+
+    //FCの場合
+    }else{
+        Color_Pallet($pdf,"d3");
+    }
+
+	//データセルの表題
+	$pdf->RoundedRect($xx-$tune,$yy,$width[0]+$tune,$height_h,2.5,'DF',1);          //左上が丸いセル
+	$pdf->SetXY($xx,$yy);                                               //↑の隣に位置指定
+	$pdf->Cell($width[0],$height_h,"月　日",0,0,'C');                   //月日セル
+	$pdf->Cell($width[1],$height_h,"伝票番号",1,0,'C',1);               //伝票番号セル
+	$pdf->MultiCell($width[2],4,"取引\n区分",1,"C",1);                  //区分セル
+	$pdf->SetXY($xx+32,$yy);                                            //↑の隣に位置指定
+	$pdf->Cell($width[3],$height_h,"商　　品　　名",1,0,'C',1);         //商品名セル
+	$pdf->Cell($width[4],$height_h,"数量",1,0,'C',1);                   //数量セル
+	$pdf->Cell($width[5],$height_h,"単　価",1,0,'C',1);                 //単価セル
+	$pdf->Cell($width[6],$height_h,"金　額",1,0,'C',1);                 //金額セル
+	$pdf->Cell($width[7],$height_h,"税区",1,0,'C',1);                 //税区分セル
+	$pdf->Cell($width[8],$height_h,"入　金",1,0,'C',1);                 //入金セル
+	$pdf->RoundedRect(204-$width[9],$yy,$width[9]+$tune,$height_h,2.5,'DF',2);//右上が丸いセル
+	$pdf->Cell($width[9],$height_h,"残　高",0,0,'C');                   //単位セル
+	$yy = ($yy + $height_h);
+
+	$pdf->SetXY($xx,$yy);       //下の行に位置指定
+    Color_Pallet($pdf,"t4");
+
+	if ($hikae_flg == "t") {                  
+        Color_Pallet($pdf,"d1");
+	} else {                                  
+        Color_Pallet($pdf,"d2");
+    }
+
+    $celco = 0;
+
+    //表示に関係ないデータを削除
+    unset($page_data["head"]);
+
+    foreach($page_data AS $key => $var){
+
+        if($celco == "0"){                      //色変数が0の場合
+            Color_Pallet($pdf,"f5");
+            $celco=1;                           //次は水色
+        }else{
+            if ($hikae_flg == "t") {
+                Color_Pallet($pdf,"f6");
+            }else{                              //２枚目の緑請求書の場合
+                Color_Pallet($pdf,"f7");
+            }
+            $celco=0;                           //次は白
+        }
+
+        //消費税金額の場合は「月日」「伝票番号」「取引区分」を表示しない
+        if ($var[formal_name] == "消費税金額" || $var["flg"] == true) {
+        //aoyama-n 2009-07-07
+        //    $var[trading_day]  = "";
+        //    $var[slip_no]      = "";
+            $var[trade_cname]  = "";
+        }
+
+        $price = explode(".",$var[sale_price]);
+        $sale_price = my_number_format($price[0]);
+
+        if($sale_price != NULL) {
+            $sale_price = $sale_price.".".$price[1];
+        }
+
+        $pdf->SetXY($xx,$yy);             //位置設定
+        $pdf->SetFontSize(8);
+
+        if($var["client_flg"] == true){
+            $pdf->Cell(array_sum($width), $height,"【".$var[client_cd]."　".$var[client_name]."】", 1, 0, 'L', 1);  //月日
+        }elseif($var["d_flg"] == true){
+            $pdf->Cell(array_sum($width), $height,"【".$var[formal_name]."】", 1, 0, 'L', 1);  //月日
+        }else{
+
+            //同じ伝票番号は表示しない
+            if($current_no == $var[slip_no]){
+                //表示中の伝票番号
+                $current_no = $var[slip_no];
+                $var[slip_no] = null;
+                $var[trading_day] = null;
+            }else{
+                //表示中の伝票番号
+                $current_no = $var[slip_no];
+            }
+
+    		$pdf->Cell($width[0], $height,substr($var[trading_day],5),          1, 0, 'C', 1);          //月日
+    		$pdf->Cell($width[1], $height,$var[slip_no],                        1, 0, 'C', 1);          //伝票番号
+    		$pdf->Cell($width[2], $height,$var[trade_cname],                    1, 0, 'C', 1);          //取引区分
+
+            //フッタの場合  
+            if($var["flg"] == true && $var[formal_name] == "計"){
+                $pdf->SetFontSize(10);
+    		    $pdf->Cell($width[3], $height,$var[formal_name],                1, 0, $var[align],1);   //商品名
+                $pdf->SetFontSize(8);
+            }else{
+    		    $pdf->Cell($width[3], $height,$var[formal_name],                1, 0, $var[align],1);   //商品名
+            }
+
+    		$pdf->Cell($width[4], $height,my_number_format($var[quantity]),     1, 0, 'R', 1);          //数量
+    		$pdf->Cell($width[5], $height,$sale_price,                          1 ,0, 'R', 1);          //単価
+    		$pdf->Cell($width[6], $height,my_number_format($var[sale_amount]),  1 ,0, 'R', 1);          //金額
+    		$pdf->Cell($width[7], $height,$var[tax_div],                        1, 0, 'C', 1);          //税区分
+    		$pdf->Cell($width[8], $height,my_number_format($var[pay_amount]),   1, 0, 'R', 1);          //入金
+    		$pdf->Cell($width[9], $height,my_number_format($var[rest_amount]),  1, 0, 'R', 1);          //残高
+        }
+
+        $yy = $yy+$height;
+    }
+
+    if ($hikae_flg == "t") {
+        Color_Pallet($pdf, "f6");
+    } else {
+        Color_Pallet($pdf, "f7");
+    }
+
+    //最終行の丸角セル
+    $pdf->SetXY($xx,$yy);             //位置設定
+    $pdf->RoundedRect($xx,$yy,$width[0],$height,2.5,'DF',4);//月日
+    $pdf->SetXY($xx+$width[0],$yy);
+    $pdf->Cell($width[1],$height,"",1,0,'C',1);  //伝票番号
+    $pdf->Cell($width[2],$height,"",1,0,"C",1);   //取引区分
+    $pdf->Cell($width[3],$height,"",1,0,'L',1);  //商品名
+    $pdf->Cell($width[4],$height,"",1,0,'R',1);  //数量
+    $pdf->Cell($width[5],$height,"",1,0,'L',1);  //単位
+    $pdf->Cell($width[6],$height,"",1,0,'R',1);  //単価
+    $pdf->Cell($width[7],$height,"",1,0,'R',1);  //金額
+    $pdf->Cell($width[8],$height,"",1,0,'C',1);  //税区分
+    $pdf->RoundedRect(204-$width[9],$yy,$width[9],$height,2.5,'DF',3);//入金
+    $yy = $yy+$height;
+
+    //データ開始Y座標
+    $yy_s = $yy_s + $height_h;
+    $pdf->SetXY($xx,$yy+2);             //次の表示座標をセット
+
+}
+
+//色の設定関数
+function Color_Pallet($pdf, $ptn){
+if($_SESSION["group_kind"] == '1'){
+    //Fill_Color
+    if($ptn == 'f1'){
+        $pdf->SetFillColor(128,96,0);           //鑑左部の背景色（控）
+    }elseif($ptn == 'f2'){
+        $pdf->SetFillColor(153,102,255);         //鑑左部の背景色 
+    }elseif($ptn == 'f3'){
+        $pdf->SetFillColor(240,230,140);        //鑑右部の背景色（控）
+    }elseif($ptn == 'f4'){
+        $pdf->SetFillColor(238,227,255);        //鑑右部の背景色    
+    }elseif($ptn == 'f5'){
+        $pdf->SetFillColor(255,255,255);        //一覧の奇数行の背景色
+    }elseif($ptn == 'f6'){
+        $pdf->SetFillColor(255,255,240);        //一覧の偶数行の背景色（控）
+    }elseif($ptn == 'f7'){
+        $pdf->SetFillColor(248,248,255);        //一覧の偶数行の背景色
+
+
+    //Text_Color
+    }elseif($ptn == 't1'){
+        $pdf->SetTextColor(128,96,0);           //文字色（控）
+    }elseif($ptn == 't2'){
+        $pdf->SetTextColor(129,53,255);           //文字色
+    }elseif($ptn == 't3'){
+        $pdf->SetTextColor(255,255,255);        //白字
+    }elseif($ptn == 't4'){
+        $pdf->SetTextColor(0,0,0);              //黒字
+
+    //Draw_Color
+    }elseif($ptn == 'd1'){
+        $pdf->SetDrawColor(128,96,0);
+    }elseif($ptn == 'd2'){
+        $pdf->SetDrawColor(85,0,170);
+    }elseif($ptn == 'd3'){
+        $pdf->SetDrawColor(255,255,255);
+    }
+//FCの場合
+}else{
+    //Fill_Color
+    if($ptn == 'f1'){
+        $pdf->SetFillColor(204,230,255);        //塗りつぶしの色を設定（薄い水色）
+    }elseif($ptn == 'f2'){
+        $pdf->SetFillColor(198,246,195);        //塗りつぶしの色を設定（薄い緑色）
+    }elseif($ptn == 'f3'){
+        $pdf->SetFillColor(77,66,177);      //塗りつぶしの色を設定（青)
+    }elseif($ptn == 'f4'){
+        $pdf->SetFillColor(18,133,25);
+    }elseif($ptn == 'f5'){
+        $pdf->SetFillColor(255,255,255);        //フォントを白に設定
+    }elseif($ptn == 'f6'){
+        $pdf->SetFillColor(232,240,255);
+    }elseif($ptn == 'f7'){
+        $pdf->SetFillColor(230,255,230); 
+
+
+    //Text_Color
+    }elseif($ptn == 't1'){
+        $pdf->SetTextColor(77,66,177);
+    }elseif($ptn == 't2'){
+        $pdf->SetTextColor(18,133,25);
+    }elseif($ptn == 't3'){
+        $pdf->SetTextColor(255,255,255);        //フォントを白に設定
+    }elseif($ptn == 't4'){
+        $pdf->SetTextColor(0,0,0); 
+
+    //Draw_Color
+    }elseif($ptn == 'd1'){
+        $pdf->SetDrawColor(77,66,177);
+    }elseif($ptn == 'd2'){
+        $pdf->SetDrawColor(18,133,25);
+    }elseif($ptn == 'd3'){
+        $pdf->SetDrawColor(255,255,255);
+    }
+}
+
+}
+?>

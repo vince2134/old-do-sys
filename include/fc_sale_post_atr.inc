@@ -1,0 +1,682 @@
+<?php
+/**
+ *
+ * 登録ボタンが押された判定からvalidateの前あたりまでのチェック
+ * （除同時実行チェック）
+ *
+ * 呼出元
+ * ・2-2-107（予定データ訂正）
+ * ・2-2-201（手書伝票発行）
+ * ・2-2-202（売上伝票訂正）
+ * ・2-2-118（予定手書）
+ *
+ */
+/*
+ * 履歴：
+ *  日付            B票No.      担当者      内容
+ *  -----------------------------------------------------------
+ *  2007/05/21      B0702-055   kajioka-h   商品情報が取得できなかった場合に、アイテムの正式名だけクリアされないバグ修正
+ *  2007/05/23      xx-xxx      kajioka-h   手書伝票、予定手書のみのチェックを追加（移動）
+ *  2007/06/09      その他14    kajioka-h   前受金
+ *  2007-07-12                  fukuda      「支払締」を「仕入締」に変更
+ *  2009-09-08                  aoyama-n    値引機能追加
+ *
+ */
+
+/****************************/
+//エラーチェック(PHP)
+/****************************/
+//$error_flg = false;            //エラー判定フラグ
+
+//手書伝票、予定手書のみ
+if($hand_slip_flg == true || $hand_plan_flg == true){
+
+    //得意先
+    //●必須チェック
+    $form->addGroupRule('form_client', array(
+            'cd1' => array(
+                    array($h_mess[27],'required')
+            ),
+            'cd2' => array(
+                    array($h_mess[27],'required')
+            ),
+            'name' => array(
+                    array($h_mess[27],'required')
+            )
+    ));
+    $injust = Injustice_check($db_con, "client", $client_id, $_POST["form_client"]["cd1"], $_POST["form_client"]["cd2"]);
+    if($injust == false){
+        $form->setElementError("form_client", $h_mess[44]);
+    }
+
+
+    //自社巡回の場合
+    if($contract_div == "1"){
+        //出荷倉庫
+        //●必須チェック
+        $form->addRule('form_ware_select', $h_mess[29], 'required');
+
+        if($hand_slip_flg == true){
+            //売上担当者
+            //●必須チェック
+            $form->addRule('form_ac_staff_select',$h_mess[31],'required');
+        }
+
+        //通常巡回の場合、代行料は「発生しない」のみ
+        $form->addRule('act_div',$h_mess[62],"regex", '/^[1]$/');
+
+
+    //代行の場合
+    }else{
+        //代行先
+        //●必須チェック
+        $form->addGroupRule('form_daiko', array(
+                'cd1' => array(
+                        array($h_mess[1], 'required')
+                ),
+                'cd2' => array(
+                        array($h_mess[1], 'required')
+                ),
+                'name' => array(
+                        array($h_mess[1], 'required')
+                )
+        ));
+        //●妥当性チェック
+        if($act_id != null){
+            $injust = Injustice_check($db_con, "client", $act_id, $_POST["form_daiko"]["cd1"], $_POST["form_daiko"]["cd2"]);
+            if($injust == false){
+                $form->setElementError("form_daiko", $h_mess[33]);
+            }
+        }
+
+
+        //代行委託料
+        //代行料（固定額）の場合
+        if($act_div == "2" ){
+            $form->addRule('act_request_price', $h_mess[60], "required");
+        }
+        $form->addRule('act_request_price', $h_mess[60], "regex", '/^[0-9]+$/');
+
+        //代行料（％）の場合
+        if($act_div == "3" ){
+            $form->addRule('act_request_rate', $h_mess[61], "required");
+        }
+        $form->addRule('act_request_rate', $h_mess[61], "regex", '/^[0-9]+$/');
+        $form->registerRule("check_percent", "function", "Check_Percent_Qf");
+        $form->addRule("act_request_rate", $h_mess[61], "check_percent");
+
+        //代行の場合、代行料は「発生する」のみ
+        if($act_div == "1"){
+            $form->setElementError("act_div[]", "オフライン代行の代行委託料は「発生する」を選択して下さい。");
+        }
+
+    }
+
+}//手書、予定手書のみチェックおわり
+
+
+//◇予定巡回日
+if($delivery_day_y != null && $delivery_day_m != null && $delivery_day_d != null){
+    $deli_day_flg = false;    //月次更新判定する
+
+    $delivery_day_y = str_pad($delivery_day_y,4, 0, STR_PAD_LEFT);
+    $delivery_day_m = str_pad($delivery_day_m,2, 0, STR_PAD_LEFT);
+    $delivery_day_d = str_pad($delivery_day_d,2, 0, STR_PAD_LEFT);
+    $delivery_day_ymd = $delivery_day_y."-".$delivery_day_m."-".$delivery_day_d;
+
+    //数値判定
+    if(!ereg("^[0-9]{4}$",$delivery_day_y) || !ereg("^[0-9]{2}$",$delivery_day_m) || !ereg("^[0-9]{2}$",$delivery_day_d)){
+        $form->setElementError("form_delivery_day",$h_mess[35]);
+        $deli_day_flg = true;    //月次更新判定しない
+    }
+
+    //・文字種チェック
+    $delivery_day_y = (int)$delivery_day_y;
+    $delivery_day_m = (int)$delivery_day_m;
+    $delivery_day_d = (int)$delivery_day_d;
+    if(!checkdate($delivery_day_m,$delivery_day_d,$delivery_day_y)){
+        $form->setElementError("form_delivery_day",$h_mess[35]);
+        $deli_day_flg = true;    //月次更新判定しない
+    }
+
+    //システム開始日判定
+    if(START_DAY > $delivery_day_ymd){
+        //システム開始日より前ならエラー
+        $form->setElementError("form_delivery_day",$h_mess[38]);
+        $deli_day_flg = true;    //月次更新判定しない
+    }
+
+    //今日より未来判定
+    if($g_today < $delivery_day_ymd){
+        //手書伝票
+        if($hand_slip_flg){
+            //今日より未来ならエラー
+            $form->setElementError("form_delivery_day", "売上計上日".$h_mess[69]);
+            $deli_day_flg = true;    //月次更新判定しない
+
+        //売上伝票（訂正）で前受相殺あり
+        }elseif($plan_sale_flg){
+            //今日より未来ならエラー
+            $form->setElementError("form_delivery_day", "予定巡回日".$h_mess[69]);
+            $deli_day_flg = true;    //月次更新判定しない
+        }
+    }
+
+    //配送日にエラーが無ければ月次更新判定実行
+    if($deli_day_flg == false){
+        //配送日が前回月次更新より先かチェック
+        if(Check_Monthly_Renew($db_con,$client_id,"1",$delivery_day_y,$delivery_day_m,$delivery_day_d) == false){
+            $form->setElementError("form_delivery_day",$h_mess[39]);
+        }
+    }
+}
+
+//契約区分が通常or直営のみ
+if($contract_div == '1' || $group_kind == 2){
+    //◇請求日
+    if($request_day_y != null && $request_day_m != null && $request_day_d != null){
+        $requ_day_flg = false;    //月次更新判定する
+
+        $request_day_y = str_pad($request_day_y,4, 0, STR_PAD_LEFT);
+        $request_day_m = str_pad($request_day_m,2, 0, STR_PAD_LEFT);
+        $request_day_d = str_pad($request_day_d,2, 0, STR_PAD_LEFT);
+        $request_day_ymd = $request_day_y."-".$request_day_m."-".$request_day_d;
+
+        //数値判定
+        if(!ereg("^[0-9]{4}$",$request_day_y) || !ereg("^[0-9]{2}$",$request_day_m) || !ereg("^[0-9]{2}$",$request_day_d)){
+            $form->setElementError("form_request_day",$h_mess[25]);
+            $requ_day_flg = true;    //月次更新判定しない
+        }
+
+        //・文字種チェック
+        $request_day_y = (int)$request_day_y;
+        $request_day_m = (int)$request_day_m;
+        $request_day_d = (int)$request_day_d;
+        if(!checkdate($request_day_m,$request_day_d,$request_day_y)){
+            $form->setElementError("form_request_day",$h_mess[25]);
+            $requ_day_flg = true;    //月次更新判定しない
+        }
+
+        //システム開始日判定
+        if(START_DAY > $request_day){
+            //システム開始日より前ならエラー
+            $form->setElementError("form_request_day",$h_mess[37]);
+            $requ_day_flg = true;    //月次更新判定しない
+        }
+
+        //請求日にエラーが無ければ月次更新判定実行
+        if($requ_day_flg == false){
+/*
+            //請求日が前回月次更新より先かチェック
+            if(Check_Monthly_Renew($db_con,$client_id,"1",$request_day_y,$request_day_m,$request_day_d) == false){
+                $form->setElementError("form_request_day",$h_mess[40]);
+                $error_flg = true;
+            }
+*/
+
+            //請求日が前回より先かチェック
+            //if(Check_Bill_Close_Day($db_con,$client_id,$request_day_y,$request_day_m,$request_day_d) == false){
+            if(Check_Bill_Close_Day_Claim($db_con, $client_id, $claim_div, $request_day_y, $request_day_m, $request_day_d) == false){
+                $error_msg16 = $h_mess[41];
+                $error_flg = true;
+            }
+
+        }
+    }
+
+
+    //前受のチェック
+    if($ad_offset_flg){
+
+        //手書伝票
+        if($hand_slip_flg){
+            //「掛売上」の場合
+            if($trade_sale == "11"){
+                //売上計上日以前に未確定の前受金伝票があるとエラー
+                if(Chk_Advance_Fix($db_con, $delivery_day_ymd, $client_id, $claim_div) == false){
+                    $form->setElementError("form_delivery_day", "売上計上日".$h_mess[74]);
+                }
+
+            //「掛売上」「掛返品」「掛値引」以外の場合はエラー
+            }elseif(!($trade_sale == "13" || $trade_sale == "14")){
+                $form->setElementError("trade_sale_select", $h_mess[76]);
+            }
+
+        //手書伝票以外
+        }else{
+            //売上伝票（訂正）だけチェック
+            if($plan_sale_flg){
+                //「掛売上」の場合
+                if($trade_aord == "11"){
+                    //予定巡回日以前に未確定の前受金伝票があるとエラー
+                    if(Chk_Advance_Fix($db_con, $delivery_day_ymd, $client_id, $claim_div) == false){
+                        $form->setElementError("form_delivery_day", "予定巡回日".$h_mess[74]);
+                    }
+                }
+            }
+
+            //「現金売上」の場合はエラー
+            if($trade_aord == "61"){
+                $form->setElementError("trade_aord", $h_mess[77]);
+            }
+        }
+    }//前受チェックおわり
+
+
+    //手書伝票
+    if($hand_slip_flg){
+        //「現金売上」「現金返品」「現金値引」
+        if($trade_sale == "61" || $trade_sale == "63" || $trade_sale == "64"){
+            //売上計上日と請求日が等しくないとエラー
+            if($delivery_day_ymd != $request_day_ymd){
+                $form->setElementError("trade_sale_select", $h_mess[71]);
+            }
+
+        //「掛売上」「掛返品」「掛値引」
+        }elseif($trade_sale == "11" || $trade_sale == "13" || $trade_sale == "14"){
+            //前受ありで、売上計上日と請求日が等しくないとエラー
+            if($ad_offset_flg && $delivery_day_ymd != $request_day_ymd){
+                $form->setElementError("trade_sale_select", $h_mess[70]);
+            }
+        }
+
+    //手書伝票以外
+    }else{
+        //「現金売上」
+        if($trade_aord == "61"){
+            //予定巡回日と請求日が等しくないとエラー
+            if($delivery_day_ymd != $request_day_ymd){
+                $form->setElementError("trade_aord", $h_mess[73]);
+            }
+
+        //「掛売上」
+        }else{
+            //前受ありで、予定巡回日と請求日が等しくないとエラー
+            if($ad_offset_flg && $delivery_day_ymd != $request_day_ymd){
+                $form->setElementError("trade_aord", $h_mess[72]);
+            }
+        }
+    }
+
+}//契約区分が通常or直営のみチェックおわり
+
+
+//オンライン代行でFC側の場合、予定データ訂正で前受の入力がないけど、取引区分の変更チェック
+if($plan_aord_flg && $group_kind == "3" && $contract_div == "2"){
+
+    $sql = "SELECT advance_offset_totalamount FROM t_aorder_h WHERE aord_id = $aord_id;";
+    $result = Db_Query($db_con, $sql);
+
+    if(pg_fetch_result($result, 0, "advance_offset_totalamount") != null){
+        //「現金売上」の場合はエラー
+        if($trade_aord == "61"){
+            $form->setElementError("trade_aord", "委託先で前受相殺を登録しているため、取引区分を「掛売上」にしてください。");
+        }
+    }
+}
+
+
+//代行伝票で直営の場合
+if($contract_div != "1" && $group_kind == "2" && $act_id != null){
+    //代行料仕入を起こす際、本部が代行者に月次更新をやってないかチェック
+    if(Check_Monthly_Renew($db_con, $act_id, "2", $delivery_day_y, $delivery_day_m, $delivery_day_d, $head_id) == false){
+        if($hand_slip_flg){
+            $form->setElementError("form_delivery_day", "売上計上日".$h_mess[57]);
+        }else{
+            $form->setElementError("form_delivery_day", "予定巡回日".$h_mess[57]);
+        }
+    }
+
+    //日が本部の仕入締日より後かどうか
+    if(Check_Payment_Close_Day($db_con, $act_id, $delivery_day_y, $delivery_day_m, $delivery_day_d, $head_id) == false){
+        if($hand_slip_flg){
+            $form->setElementError("form_delivery_day", "売上計上日".$h_mess[58]);
+        }else{
+            $form->setElementError("form_delivery_day", "予定巡回日".$h_mess[58]);
+        }
+    }
+}
+
+
+//紹介口座がありの場合、月次・仕入締チェック
+if($intro_account_id != null && $intro_ac_div != "1"){
+
+    //直営で、紹介口座がFCの場合、本部の月次・仕入締チェック
+    if($group_kind == "2" && $intro_client_div == "3"){
+        //紹介料仕入を起こす際、本部が代行者に月次更新をやってないかチェック
+        if(Check_Monthly_Renew($db_con, $intro_account_id, "2", $delivery_day_y, $delivery_day_m, $delivery_day_d, $head_id) == false){
+            if($hand_slip_flg){
+                $form->setElementError("form_delivery_day", "売上計上日".$h_mess[57]);
+            }else{
+                $form->setElementError("form_delivery_day", "予定巡回日".$h_mess[57]);
+            }
+        }
+
+        //紹介料仕入を起こす際、本部が代行者に仕入締をやってないかチェック
+        if(Check_Payment_Close_Day($db_con, $intro_account_id, $delivery_day_y, $delivery_day_m, $delivery_day_d, $head_id) == false){
+            if($hand_slip_flg){
+                $form->setElementError("form_delivery_day", "売上計上日".$h_mess[58]);
+            }else{
+                $form->setElementError("form_delivery_day", "予定巡回日".$h_mess[58]);
+            }
+        }
+
+    //それ以外の場合、自分のとこの月次・仕入締チェック
+    }else{
+        //紹介料仕入を起こす際、本部が代行者に月次更新をやってないかチェック
+        if(Check_Monthly_Renew($db_con, $intro_account_id, "2", $delivery_day_y, $delivery_day_m, $delivery_day_d) == false){
+            if($hand_slip_flg){
+                $form->setElementError("form_delivery_day", $h_mess[43]);
+            }else{
+                $form->setElementError("form_delivery_day", $h_mess[39]);
+            }
+        }
+
+        //紹介料仕入を起こす際、代行者に仕入締をやってないかチェック
+        if(Check_Payment_Close_Day($db_con, $intro_account_id, $delivery_day_y, $delivery_day_m, $delivery_day_d) == false){
+            if($hand_slip_flg){
+                $form->setElementError("form_delivery_day", "売上計上日 に紹介口座先の仕入締日以前の日付は入力できません。");
+            }else{
+                $form->setElementError("form_delivery_day", "予定巡回日 に紹介口座先の仕入締日以前の日付は入力できません。");
+            }
+        }
+    }
+}
+
+
+//契約区分が通常orＦＣのみ
+if($contract_div == '1' || $group_kind == 3){
+
+    //手書伝票以外でチェック
+    if($hand_slip_flg != true){
+        //◇巡回担当者
+        //売上率の合計が100%か判定
+        //入力された売上率の合計が100％か判定
+        if(($rate1 + (int)$rate2 + (int)$rate3 + (int)$rate4) != 100){
+            $error_msg = $h_mess[16];
+            $error_flg = true;        //エラー表示
+        }
+
+        //巡回担当者の重複チェック
+        $cnum1 = count($staff_check);
+        $staff_check2 = array_unique($staff_check);
+        $cnum2 = count($staff_check2);
+        //要素数判定
+        if($cnum1 != $cnum2){
+            //要素数が違う場合、重複値が存在した
+            $error_msg2 = $h_mess[17];
+            $error_flg = true;        //エラー表示
+        }
+
+        //売上率が０以上の数値か判定
+        for($s=0;$s<5;$s++){
+            $ecount = 12 + $s;
+            //入力値がある場合に数値判定
+            if(!ereg("^[0-9]+$",$staff_rate[$s]) && $staff_rate[$s] != NULL){
+                $error_msg10[$s] = $h_mess[$ecount];
+                $error_flg = true;        //エラー表示
+            }
+        }
+
+        //順路
+        //●文字数チェック
+        //●数値チェック
+        if(!ereg("^[0-9]{4}$",$route)){
+            $form->setElementError("form_route_load","$h_mess[18]");
+        }
+    }
+
+}
+
+
+//商品入力判定
+if($input_goods_flg == false){
+    //商品行全てが未入力の場合、エラー
+    $error_msg3 = $h_mess[21];
+    $error_flg = true;        //エラー表示
+}
+
+//紹介口座料
+$form->addRule('intro_ac_price',$h_mess[55],"regex", '/^[0-9]+$/');
+$form->addRule('intro_ac_price',$h_mess[55],"nonzero");
+$form->addRule('intro_ac_rate',$h_mess[56],"regex", '/^[0-9]+$/');
+$form->addRule('intro_ac_rate',$h_mess[56],"nonzero");
+
+//紹介口座率は1〜100の間
+if($intro_ac_div == "3" && ($intro_ac_rate <= 0 || $intro_ac_rate > 100)){
+    $form->setElementError('intro_ac_rate', $h_mess[56]);
+}
+
+if($intro_ac_div == "2"){
+    $form->addRule('intro_ac_price', $h_mess[55], 'required');
+}elseif($intro_ac_div == "3"){
+    $form->addRule('intro_ac_rate', $h_mess[56], 'required');
+}
+
+
+for($n=1;$n<=5;$n++){
+    //入力行判定
+    if($divide[$n] != NULL || $slip_flg[$n] == 'true' || $serv_id[$n] != NULL ||$goods_item_flg[$n] == 'true' || $goods_item_id[$n] != NULL || $goods_item_num[$n] != NULL || $set_flg[$n] == 'true' || $t_price1[$n] != NULL || $t_price2[$n] != NULL || $s_price1[$n] != NULL || $s_price2[$n] != NULL || $trade_amount[$n] != NULL || $sale_amount[$n] != NULL || $goods_body_id[$n] != NULL || $goods_expend_id[$n] || $goods_body_num[$n] != NULL || $goods_expend_num[$n] != NULL || $aprice_div[$n] == 2 || $aprice_div[$n] == 3 || $ad_flg[$n] == "2"){
+
+        //◇サービス印字・一式フラグ
+        //妥当入力チェック
+        //サービスIDがあり印字しない場合に、一式フラグが付いているか判定
+        if($serv_id[$n] != NULL && $slip_flg[$n] == 'false' && $set_flg[$n] == 'true'){
+            $form->setElementError("form_print_flg1[$n]",$d_mess[15][$n]);
+        }
+
+        //◇サービス印字・アイテム印字
+        //妥当入力チェック
+        //サービスID or アイテムIDがある場合、サービス・アイテムのいずれかが印字してあるか判定
+        if(($serv_id[$n] != NULL || $goods_item_id[$n] != NULL) && $slip_flg[$n] == 'false' && $goods_item_flg[$n] == 'false'){
+            $form->setElementError("form_print_flg2[$n]",$d_mess[17][$n]);
+        }
+        //サービス印字がある場合、サービスIDがあるか判定
+        if($serv_id[$n] == NULL && $slip_flg[$n] == 'true'){
+            $error_msg4[$n] = $d_mess[2][$n];
+            $error_flg = true;        //エラー表示
+        }
+
+        //◇アイテム印字
+        //妥当入力チェック
+        //アイテム印字がある場合、アイテムIDがあるか判定
+        if($goods_item_id[$n] == NULL && $goods_item_flg[$n] == 'true'){
+            $error_msg5[$n] = $d_mess[16][$n];
+            $error_flg = true;        //エラー表示
+        }
+
+        //契約区分が通常のみ口座料判定
+        if($contract_div == '1'){
+            //◇口座料(固定金額)
+            //金額妥当性チェック
+            if($aprice_div[$n] == 2){
+                //売上金額より口座料が多い場合エラー
+                if($sale_amount[$n] < $ac_price[$n]){
+                    $form->setElementError("form_account_price[$n]",$d_mess[31][$n]);
+                }
+                //口座料が数値のみか判定
+                if(!ereg("^[0-9]+$",$ac_price[$n])){
+                    $form->setElementError("form_account_price[$n]",$d_mess[13][$n]);
+                }
+            }
+            //◇口座料(％指定)
+            //金額妥当性チェック
+            if($aprice_div[$n] == 3){
+                //売上金額より口座料が多い場合エラー
+                if(100 < $ac_rate[$n]){
+                    $form->setElementError("form_account_rate[$n]",$d_mess[31][$n]);
+                }
+                //口座料が数値のみか判定
+                if(!ereg("^[0-9]+$",$ac_rate[$n])){
+                    $form->setElementError("form_account_rate[$n]",$d_mess[14][$n]);
+                }
+                //口座料が100以下か判定
+                if($ac_rate[$n] <= 0 || $ac_rate[$n] > 100){
+                    $form->setElementError("form_account_rate[$n]",$d_mess[14][$n]);
+                }
+            }
+        }
+
+        //aoyama-n 2009-09-08
+        /************
+        //◇営業原価
+        //・数値判定
+        if(!ereg("^[0-9]+\.[0-9]+$",$trade_price[$n])){
+            $form->setElementError("form_trade_price[$n]",$d_mess[5][$n]);
+        }
+        //◇売上単価
+        //・数値判定
+        if(!ereg("^[0-9]+\.[0-9]+$",$sale_price[$n])){
+            $form->setElementError("form_sale_price[$n]",$d_mess[7][$n]);
+        }
+        ************/
+
+        //値引商品 
+        if($_POST["hdn_discount_flg"][$n] === 't'){
+            //◇営業原価
+            //・数値判定
+            if(!ereg("^[-0-9]+\.[0-9]+$",$trade_price[$n])){
+                $form->setElementError("form_trade_price[$n]",$d_mess[36][$n]);
+            }elseif($trade_price[$n] > 0){
+                $form->setElementError("form_trade_price[$n]",$d_mess[36][$n]);
+            }
+            //◇売上単価
+            //・数値判定
+            if(!ereg("^[-0-9]+\.[0-9]+$",$sale_price[$n])){
+                $form->setElementError("form_sale_price[$n]",$d_mess[37][$n]);
+            }elseif($sale_price[$n] > 0){
+                $form->setElementError("form_sale_price[$n]",$d_mess[37][$n]);
+            }
+        //値引商品以外  
+        }else{
+            //◇営業原価
+            //・数値判定
+            if(!ereg("^[0-9]+\.[0-9]+$",$trade_price[$n])){
+                $form->setElementError("form_trade_price[$n]",$d_mess[5][$n]);
+            }
+            //◇売上単価
+            //・数値判定
+            if(!ereg("^[0-9]+\.[0-9]+$",$sale_price[$n])){
+                $form->setElementError("form_sale_price[$n]",$d_mess[7][$n]);
+            }
+        }
+
+        if($goods_item_num[$n] == null){
+            //◇アイテム商品コード
+            if($_POST["form_goods_name1"][$n] != null || $_POST["official_goods_name"][$n] != null){
+                $form->setElementError("form_goods_cd1[$n]", $d_mess[32][$n]);
+            }
+        }else{
+            //◇アイテム数量
+            //・数値判定
+            if(($serv_id[$n] != NULL || $goods_item_id[$n] != NULL) && !ereg("^[0-9]+$",$goods_item_num[$n])){
+                $form->setElementError("form_goods_num1[$n]",$d_mess[8][$n]);
+            }
+        }
+
+        if($_POST["form_goods_num2"][$n] == null){
+            //◇本体商品商品コード
+            if($_POST["form_goods_cd2"][$n] == null && $_POST["form_goods_name2"][$n] != null){
+                $form->setElementError("form_goods_cd2[$n]", $d_mess[34][$n]);
+            }
+        }else{
+            //◇本体数量
+            //・必須判定
+            if($goods_body_id[$n] == NULL){
+                if($contract_div == "1"){
+                    $form->setElementError("error_goods_num2[$n]",$d_mess[12][$n]);
+                }else{
+                    $form->setElementError("form_goods_cd2[$n]", $d_mess[24][$n]);
+                }
+            }
+            //・数値判定
+            if($goods_body_id[$n] != NULL && !ereg("^[0-9]+$",$goods_body_num[$n])){
+                $form->setElementError("form_goods_num2[$n]",$d_mess[10][$n]);
+            }
+        }
+
+        if($_POST["form_goods_num3"][$n] == null){
+            //◇消耗品商品コード
+            if($_POST["form_goods_cd3"][$n] == null && $_POST["form_goods_name3"][$n] != null){
+                $form->setElementError("form_goods_cd3[$n]", $d_mess[33][$n]);
+            }
+        }else{
+            //◇消耗品数量
+            //・必須判定
+            if($goods_expend_id[$n] == NULL){
+                if($contract_div == "1"){
+                    $form->setElementError("error_goods_num3[$n]",$d_mess[11][$n]);
+                }else{
+                    $form->setElementError("form_goods_cd3[$n]", $d_mess[25][$n]);
+                }
+            }
+            //・数値判定
+            if($goods_expend_id[$n] != NULL && !ereg("^[0-9]+$",$goods_expend_num[$n])){
+                $form->setElementError("form_goods_num3[$n]",$d_mess[9][$n]);
+            }
+        }
+
+
+        //--------------------------//
+        //不正値判定関数
+        //--------------------------//
+        //アイテム商品不正判定
+        if($goods_item_id[$n] != NULL){
+            $injust = Injustice_check($db_con,"goods",$goods_item_id[$n],$goods_item_cd[$n]);
+            if($injust == false){
+                $form->setElementError("form_goods_cd1[$n]",$d_mess[18][$n]);
+
+                //該当フォーム初期化
+                $con_data2["hdn_goods_id1"][$n]         = "";
+                $con_data2["hdn_name_change1"][$n]      = "";
+                $con_data2["form_goods_cd1"][$n]        = "";
+                $con_data2["official_goods_name"][$n]   = "";
+                $con_data2["form_goods_name1"][$n]      = "";
+                $con_data2["form_trade_price"][$n]["1"] = "";
+                $con_data2["form_trade_price"][$n]["2"] = "";
+                $con_data2["form_trade_amount"][$n]     = "";
+                $con_data2["form_sale_price"][$n]["1"]  = "";
+                $con_data2["form_sale_price"][$n]["2"]  = "";
+                $con_data2["form_sale_amount"][$n]      = "";
+            }
+        }
+        //本体商品不正判定
+        if($goods_body_id[$n] != NULL){
+            $injust = Injustice_check($db_con,"goods",$goods_body_id[$n],$goods_body_cd[$n]);
+            if($injust == false){
+                $form->setElementError("form_goods_cd2[$n]",$d_mess[20][$n]);
+
+                //該当フォーム初期化
+                $con_data2["hdn_goods_id2"][$n]         = "";
+                $con_data2["hdn_name_change2"][$n]      = "";
+                $con_data2["form_goods_cd2"][$n]        = "";
+                $con_data2["form_goods_name2"][$n]      = "";
+            }
+        }
+        //消耗品不正判定
+        if($goods_expend_id[$n] != NULL){
+            $injust = Injustice_check($db_con,"goods",$goods_expend_id[$n],$goods_expend_cd[$n]);
+            if($injust == false){
+                $form->setElementError("form_goods_cd3[$n]",$d_mess[19][$n]);
+
+                //該当フォーム初期化
+                $con_data2["hdn_goods_id3"][$n]         = "";
+                $con_data2["hdn_name_change3"][$n]      = "";
+                $con_data2["form_goods_cd3"][$n]        = "";
+                $con_data2["form_goods_name3"][$n]      = "";
+            }
+        }
+
+
+        //前受金数値チェック
+        $form->addRule("form_ad_offset_amount[$n]", $d_mess[35][$n], "regex", "/^[0-9]+$/");
+        //前受金ありの場合、必須
+        if($ad_flg[$n] == "2" && $ad_offset_amount[$n] == null){
+            $form->setElementError("form_ad_offset_amount[$n]", $d_mess[35][$n]);
+        }
+
+    }
+}
+
+
+?>

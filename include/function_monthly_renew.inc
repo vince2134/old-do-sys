@@ -1,0 +1,943 @@
+<?php
+
+
+/**
+ * 対象の取引先IDを取得するSQL
+ *
+ * 変更履歴
+ * 1.0.0 (2007/01/18) 新規作成(kajioka-h)
+ *
+ * @param       int         $shop_id        ショップID
+ * @param       string      $trade_div      売買区分
+ *                                              "sale": 売掛
+ *                                              "buy":  買掛
+ * @param       string      $end_day        終了日（この日まで集計）
+ * @param       boolean     $renew_flg      日次更新フラグ
+ *                                              true:   日次更新済のもののみ
+ *                                              false:  全て
+ *
+ * @return      string      $sql            生成したSQL
+ *
+ * @author      kajioka-h <kajioka-h@bhsk.co.jp>
+ * @version     1.0.0 (2007/01/18)
+ *
+ */
+/*
+ * 履歴：
+ *  日付            B票No.      担当者      内容
+ *  -----------------------------------------------------------
+ *  2007/04/19      要望20-4    kajioka-h   一括入金の、振分テーブルの金額がNULLじゃないやつも抽出
+ */
+function Monthly_All_Client_Sql($shop_id, $trade_div, $end_day, $renew_flg){
+
+    //対象のテーブル名等を指定
+    if($trade_div == "sale"){
+        $pay_table      = "t_payin_h";
+        $balance_table  = "t_ar_balance";
+    }else{
+        $pay_table      = "t_payout_h";
+        $balance_table  = "t_ap_balance";
+    }
+
+
+    //指定日以前に売上、入金、月次更新（売掛or買掛残高初期設定）のあった取引先IDを全て抽出
+    $sql  = "
+        SELECT DISTINCT(client_id) AS client_id 
+        FROM ( 
+            SELECT client_id 
+            FROM t_".$trade_div."_h 
+            WHERE shop_id = $shop_id 
+    ";
+    if($renew_flg){
+        $sql .= "            AND renew_flg = true ";
+    }
+    $sql .= "
+            AND ".$trade_div."_day <= '$end_day' 
+
+            UNION 
+
+            SELECT client_id 
+            FROM $pay_table 
+            WHERE shop_id = $shop_id 
+    ";
+    if($renew_flg){
+        $sql .= "            AND renew_flg = true ";
+    }
+    $sql .= "
+            AND pay_day <= '$end_day' 
+
+    ";
+    //売上（売掛）の場合、振分入金データテーブルの金額がNULLじゃないやつも抽出
+    if($trade_div == "sale"){
+        $sql .= "
+            UNION 
+
+            SELECT 
+                t_payallocation_d.client_id 
+            FROM 
+                t_payin_h 
+                LEFT JOIN t_payallocation_d ON t_payin_h.pay_id = t_payallocation_d.pay_id 
+            WHERE 
+                t_payin_h.shop_id = $shop_id 
+                AND t_payin_h.pay_day <= '$end_day' 
+                AND t_payin_h.payin_div = '2' 
+                AND t_payallocation_d.amount IS NOT NULL 
+        ";
+        if($renew_flg){
+            $sql .= "            AND t_payin_h.renew_flg = true ";
+        }
+    }
+    $sql .= $test = "
+            UNION 
+
+            SELECT client_id 
+            FROM $balance_table 
+            WHERE shop_id = $shop_id 
+            AND monthly_close_day_this < '$end_day' 
+        ) AS t_all_client 
+    ";
+
+    return $sql;
+
+}
+
+
+
+/**
+ * 月次更新時の月次更新日、/売|買/掛残高を抽出SQL
+ *
+ * 変更履歴
+ * 1.0.0 (2007/01/23) 新規作成(kajioka-h)
+ *
+ * @param       int         $shop_id        抽出対象のショップID
+ * @param       string      $trade_div      売買区分
+ *                                              "sale": 売掛
+ *                                              "buy":  買掛
+ *
+ * @return      string      $sql            生成したSQL
+ *
+ * @author      kajioka-h <kajioka-h@bhsk.co.jp>
+ * @version     1.0.0 (2007/01/23)
+ *
+ */
+function Monthly_Balance_Last_Sql($shop_id, $trade_div){
+
+    //対象のテーブル名等を指定
+    $table_name = ($trade_div == "sale") ? "ar" : "ap";
+
+    $sql  = "
+        SELECT 
+            t_".$table_name."_balance.client_id, 
+            t_".$table_name."_balance.monthly_close_day_last, 
+            t_".$table_name."_balance2.".$table_name."_balance_last 
+        FROM 
+            ( 
+                SELECT 
+                    client_id, 
+                    MAX(monthly_close_day_this) AS monthly_close_day_last 
+                FROM 
+                    t_".$table_name."_balance 
+                WHERE 
+                    shop_id = $shop_id 
+                GROUP BY 
+                    client_id 
+            ) AS t_".$table_name."_balance 
+            INNER JOIN 
+            ( 
+                SELECT 
+                    client_id, 
+                    monthly_close_day_this AS monthly_close_day_last, 
+                    ".$table_name."_balance_this AS ".$table_name."_balance_last 
+                FROM 
+                    t_".$table_name."_balance 
+                WHERE 
+                    shop_id = $shop_id 
+            ) AS t_".$table_name."_balance2 ON t_".$table_name."_balance.client_id = t_".$table_name."_balance2.client_id 
+                AND t_".$table_name."_balance.monthly_close_day_last = t_".$table_name."_balance2.monthly_close_day_last
+    ";
+
+    return $sql;
+
+}
+
+
+
+/**
+ * 指定期間の売上合計額（掛売、現売、割賦売）とその消費税合計額を抽出するSQL
+ *
+ * 変更履歴
+ * 1.0.0 (2007/01/18) 新規作成(kajioka-h)
+ *
+ * @param       int         $shop_id        抽出対象のショップID
+ * @param       string      $start_day      開始日（この日の翌日から集計）
+ * @param       string      $end_day        終了日（この日まで集計）
+ * @param       boolean     $renew_flg      日次更新フラグ
+ *                                              true:   日次更新済のもののみ
+ *                                              false:  全て
+ *
+ * @return      string      $sql            生成したSQL
+ *
+ * @author      kajioka-h <kajioka-h@bhsk.co.jp>
+ * @version     1.0.0 (2007/01/18)
+ *
+ */
+function Monthly_Sale_Amount_Sql($shop_id, $start_day, $end_day, $renew_flg){
+
+    $sql  = "
+        SELECT 
+            client_id, 
+            SUM( 
+                CASE 
+                    WHEN trade_id IN (11, 61, 15) THEN net_amount 
+                    ELSE -(net_amount) 
+                END 
+            ) AS net_sale_amount, 
+            SUM( 
+                CASE 
+                    WHEN trade_id IN (11, 61, 15) THEN tax_amount 
+                    ELSE -(tax_amount) 
+                END 
+            ) AS tax_amount 
+        FROM 
+            t_sale_h 
+        WHERE 
+            shop_id = $shop_id 
+            AND sale_day > '$start_day' 
+            AND sale_day <= '$end_day' 
+    ";
+    if($renew_flg){
+        $sql .= "            AND renew_flg = true ";
+    }
+    $sql .= "
+        GROUP BY 
+            client_id 
+    ";
+
+    return $sql;
+
+}
+
+
+/**
+ * 指定期間の入金合計額（除調整額）、調整額を抽出するSQL
+ *
+ * 変更履歴
+ * 1.0.0 (2007/01/18) 新規作成(kajioka-h)
+ * 1.0.0 (2007/08/09) 一括入金がすべて親に挙がる不具合を修正（watanabe-k)
+ *
+ * @param       int         $shop_id        ショップID
+ * @param       string      $start_day      開始日（この日の翌日から集計、前回月次更新日とかを指定する）
+ * @param       string      $end_day        終了日（この日まで集計）
+ * @param       boolean     $renew_flg      日次更新フラグ
+ *                                              true:   日次更新済のもののみ
+ *                                              false:  全て
+ *
+ * @return      string      $sql            生成したSQL
+ *
+ * @author      kajioka-h <kajioka-h@bhsk.co.jp>
+ * @version     1.1.0 (2007/04/11)
+ *
+ */
+/*
+ * 履歴：
+ *  日付            B票No.      担当者      内容
+ *  -----------------------------------------------------------
+ *  2007/04/11      要望20-4    kajioka-h   一括入金に対応
+ *  2007-07-13                  fukuda      入金調整とそれ以外の取引区分が、1伝票内に1:n, n:1の場合に起こる不具合を修正
+ */
+function Monthly_Payin_Amount_Sql($shop_id, $start_day, $end_day, $renew_flg)
+{
+
+    // 得意先ID、入金合計額、調整合計額を取得
+    $sql  = "SELECT \n";
+    $sql .= "   CASE \n";
+    $sql .= "       WHEN t_payin_h.client_id IS NOT NULL \n";
+    $sql .= "       THEN t_payin_h.client_id \n";
+    $sql .= "       ELSE t_payallocation_d.client_id \n";
+    $sql .= "   END \n";
+    $sql .= "   AS client_id, \n";
+    $sql .= "   COALESCE(t_payin_h.payin_amount, 0) + COALESCE(t_payallocation_d.payin_amount, 0) AS payin_amount, \n";
+    $sql .= "   COALESCE(t_payin_h.tune_amount,  0) + COALESCE(t_payallocation_d.tune_amount,  0) AS tune_amount \n";
+    $sql .= "FROM \n";
+    // 通常入金
+    $sql .= "   ( \n";
+    $sql .= "       SELECT \n";
+    $sql .= "           t_payin_h.client_id, \n";
+    $sql .= "           SUM( \n";
+    $sql .= "               CASE \n";
+    $sql .= "                   WHEN t_payin_d.trade_id != 38 \n";
+    $sql .= "                   THEN COALESCE(t_payin_d.amount, 0) \n";
+    $sql .= "                   ELSE 0 \n";
+    $sql .= "               END \n";
+    $sql .= "           ) \n";
+    $sql .= "           AS payin_amount, \n";
+    $sql .= "           SUM( \n";
+    $sql .= "               CASE \n";
+    $sql .= "                   WHEN t_payin_d.trade_id  = 38 \n";
+    $sql .= "                   THEN COALESCE(t_payin_d.amount, 0) \n";
+    $sql .= "                   ELSE 0 \n";
+    $sql .= "               END \n";
+    $sql .= "           ) \n";
+    $sql .= "           AS tune_amount \n";
+    $sql .= "       FROM \n";
+    $sql .= "           t_payin_h \n";
+    $sql .= "           LEFT JOIN t_payin_d ON t_payin_h.pay_id = t_payin_d.pay_id \n";
+    $sql .= "       WHERE \n";
+    $sql .= "           t_payin_h.shop_id = $shop_id \n";
+    $sql .= "       AND \n";
+    $sql .= "           t_payin_h.pay_day > '$start_day' \n";
+    $sql .= "       AND \n";
+    $sql .= "           t_payin_h.pay_day <= '$end_day' \n";
+    $sql .= "       AND \n";
+    $sql .= "           t_payin_h.payin_div = '1' \n";
+    if ($renew_flg){
+    $sql .= "       AND \n";
+    $sql .= "           t_payin_h.renew_flg = true \n";
+    }
+    $sql .= "       GROUP BY \n";
+    $sql .= "           t_payin_h.client_id \n";
+    $sql .= "   ) \n";
+    $sql .= "   AS t_payin_h \n";
+    // 一括入金
+    $sql .= "   FULL OUTER JOIN \n";
+    $sql .= "   ( \n";
+    $sql .= "       SELECT \n";
+//    $sql .= "           t_payin_h.client_id, \n";
+//抽出対象カラムを変更<watanabe-k>
+    $sql .= "           t_payallocation_d.client_id, \n";
+    $sql .= "           SUM( \n";
+    $sql .= "               CASE \n";
+    $sql .= "                   WHEN t_payallocation_d.trade_id != 38 \n";
+    $sql .= "                   THEN COALESCE(t_payallocation_d.amount, 0) \n";
+    $sql .= "                   ELSE 0 \n";
+    $sql .= "               END \n";
+    $sql .= "           ) \n";
+    $sql .= "           AS payin_amount, \n";
+    $sql .= "           SUM( \n";
+    $sql .= "               CASE \n";
+    $sql .= "                   WHEN t_payallocation_d.trade_id  = 38 \n";
+    $sql .= "                   THEN COALESCE(t_payallocation_d.amount, 0) \n";
+    $sql .= "                   ELSE 0 \n";
+    $sql .= "               END \n";
+    $sql .= "           ) \n";
+    $sql .= "           AS tune_amount \n";
+    $sql .= "       FROM \n";
+    $sql .= "           t_payin_h \n";
+    $sql .= "           LEFT JOIN t_payallocation_d ON t_payin_h.pay_id = t_payallocation_d.pay_id \n";
+    $sql .= "       WHERE \n";
+    $sql .= "           t_payin_h.shop_id = $shop_id \n";
+    $sql .= "       AND \n";
+    $sql .= "           t_payin_h.pay_day > '$start_day' \n";
+    $sql .= "       AND \n";
+    $sql .= "           t_payin_h.pay_day <= '$end_day' \n";
+    $sql .= "       AND \n";
+    $sql .= "           t_payin_h.payin_div = '2' \n";
+    if ($renew_flg){
+    $sql .= "       AND \n";
+    $sql .= "           t_payin_h.renew_flg = true \n";
+    }
+    $sql .= "       GROUP BY \n";
+//    $sql .= "           t_payin_h.client_id \n";
+//GROUP BYカラムを変更<watanabe-k>
+    $sql .= "           t_payallocation_d.client_id \n";
+    $sql .= "   ) \n";
+    $sql .= "   AS t_payallocation_d \n";
+    $sql .= "   ON t_payin_h.client_id = t_payallocation_d.client_id \n";
+
+    return $sql;
+
+}
+
+
+/**
+ * 概要     指定期間の入金手数料を抽出するクエリを返す
+ *
+ * 説明     ↑
+ *
+ * @param   int     $shop_id        自ショップID
+ * @param   str     $start_day      抽出期間開始日
+ * @param   str     $end_day        抽出期間終了日
+ * @param   bool    $renew_flg      日次更新実施フラグ
+ *
+ */
+function Monthly_Payin_Rebate_Sql($shop_id, $start_day, $end_day, $renew_flg)
+{
+    // 得意先ID、入金手数料額
+    $sql .= "SELECT \n";
+    $sql .= "   CASE \n";
+    $sql .= "       WHEN t_payin_h.client_id IS NOT NULL \n";
+    $sql .= "       THEN t_payin_h.client_id \n";
+    $sql .= "       ELSE t_payallocation_d.client_id \n";
+    $sql .= "   END \n";
+    $sql .= "   AS client_id, \n";
+    $sql .= "   COALESCE(t_payin_h.payin_amount, 0) + COALESCE(t_payallocation_d.payin_amount, 0) AS payin_rebate \n";
+    $sql .= "FROM \n";
+    // 通常入金（手数料）
+    $sql .= "   ( \n";
+    $sql .= "       SELECT \n";
+    $sql .= "           t_payin_h.client_id, \n";
+    $sql .= "           SUM(COALESCE(t_payin_d.amount, 0)) AS payin_amount \n";
+    $sql .= "       FROM \n";
+    $sql .= "           t_payin_h \n";
+    $sql .= "           LEFT JOIN t_payin_d \n";
+    $sql .= "               ON  t_payin_h.pay_id = t_payin_d.pay_id \n";
+    $sql .= "               AND t_payin_d.trade_id = 35 \n";
+    $sql .= "       WHERE \n";
+    $sql .= "           t_payin_h.shop_id = $shop_id \n";
+    $sql .= "       AND \n";
+    $sql .= "           t_payin_h.pay_day > '$start_day' \n";
+    $sql .= "       AND \n";
+    $sql .= "           t_payin_h.pay_day <= '$end_day' \n";
+    $sql .= "       AND \n";
+    $sql .= "           t_payin_h.payin_div = '1' \n";
+    if ($renew_flg){
+    $sql .= "       AND \n";
+    $sql .= "           t_payin_h.renew_flg = true \n";
+    }
+    $sql .= "       GROUP BY \n";
+    $sql .= "           t_payin_h.client_id \n";
+    $sql .= "   ) \n";
+    $sql .= "   AS t_payin_h \n";
+    // 一括入金（手数料）
+    $sql .= "   FULL OUTER JOIN \n";
+    $sql .= "   ( \n";
+    $sql .= "       SELECT \n";
+    $sql .= "           t_payallocation_d.client_id, \n";
+    $sql .= "           SUM(COALESCE(t_payallocation_d.amount, 0)) AS payin_amount \n";
+    $sql .= "       FROM \n";
+    $sql .= "           t_payin_h \n";
+    $sql .= "           LEFT JOIN t_payallocation_d \n";
+    $sql .= "               ON  t_payin_h.pay_id = t_payallocation_d.pay_id \n";
+    $sql .= "               AND t_payallocation_d.trade_id = 35 \n";
+    $sql .= "       WHERE \n";
+    $sql .= "           t_payin_h.shop_id = $shop_id \n";
+    $sql .= "       AND \n";
+    $sql .= "           t_payin_h.pay_day > '$start_day' \n";
+    $sql .= "       AND \n";
+    $sql .= "           t_payin_h.pay_day <= '$end_day' \n";
+    $sql .= "       AND \n";
+    $sql .= "           t_payin_h.payin_div = '2' \n";
+    if ($renew_flg){
+    $sql .= "       AND \n";
+    $sql .= "           t_payin_h.renew_flg = true \n";
+    }
+    $sql .= "       GROUP BY \n";
+    $sql .= "           t_payallocation_d.client_id \n";
+    $sql .= "   ) \n";
+    $sql .= "   AS t_payallocation_d \n";
+    $sql .= "   ON t_payin_h.client_id = t_payallocation_d.client_id \n";
+
+    return $sql;
+
+}
+
+
+/**
+ * 指定期間の仕入合計額（掛仕入、現仕入、割賦仕入）とその消費税合計額を抽出するSQL
+ *
+ * 変更履歴
+ * 1.0.0 (2007/01/27) 新規作成(kajioka-h)
+ *
+ * @param       int         $shop_id        抽出対象のショップID
+ * @param       string      $start_day      開始日（この日の翌日から集計、前回月次更新日とかを指定する）
+ * @param       string      $end_day        終了日（この日まで集計）
+ * @param       boolean     $renew_flg      日次更新フラグ
+ *                                              true:   日次更新済のもののみ
+ *                                              false:  全て
+ *
+ * @return      string      $sql            生成したSQL
+ *
+ * @author      kajioka-h <kajioka-h@bhsk.co.jp>
+ * @version     1.0.0 (2007/01/27)
+ *
+ */
+function Monthly_Buy_Amount_Sql($shop_id, $start_day, $end_day, $renew_flg){
+
+    $sql  = "
+        SELECT 
+            client_id, 
+            SUM( 
+                CASE 
+                    WHEN trade_id IN (21, 71, 25) THEN net_amount 
+                    ELSE -(net_amount) 
+                END 
+            ) AS net_buy_amount, 
+            SUM( 
+                CASE 
+                    WHEN trade_id IN (21, 71, 25) THEN tax_amount 
+                    ELSE -(tax_amount) 
+                END 
+            ) AS tax_amount 
+        FROM 
+            t_buy_h 
+        WHERE 
+            shop_id = $shop_id 
+            AND buy_day > '$start_day' 
+            AND buy_day <= '$end_day' 
+    ";
+    if($renew_flg){
+        $sql .= "            AND renew_flg = true ";
+    }
+    $sql .= "
+        GROUP BY 
+            client_id 
+    ";
+
+    return $sql;
+
+}
+
+
+/**
+ * 指定期間の支払合計額（除調整額）、調整額を抽出するSQL
+ *
+ * 変更履歴
+ * 1.0.0 (2007/01/27) 新規作成(kajioka-h)
+ *
+ * @param       int         $shop_id        ショップID
+ * @param       string      $start_day      開始日（この日の翌日から集計）
+ * @param       string      $end_day        終了日（この日まで集計）
+ * @param       boolean     $renew_flg      日次更新フラグ
+ *                                              true:   日次更新済のもののみ
+ *                                              false:  全て
+ *
+ * @return      string      $sql            生成したSQL
+ *
+ * @author      kajioka-h <kajioka-h@bhsk.co.jp>
+ * @version     1.0.0 (2007/01/27)
+ *
+ */
+/*
+ * 履歴：
+ *  日付            B票No.      担当者      内容
+ *  -----------------------------------------------------------
+ *  2007-07-13                  fukuda      支払調整とそれ以外の取引区分が、1伝票内に1:n, n:1の場合に起こる不具合を修正
+ */
+function Monthly_Payout_Amount_Sql($shop_id, $start_day, $end_day, $renew_flg){
+
+    // 取引先ID、支払合計額、調整合計額を取得
+    $sql  = "SELECT \n";
+    $sql .= "   t_payout_h.client_id, \n";
+    $sql .= "   SUM( \n";
+    $sql .= "       CASE \n";
+    $sql .= "           WHEN t_payout_d.trade_id != 46 \n";
+    $sql .= "           THEN COALESCE(t_payout_d.pay_amount, 0) \n";
+    $sql .= "           ELSE 0 \n";
+    $sql .= "       END \n";
+    $sql .= "   ) \n";
+    $sql .= "   AS payout_amount, \n";
+    $sql .= "   SUM( \n";
+    $sql .= "       CASE \n";
+    $sql .= "           WHEN t_payout_d.trade_id  = 46 \n";
+    $sql .= "           THEN COALESCE(t_payout_d.pay_amount, 0) \n";
+    $sql .= "           ELSE 0 \n";
+    $sql .= "       END \n";
+    $sql .= "   ) \n";
+    $sql .= "   AS tune_amount \n";
+    $sql .= "FROM \n";
+    $sql .= "   t_payout_h \n";
+    $sql .= "   INNER JOIN t_payout_d ON t_payout_h.pay_id = t_payout_d.pay_id \n";
+    $sql .= "WHERE \n";
+    $sql .= "   t_payout_h.shop_id = $shop_id \n";
+    $sql .= "AND \n";
+    $sql .= "   t_payout_h.pay_day > '$start_day' \n";
+    $sql .= "AND \n";
+    $sql .= "   t_payout_h.pay_day <= '$end_day' \n";
+    if ($renew_flg){
+    $sql .= "AND \n";
+    $sql .= "   t_payout_h.renew_flg = true \n";
+    }
+    $sql .= "GROUP BY \n";
+    $sql .= "   t_payout_h.client_id \n";
+
+    return $sql;
+
+}
+
+
+/**
+ * 概要     指定期間の支払手数料を抽出するクエリを返す
+ *
+ * 説明     ↑
+ *
+ * @param   int     $shop_id        自ショップID
+ * @param   str     $start_day      抽出期間開始日
+ * @param   str     $end_day        抽出期間終了日
+ * @param   bool    $renew_flg      日次更新実施フラグ
+ *
+ */
+function Monthly_Payout_Rebate_Sql($shop_id, $start_day, $end_day, $renew_flg){
+
+    // 取引先ID、手数料額
+    $sql  = "SELECT \n";
+    $sql .= "   t_payout_h.client_id, \n";
+    $sql .= "   SUM(COALESCE(t_payout_d.pay_amount, 0)) AS payout_rebate \n";
+    $sql .= "FROM \n";
+    $sql .= "   t_payout_h \n";
+    $sql .= "   LEFT JOIN t_payout_d \n";
+    $sql .= "       ON  t_payout_h.pay_id = t_payout_d.pay_id \n";
+    $sql .= "       AND t_payout_d.trade_id = 48 \n";
+    $sql .= "WHERE \n";
+    $sql .= "   t_payout_h.shop_id = $shop_id \n";
+    $sql .= "AND \n";
+    $sql .= "   t_payout_h.pay_day > '$start_day' \n";
+    $sql .= "AND \n";
+    $sql .= "   t_payout_h.pay_day <= '$end_day' \n";
+    if ($renew_flg){
+    $sql .= "AND \n";
+    $sql .= "   t_payout_h.renew_flg = true \n";
+    }
+    $sql .= "GROUP BY \n";
+    $sql .= "   t_payout_h.client_id \n";
+
+    return $sql;
+
+}
+
+
+/**
+ * 指定期間のロイヤリティとその消費税額、または一括消費税額を抽出するSQL
+ *
+ * 変更履歴
+ * 1.0.0 (2007/03/07) 新規作成(kajioka-h)
+ *
+ * @param       int         $shop_id        ショップID
+ * @param       string      $start_day      開始日（この日の翌日から集計）
+ * @param       string      $end_day        終了日（この日まで集計）
+ * @param       string      $data_div       データ区分
+ *                                              1： ロイヤリティとその消費税を抽出
+ *                                              2： 一括消費税を抽出
+ * @param       string      $trade_div      売買区分
+ *                                              "sale": 売掛
+ *                                              "buy":  買掛
+ *
+ * @return      string      $sql            生成したSQL
+ *
+ * @author      kajioka-h <kajioka-h@bhsk.co.jp>
+ * @version     1.0.0 (2007/03/07)
+ *
+ */
+/*
+ * 履歴：
+ *  日付            B票No.      担当者      内容
+ *  -----------------------------------------------------------
+ *  2007/05/28      B0702-058   kajioka-h   本部の場合、同じclient_idで売りも買いもするので、ロイヤリティ・一括消費税の区別がつかないバグ修正
+ *
+ */
+function Monthly_Lump_Amount_Sql($shop_id, $start_day, $end_day, $data_div, $trade_div)
+{
+    $sql  = "
+        SELECT 
+            client_id, 
+    ";
+    //データ区分="1"の場合、ロイヤリティ額、消費税額
+    if($data_div == "1"){
+        $sql .= "
+            SUM(net_amount) AS royalty_price, 
+            SUM(tax_amount) AS royalty_tax 
+        ";
+    //データ区分="2"の場合、一括消費税額
+    }elseif($data_div == "2"){
+        $sql .= "
+            SUM(tax_amount) AS adjust_tax 
+        ";
+    }
+    $sql .= "
+        FROM 
+            t_lump_amount 
+        WHERE 
+            shop_id = $shop_id
+            AND allocate_day > '$start_day' 
+            AND allocate_day <= '$end_day' 
+            AND data_div = '$data_div' 
+    ";
+    if($trade_div == "sale"){
+        $sql .= "
+            AND bill_id IS NOT NULL 
+        ";
+    }elseif($trade_div == "buy"){
+        $sql .= "
+            AND schedule_payment_id IS NOT NULL 
+        ";
+    }else{
+        return false;
+    }
+    $sql .= "
+        GROUP BY 
+            client_id 
+    ";
+
+    return $sql;
+
+}
+
+
+/**
+ * 対象の取引先の/売|買/掛残高を取得する
+ *
+ * 変更履歴
+ * 1.0.0 (2007/04/13) 新規作成(kajioka-h)
+ *
+ * @param       resource    $db_con         DB接続リソース
+ * @param       string      $trade_div      売買区分
+ *                                              "sale": 売掛残高を取得
+ *                                              "buy":  買掛残高を取得
+ * @param       int         $client_id      求めたい取引先ID
+ * @param       int         $shop_id        ショップID
+ *                                              デフォルトは $_SESSION["client_id"]
+ * @param       string      $end_day        終了日（この日まで集計）
+ *                                              'yyyy-mm-dd' 形式で渡してね
+ *                                              デフォルトは本日の日付
+ * @param       boolean     $renew_flg      日次更新フラグ
+ *                                              true:   日次更新済のもののみ集計
+ *                                              false:  全て（デフォルト）
+ *
+ * @return      成功：      int             /売|買/掛残高
+ *              失敗：      boolean         false
+ *
+ * @author      kajioka-h <kajioka-h@bhsk.co.jp>
+ * @version     1.0.0 (2007/04/13)
+ *
+ */
+/*
+ * 履歴：
+ *  日付            B票No.      担当者      内容
+ *  -----------------------------------------------------------
+ *  2007/05/11      B0702-051   kajioka-h   調整額の符号が間違っているのを修正
+ *  2007/05/28      B0702-058   kajioka-h   本部の場合、同じclient_idで売り買いするので、ロイヤリティ・一括消費税の区別がつかない仕変の対応
+ *
+ */
+function Get_Balance($db_con, $trade_div, $client_id, $shop_id=null, $end_day=null, $renew_flg=false)
+{
+
+    //売買区分から、抽出するテーブル等を決める
+    if($trade_div == "sale"){
+        $arp        = "ar";         //売掛
+        $pay_div    = "payin";      //入金
+    }elseif($trade_div == "buy"){
+        $arp        = "ap";         //買掛
+        $pay_div    = "payout";     //支払
+    }else{
+        return false;
+    }
+
+    //ショップID
+    $shop_id = ($shop_id === null) ? $_SESSION["client_id"] : $shop_id;
+
+    //抽出期間の始め（前回締日）を取得
+    $sql  = "SELECT \n";
+    $sql .= "    close_day \n";
+    $sql .= "FROM \n";
+    $sql .= "    t_sys_renew \n";
+    $sql .= "WHERE \n";
+    $sql .= "    shop_id = ".$shop_id." \n";
+    $sql .= "    AND \n";
+    $sql .= "    renew_div = '2' \n";
+    $sql .= "ORDER BY \n";
+    $sql .= "    close_day DESC \n";
+    $sql .= "LIMIT 1 \n";
+    $sql .= ";\n";
+
+    $result = Db_Query($db_con, $sql);
+    if(pg_num_rows($result) == 0){
+        $start_day = START_DAY;                         //システム開始日
+    }else{
+        $start_day = pg_fetch_result($result, 0, 0);    //前回の月次更新日
+    }
+
+    //抽出期間の始めを取得
+    global $g_today;
+    $end_day = ($end_day == null) ? $g_today : $end_day;
+
+
+    //残高抽出SQL生成
+    $sql  = "
+        SELECT
+            ( COALESCE(t_".$arp."_balance_last.".$arp."_balance_last, 0)
+              - COALESCE(t_".$pay_div."_amount.".$pay_div."_amount, 0)
+              - COALESCE(t_".$pay_div."_amount.tune_amount, 0)
+              + COALESCE(t_".$trade_div."_amount.net_".$trade_div."_amount, 0)
+              + COALESCE(t_royalty.royalty_price, 0)
+              + COALESCE(t_".$trade_div."_amount.tax_amount, 0)
+              + COALESCE(t_royalty.royalty_tax, 0)
+              + COALESCE(t_adjust_tax.adjust_tax, 0)
+            ) AS ".$arp."_balance_this
+
+        FROM
+            t_client 
+    ";
+
+    //前回月次更新時の月次更新日、売掛残高を抽出
+    $sql .= "
+            LEFT JOIN
+            (
+    ";
+    $sql .= Monthly_Balance_Last_Sql($shop_id, $trade_div);
+    $sql .= "
+            ) AS t_".$arp."_balance_last ON t_client.client_id = t_".$arp."_balance_last.client_id
+    ";
+
+    //前回締日から指定日までの/売上|仕入/額（税抜）、消費税額、/売上|仕入/額（税込）を抽出
+    $sql .= "
+            LEFT JOIN
+            (
+    ";
+    if($trade_div == "sale"){
+        $sql .= Monthly_Sale_Amount_Sql($shop_id, $start_day, $end_day, $renew_flg);
+    }else{
+        $sql .= Monthly_Buy_Amount_Sql($shop_id, $start_day, $end_day, $renew_flg);
+    }
+    $sql .= "
+            ) AS t_".$trade_div."_amount ON t_client.client_id = t_".$trade_div."_amount.client_id
+    ";
+
+    //前回締日から指定日までの入金額（除調整額）、調整額を抽出
+    $sql .= "
+            LEFT JOIN
+            (
+    ";
+    if($trade_div == "sale"){
+        $sql .= Monthly_Payin_Amount_Sql($shop_id, $start_day, $end_day, $renew_flg);
+    }else{
+        $sql .= Monthly_Payout_Amount_Sql($shop_id, $start_day, $end_day, $renew_flg);
+    }
+    $sql .= "
+            ) AS t_".$pay_div."_amount ON t_client.client_id = t_".$pay_div."_amount.client_id
+    ";
+
+    //前回締日から指定日までのロイヤリティ額、その消費税額を抽出
+    $sql .= "
+            LEFT JOIN
+            (
+    ";
+    $sql .= Monthly_Lump_Amount_Sql($shop_id, $start_day, $end_day, "1", $trade_div);
+    $sql .= "
+            ) AS t_royalty ON t_client.client_id = t_royalty.client_id
+    ";
+
+    //前回締日から指定日までの一括消費税額を抽出
+    $sql .= "
+            LEFT JOIN
+            (
+    ";
+    $sql .= Monthly_Lump_Amount_Sql($shop_id, $start_day, $end_day, "2", $trade_div);
+    $sql .= "
+            ) AS t_adjust_tax ON t_client.client_id = t_adjust_tax.client_id
+    ";
+
+    //対象の得意先ID指定
+    $sql .= "WHERE \n";
+    $sql .= "    t_client.client_id = $client_id \n";
+
+    $sql .= ";\n";
+//print_array($sql);
+
+
+    $result = Db_Query($db_con, $sql);
+    if(pg_num_rows($result) == 0 || $result === false){
+        return false;
+    }
+
+    $balance = pg_fetch_result($result, 0, 0);
+
+    return $balance;
+
+}
+
+
+/**
+ * 買掛・売掛残高一覧で対象の取引先IDを取得するSQL
+ *
+ * 変更履歴
+ * 1.0.0 (2011/01/29) 新規作成
+ *
+ * @param       int         $shop_id        ショップID
+ * @param       string      $trade_div      売買区分
+ *                                              "sale": 売掛
+ *                                              "buy":  買掛
+ * @param       string      $end_day        終了日（この日まで集計）
+ * @param       boolean     $renew_flg      日次更新フラグ
+ *                                              true:   日次更新済のもののみ
+ *                                              false:  全て
+ *
+ * @return      string      $sql            生成したSQL
+ *
+ * @author      watanabe-k <watanabe-k@bhsk.co.jp>
+ * @version     1.0.0 (20l1/01/29)
+ *
+ */
+function Monthly_All_Client_Sql_For_Balance($shop_id, $trade_div, $end_day, $renew_flg){
+
+    //対象のテーブル名等を指定
+    if($trade_div == "sale"){
+        $pay_table      = "t_payin_h";
+        $balance_table  = "t_ar_balance";
+    }else{
+        $pay_table      = "t_payout_h";
+        $balance_table  = "t_ap_balance";
+    }
+
+
+    //指定日以前に売上、入金、月次更新（売掛or買掛残高初期設定）のあった取引先IDを全て抽出
+    $sql  = "
+        SELECT DISTINCT(client_id) AS client_id 
+        FROM ( 
+            SELECT client_id 
+            FROM t_".$trade_div."_h 
+            WHERE shop_id = $shop_id 
+    ";
+    if($renew_flg){
+        $sql .= "            AND renew_flg = true ";
+    }
+    $sql .= "
+            AND ".$trade_div."_day <= '$end_day' 
+
+            UNION 
+
+            SELECT client_id 
+            FROM $pay_table 
+            WHERE shop_id = $shop_id 
+    ";
+    if($renew_flg){
+        $sql .= "            AND renew_flg = true ";
+    }
+    $sql .= "
+            AND pay_day <= '$end_day' 
+
+    ";
+    //売上（売掛）の場合、振分入金データテーブルの金額がNULLじゃないやつも抽出
+    if($trade_div == "sale"){
+        $sql .= "
+            UNION 
+
+            SELECT 
+                t_payallocation_d.client_id 
+            FROM 
+                t_payin_h 
+                LEFT JOIN t_payallocation_d ON t_payin_h.pay_id = t_payallocation_d.pay_id 
+            WHERE 
+                t_payin_h.shop_id = $shop_id 
+                AND t_payin_h.pay_day <= '$end_day' 
+                AND t_payin_h.payin_div = '2' 
+                AND t_payallocation_d.amount IS NOT NULL 
+        ";
+        if($renew_flg){
+            $sql .= "            AND t_payin_h.renew_flg = true ";
+        }
+    }
+    $sql .= $test = "
+            UNION 
+
+            SELECT client_id 
+            FROM $balance_table 
+            WHERE shop_id = $shop_id 
+            AND monthly_close_day_this <= '$end_day' 
+        ) AS t_all_client 
+    ";
+
+    return $sql;
+
+}
+
+
+?>
