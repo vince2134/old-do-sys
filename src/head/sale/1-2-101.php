@@ -439,17 +439,17 @@ if($aord_id != NULL && $client_id == NULL && $_POST[complete_flg] != true){
     }
 
 	//得意先情報復元 restore customer information
-	$client_id      = $client_list[0][0];        //得意先ID
-	$coax           = $client_list[0][1];        //丸め区分（金額）
-    $tax_franct     = $client_list[0][2];        //端数区分（消費税）
-//    $attach_gid     = $client_list[0][3];        //所属グループ
+	$client_id      = $client_list[0][0];        //得意先ID customer ID
+	$coax           = $client_list[0][1];        //丸め区分（金額） round up/down classification (amount)
+    $tax_franct     = $client_list[0][2];        //端数区分（消費税）  round up/down classification (consumption tax)
+//    $attach_gid     = $client_list[0][3];        //所属グループ belonged group
 	$warning = null;
     $update_goods_data["hdn_client_id"]       = $client_id;
     $update_goods_data["hdn_coax"]            = $coax;
     $update_goods_data["hdn_tax_franct"]      = $tax_franct;
 //    $update_goods_data["attach_gid"]          = $attach_gid;
 
-	//現在の消費税率
+	//現在の消費税率 current consumption tax rate
     #2009-12-21 aoyama-n
 	#$sql  = "SELECT ";
 	#$sql .= "    tax_rate_n ";
@@ -470,28 +470,28 @@ if($aord_id != NULL && $client_id == NULL && $_POST[complete_flg] != true){
 	$tax_money  = number_format($total_money[1]);
 	$st_money   = number_format($total_money[2]);
 
-	//フォームに値セット
+	//フォームに値セット set the value to the form
 	$update_goods_data["form_sale_total"]      = $sale_money;
 	$update_goods_data["form_sale_tax"]        = $tax_money;
 	$update_goods_data["form_sale_money"]      = $st_money;
 	$update_goods_data["sum_button_flg"]       = "";
-	$update_goods_data["form_designated_date"] = 7; //出荷可能数
+	$update_goods_data["form_designated_date"] = 7; //出荷可能数 possible number of delivery
 
     $form->setConstants($update_goods_data);
 
-	//表示行数
+	//表示行数 displayed number of row 
 	if($_POST["max_row"] != NULL){
 	    $max_row = $_POST["max_row"];
 	}else{
-		//受注データの数
+		//受注データの数 number of sales order data
 	    $max_row = count($data_list);
 	}
 
-	//rev.1.2 通常オフライン受注変更判定フラグ
+	//rev.1.2 通常オフライン受注変更判定フラグ decision flag for editing a normall offline order
 	$edit_flg = "true";
 
 }else{
-	//自動採番の受注番号取得
+	//自動採番の受注番号取得 acquire sales order number that will be auto filled
 	$sql  = "SELECT";
 	$sql .= "   MAX(ord_no)";
 	$sql .= " FROM";
@@ -506,11 +506,11 @@ if($aord_id != NULL && $client_id == NULL && $_POST[complete_flg] != true){
 
 	$def_data["form_order_no"] = $order_no;
 
-	//出荷可能数
+	//出荷可能数 deliverable numer of units of stock
 	$def_data["form_designated_date"] = 7;
-	//担当者
+	//担当者 assigned staff
 	$def_data["form_staff_select"] = $o_staff_id;
-	//取引区分
+	//取引区分 trade classification
 	$def_data["trade_aord_select"] = 11;
 
     $def_data["form_ord_day"]["y"] = date('Y');
@@ -539,69 +539,69 @@ if($aord_id != NULL && $client_id == NULL && $_POST[complete_flg] != true){
 
 	$form->setDefaults($def_data);
 
-	//表示行数
+	//表示行数 number of rows to display
 	if($_POST["max_row"] != NULL){
 	    $max_row = $_POST["max_row"];
 	}else{
 	    $max_row = 5;
 	}
 
-	//rev.1.2 通常オフライン受注変更判定フラグ
+	//rev.1.2 通常オフライン受注変更判定フラグ decision flag for editing a normall offline order
 	$edit_flg = $_POST["hdn_edit_flg"];
 
 }
 
-//rev.1.2 通常オフライン受注変更判定フラグをhiddenにセット
+//rev.1.2 通常オフライン受注変更判定フラグをhiddenにセット set decision flag for editing a normall offline order to hidden
 $form->setConstants(array("hdn_edit_flg" => $edit_flg));
 
-//初期表示位置変更
+//初期表示位置変更 change the initial view position 
 $form_potision = "<body bgcolor=\"#D8D0C8\">";
 
-//削除行数
+//削除行数 deleted row number
 $del_history[] = NULL; 
 /****************************/
-//行数追加処理
+//行数追加処理 process for adding rows
 /****************************/
 if($_POST["add_row_flg"]==true){
 /*
 	if($_POST["max_row"] == NULL){
-		//初期値はPOSTが無い為、
+		//初期値はPOSTが無い為、since initial value doesnt have POST
 		$max_row = 5;
 	}else{
 */
-		//最大行に、＋１する
+		//最大行に、＋１する +1 to max row number
     	$max_row = $_POST["max_row"]+5;
 //	}
 
-    //行数追加フラグをクリア
+    //行数追加フラグをクリア clear the row addition flag
     $add_row_data["add_row_flg"] = "";
     $form->setConstants($add_row_data);
 }
 /****************************/
-//行削除処理
+//行削除処理 row deletion process
 /****************************/
 if($_POST["del_row"] != ""){
 
-    //削除リストを取得
+    //削除リストを取得 acquire the deleted list
     $del_row = $_POST["del_row"];
 
-    //削除履歴を配列にする。
+    //削除履歴を配列にする。turn the deletion history into array
     $del_history = explode(",", $del_row);
-    //削除した行数
+    //削除した行数 number of deleted rows
     $del_num     = count($del_history)-1;
 }
 
 //***************************/
-//最大行数をhiddenにセット
+//最大行数をhiddenにセット set the max row number to hidden
 /****************************/
 $max_row_data["max_row"] = $max_row;
 
 $form->setConstants($max_row_data);
 
 //***************************/
-//グリーン指定チェック処理
+//グリーン指定チェック処理 green designation check process
 /****************************/
-//チェックの場合は、運送業者のプルダウンの値を変更する
+//チェックの場合は、運送業者のプルダウンの値を変更する if there is a check, then change the value of the carrier's dropdown
 if($_POST["trans_check_flg"] == true){
 	$where  = " WHERE ";
 	$where .= "    shop_id = $shop_id";
@@ -616,7 +616,7 @@ if($_POST["trans_check_flg"] == true){
 }
 
 /****************************/
-//部品作成
+//部品作成 create component
 /****************************/
 
 //受注番号
@@ -627,8 +627,8 @@ $form->addElement(
     background-color: #ffffff; 
     text-align: left\" readonly'"
 );
-
-//出荷可能数
+ 
+//出荷可能数 sales order number
 $form->addElement(
     "text","form_designated_date","",
     "size=\"4\" maxLength=\"4\" 
@@ -638,7 +638,7 @@ $form->addElement(
     "
 );
 
-//受注日
+//受注日 sales order date
 $form_ord_day[] =& $form->createElement("text","y","テキストフォーム","size=\"4\" maxLength=\"4\" style=\"$g_form_style\" onkeyup=\"changeText(this.form,'form_ord_day[y]','form_ord_day[m]',4)\" onFocus=\"onForm_today(this,this.form,'form_ord_day[y]','form_ord_day[m]','form_ord_day[d]')\" onBlur=\"blurForm(this)\"");
 $form_ord_day[] =& $form->createElement("static","","","-");
 $form_ord_day[] =& $form->createElement("text","m","テキストフォーム","size=\"1\" maxLength=\"2\" style=\"$g_form_style\" onkeyup=\"changeText(this.form,'form_ord_day[m]','form_ord_day[d]',2)\" onFocus=\"onForm_today(this,this.form,'form_ord_day[y]','form_ord_day[m]','form_ord_day[d]')\" onBlur=\"blurForm(this)\"");
@@ -646,7 +646,7 @@ $form_ord_day[] =& $form->createElement("static","","","-");
 $form_ord_day[] =& $form->createElement("text","d","テキストフォーム","size=\"1\" maxLength=\"2\" style=\"$g_form_style\" onFocus=\"onForm_today(this,this.form,'form_ord_day[y]','form_ord_day[m]','form_ord_day[d]')\" onBlur=\"blurForm(this)\"");
 $form->addGroup( $form_ord_day,"form_ord_day","form_ord_day");
 
-//希望納期
+//希望納期 desired delivery date
 $form_hope_day[] =& $form->createElement("text","y","テキストフォーム","size=\"4\" maxLength=\"4\" style=\"$g_form_style\" onkeyup=\"changeText(this.form,'form_hope_day[y]','form_hope_day[m]',4)\" onFocus=\"onForm_today(this,this.form,'form_hope_day[y]','form_hope_day[m]','form_hope_day[d]')\" onBlur=\"blurForm(this)\"");
 $form_hope_day[] =& $form->createElement("static","","","-");
 $form_hope_day[] =& $form->createElement("text","m","テキストフォーム","size=\"1\" maxLength=\"2\" style=\"$g_form_style\" onkeyup=\"changeText(this.form,'form_hope_day[m]','form_hope_day[d]',2)\" onFocus=\"onForm_today(this,this.form,'form_hope_day[y]','form_hope_day[m]','form_hope_day[d]')\" onBlur=\"blurForm(this)\"");
@@ -654,7 +654,7 @@ $form_hope_day[] =& $form->createElement("static","","","-");
 $form_hope_day[] =& $form->createElement("text","d","テキストフォーム","size=\"1\" maxLength=\"2\" style=\"$g_form_style\" onFocus=\"onForm_today(this,this.form,'form_hope_day[y]','form_hope_day[m]','form_hope_day[d]')\" onBlur=\"blurForm(this)\"");
 $form->addGroup( $form_hope_day,"form_hope_day","form_hope_day");
 
-//入荷予定日
+//入荷予定日 desired delivery date
 $form_arr_day[] =& $form->createElement("text","y","テキストフォーム","size=\"4\" maxLength=\"4\" style=\"$g_form_style\" onkeyup=\"changeText(this.form,'form_arr_day[y]','form_arr_day[m]',4)\" onFocus=\"onForm_today(this,this.form,'form_arr_day[y]','form_arr_day[m]','form_arr_day[d]')\" onBlur=\"blurForm(this)\"");
 $form_arr_day[] =& $form->createElement("static","","","-");
 $form_arr_day[] =& $form->createElement("text","m","テキストフォーム","size=\"1\" maxLength=\"2\" style=\"$g_form_style\" onkeyup=\"changeText(this.form,'form_arr_day[m]','form_arr_day[d]',2)\" onFocus=\"onForm_today(this,this.form,'form_arr_day[y]','form_arr_day[m]','form_arr_day[d]')\" onBlur=\"blurForm(this)\"");
@@ -662,7 +662,7 @@ $form_arr_day[] =& $form->createElement("static","","","-");
 $form_arr_day[] =& $form->createElement("text","d","テキストフォーム","size=\"1\" maxLength=\"2\" style=\"$g_form_style\" onFocus=\"onForm_today(this,this.form,'form_arr_day[y]','form_arr_day[m]','form_arr_day[d]')\" onBlur=\"blurForm(this)\"");
 $form->addGroup( $form_arr_day,"form_arr_day","form_arr_day");
 
-//得意先コード
+//得意先コード customer code
 $freeze = $form_client[] =& $form->createElement(
         "text","cd1","","size=\"7\" maxLength=\"6\" style=\"$g_form_style\" onChange=\"javascript:Change_Submit('client_search_flg','#','true','form_client[cd2]')\" onkeyup=\"changeText(this.form,'form_client[cd1]','form_client[cd2]',6)\"".$g_form_option."\""
         );
@@ -681,7 +681,7 @@ if($_GET[aord_id] != null){
 $form_client[] =& $form->createElement("text","name","テキストフォーム","size=\"34\" $g_text_readonly");
 $form->addGroup( $form_client, "form_client", "");
 
-//売上金額合計
+//売上金額合計 total sales amount
 $form->addElement(
     "text","form_sale_total","",
     "size=\"25\" maxLength=\"18\" 
@@ -691,7 +691,7 @@ $form->addElement(
     text-align: right\" readonly'"
 );
 
-//消費税額(合計)
+//消費税額(合計) tax amount (total)
 $form->addElement(
         "text","form_sale_tax","",
         "size=\"25\" maxLength=\"18\" 
@@ -702,7 +702,7 @@ $form->addElement(
         readonly"
 );
 
-//売上金額（税込合計)
+//売上金額（税込合計) sales amount (with consumption tax)
 $form->addElement(
         "text","form_sale_money","",
         "size=\"25\" maxLength=\"18\" 
@@ -713,21 +713,21 @@ $form->addElement(
         readonly"
 );
 
-//通信欄（得意先宛）
+//通信欄（得意先宛） communication field  (addressed to customer)
 $form->addElement("textarea","form_note_client","テキストフォーム",' rows="2" cols="75" onFocus="onForm(this)" onBlur="blurForm(this)"');
-//通信欄（本部宛）
+//通信欄（本部宛）communication field (HQ)
 $form->addElement("textarea","form_note_head","テキストフォーム",' rows="2" cols="75" onFocus="onForm(this)" onBlur="blurForm(this)"');
 
-//グリーン指定
+//グリーン指定 Green designation
 $form->addElement('checkbox', 'form_trans_check', 'グリーン指定', '<b>グリーン指定</b>　',"onClick=\"javascript:Link_Submit('form_trans_check','trans_check_flg','#','true')\"");
-//運送業者
+//運送業者 carrier
 $select_value = Select_Get($db_con,'trans',$where);
 $form->addElement('select', 'form_trans_select', 'セレクトボックス', $select_value,$g_form_option_select);
 
-//直送先
+//直送先 direct destination
 //$select_value = Select_Get($db_con,'direct');
 //$form->addElement('select', 'form_direct_select', 'セレクトボックス', $select_value,"class=\"Tohaba\"".$g_form_option_select);
-//rev.1.3 テキスト入力へ変更
+//rev.1.3 テキスト入力へ変更 change to text input
 $form_direct[] = $form->createElement(
     "text","cd","","size=\"4\" maxLength=\"4\"
      style=\"$g_form_style\"
@@ -742,50 +742,49 @@ $form_direct[] = $form->createElement(
     "size=\"34\" $g_text_readonly");
 $form->addGroup($form_direct, "form_direct_text", "");
 
-//倉庫
+//倉庫 warehouse
 $select_value = Select_Get($db_con,'ware');
 $form->addElement('select', 'form_ware_select', 'セレクトボックス', $select_value,$g_form_option_select);
-//取引区分
+//取引区分 trade classification
 $select_value = Select_Get($db_con,'trade_aord');
 $form->addElement('select', 'trade_aord_select', 'セレクトボックス', $select_value,$g_form_option_select);
-//担当者
+//担当者 assigned staff
 $select_value = Select_Get($db_con,'staff',null,true);
 $form->addElement('select', 'form_staff_select', 'セレクトボックス', $select_value,$g_form_option_select);
 
-//受注
+//受注 sales order
 //$form->addElement("submit","order","受　注","onClick=\"javascript:Dialogue('受注します。','#')\"");
 //1.0.4 (2006/03/29) kaji 確認ダイアログのキャンセルボタン押下時でも登録されてしまうバグ対策
 
-//チェック完了
+//チェック完了 done with checking
 //$form->addElement("button","complete","チェック完了","onClick=\"javascript:Dialogue_2('チェックを完了します。','".HEAD_DIR."sale/1-2-101.php?aord_id=".$aord_id."','true','complete_flg')\"");
 //1.0.4 (2006/03/29) kaji 確認ダイアログのキャンセルボタン押下時でも登録されてしまうバグ対策
 
 
-// ヘッダ部リンクボタン
+// ヘッダ部リンクボタン header link button
 $ary_h_btn_list = array("照会・変更" => "./1-2-105.php", "入　力" => $_SERVER["PHP_SELF"], "受注残一覧" => "./1-2-106.php");
 Make_H_Link_Btn($form, $ary_h_btn_list);
 
 //hidden
-$form->addElement("hidden", "hdn_client_id");       //得意先ID
-$form->addElement("hidden", "hdn_aord_id");         //受注ID
-//$form->addElement("hidden", "attach_gid");          //所属グループID
-$form->addElement("hidden", "client_search_flg");   //得意先コード入力フラグ
-$form->addElement("hidden", "hdn_coax");            //丸め区分
-$form->addElement("hidden", "hdn_tax_franct");      //端数区分
-$form->addElement("hidden", "del_row");             //削除行
-$form->addElement("hidden", "add_row_flg");         //追加行フラグ
-$form->addElement("hidden", "max_row");             //最大行数
-$form->addElement("hidden", "goods_search_row");    //商品コード入力行
-$form->addElement("hidden", "sum_button_flg");      //合計ボタン押下フラグ
-$form->addElement("hidden", "complete_flg");        //チェック完了ボタン押下フラグ
-$form->addElement("hidden", "trans_check_flg");     //グリーン指定チェックフラグ
-$form->addElement("hidden", "recomp_flg");          //出荷可能数フラグ
-$form->addElement("hidden", "hdn_check_flg");         //受注照会判定フラグ
-$form->addElement("hidden", "forward_num_flg");		//出荷回数選択フラグ rev.1.2
-$form->addElement("hidden", "hdn_edit_flg");		//通常オフライン受注変更判定フラグ rev.1.2
-$form->addElement("hidden", "hdn_direct_search_flg");	//直送先コード入力フラグ rev.1.3
-$form->addElement("hidden", "form_direct_select");	//直送先ID rev.1.3
-
+$form->addElement("hidden", "hdn_client_id");       //得意先ID customer ID
+$form->addElement("hidden", "hdn_aord_id");         //受注ID sales order ID
+//$form->addElement("hidden", "attach_gid");          //所属グループID belonged group ID
+$form->addElement("hidden", "client_search_flg");   //得意先コード入力フラグ customer code input flag
+$form->addElement("hidden", "hdn_coax");            //丸め区分 round up/down
+$form->addElement("hidden", "hdn_tax_franct");      //端数区分 round up/down
+$form->addElement("hidden", "del_row");             //削除行 deleted row
+$form->addElement("hidden", "add_row_flg");         //追加行フラグ add row flag
+$form->addElement("hidden", "max_row");             //最大行数 max row number
+$form->addElement("hidden", "goods_search_row");    //商品コード入力行 input field for product code
+$form->addElement("hidden", "sum_button_flg");      //合計ボタン押下フラグ total button pressed flag
+$form->addElement("hidden", "complete_flg");        //チェック完了ボタン押下フラグ flag when confirm/complete button is pressed
+$form->addElement("hidden", "trans_check_flg");     //グリーン指定チェックフラグ flag for green designatin check box
+$form->addElement("hidden", "recomp_flg");          //出荷可能数フラグ deliverable stock count flag
+$form->addElement("hidden", "hdn_check_flg");         //受注照会判定フラグ sales order inquiry deicision flag
+$form->addElement("hidden", "forward_num_flg");		//出荷回数選択フラグ rev.1.2 number of deliveries selection flag
+$form->addElement("hidden", "hdn_edit_flg");		//通常オフライン受注変更判定フラグ rev.1.2 decision flag for editing a normall offline order
+$form->addElement("hidden", "hdn_direct_search_flg");	//直送先コード入力フラグ rev.1.3 Direct destination code input flag
+$form->addElement("hidden", "form_direct_select");	//直送先ID rev.1.3 direct destination ID
 #2009-09-26 hashimoto-y
 for($i = 0; $i < $max_row; $i++){
     if(!in_array("$i", $del_history)){
@@ -794,14 +793,14 @@ for($i = 0; $i < $max_row; $i++){
 }
 
 /****************************/
-//得意先コード入力処理
+//得意先コード入力処理 customer code input process
 /****************************/
 if($_POST["client_search_flg"] == true){
 
-    $client_cd1         = $_POST["form_client"]["cd1"];       //得意先コード1
-	$client_cd2         = $_POST["form_client"]["cd2"];       //得意先コード2
+    $client_cd1         = $_POST["form_client"]["cd1"];       //得意先コード1 customer code 1
+	$client_cd2         = $_POST["form_client"]["cd2"];       //得意先コード2 customer code 2
 
-    //得意先の情報を抽出
+    //得意先の情報を抽出 extract the information of customer 
     $sql  = "SELECT";
     $sql .= "   client_id,";
 //    $sql .= "   client_name,";
@@ -826,15 +825,15 @@ if($_POST["client_search_flg"] == true){
     $result = Db_Query($db_con, $sql); 
     $num = pg_num_rows($result);
 
-	//該当データがある
+	//該当データがある there is a corresponding data
 	if($num == 1){
-		$client_id      = pg_fetch_result($result, 0,0);        //得意先ID
-//        $attach_gid     = pg_fetch_result($result, 0,0);        //所属グループID
-        $client_name    = pg_fetch_result($result, 0,1);        //得意先名
-        $coax           = pg_fetch_result($result, 0,2);        //丸め区分（商品）
-        $tax_franct     = pg_fetch_result($result, 0,3);        //端数区分（消費税）
+		$client_id      = pg_fetch_result($result, 0,0);        //得意先ID customer id 
+//        $attach_gid     = pg_fetch_result($result, 0,0);        //所属グループID group Id where the custoemr belongs
+        $client_name    = pg_fetch_result($result, 0,1);        //得意先名 cstomer name
+        $coax           = pg_fetch_result($result, 0,2);        //丸め区分（商品） round up/down (producT)
+        $tax_franct     = pg_fetch_result($result, 0,3);        //端数区分（消費税）round/up/down (product)
 
-        //取得したデータをフォームにセット
+        //取得したデータをフォームにセット set the acquired data to form
 		$warning = null;
         $client_data["client_search_flg"]   = "";
         $client_data["hdn_client_id"]       = $client_id;
@@ -853,9 +852,9 @@ if($_POST["client_search_flg"] == true){
         $client_data["hdn_tax_franct"]      = "";
 	}
 
-	//レンタルから遷移してきた場合は初期化しない
+	//レンタルから遷移してきた場合は初期化しない do not initialize if it was transitioned from rental
 	if($rental_flg == NULL){
-		//前に入力された値を初期化
+		//前に入力された値を初期化 initialize the value that was inputted previously
 		for($i = 0; $i < $max_row; $i++){
 
 			$client_data["hdn_goods_id"][$i]           = "";
@@ -875,7 +874,7 @@ if($_POST["client_search_flg"] == true){
 			$client_data["form_sale_price"]["$i"]["i"] = "";
 			$client_data["form_sale_price"]["$i"]["d"] = "";
 			$client_data["form_sale_amount"][$i]       = "";
-			//rev.1.2 分納対応分を追加
+			//rev.1.2 分納対応分を追加 add what will be for the by batch delivery
 			$client_data["form_forward_times"][$i]     = "0";
 			$_POST["form_forward_times"][$i]				= 0;
 			$client_data["form_forward_day"][$i][0]["y"]	= "";
@@ -895,7 +894,7 @@ if($_POST["client_search_flg"] == true){
 		$post_flg                           = true;
 		$max_row = 5;
 
-	//rev.1.2 分納対応したため、レンタルの数量を出荷数へ入れる
+	//rev.1.2 分納対応したため、レンタルの数量を出荷数へ入れる since it was a by batch delivery, put the number of rented units of product to the deliverable number of units of product
 	}else{
 		for($i = 0; $i < $max_row; $i++){
 			$client_data["form_forward_num"][$i][0] = $_POST["form_sale_num"][$i];
@@ -906,25 +905,25 @@ if($_POST["client_search_flg"] == true){
 
 	$form->setConstants($client_data);
 
-    //削除行数
+    //削除行数 number of deleted rows
     unset($del_history);
     $del_history[] = NULL;
 //}
 
 /****************************/
-//合計ボタン押下処理
+//合計ボタン押下処理 process when the total button is pressed
 /****************************/
 }elseif(($_POST["sum_button_flg"] == true || $_POST["del_row"] != "" || $_POST["order"] == "受注確認画面へ" )&& $client_id != null){
-	//削除リストを取得
+	//削除リストを取得 acquire the deleted list
     $del_row = $_POST["del_row"];
-    //削除履歴を配列にする。
+    //削除履歴を配列にする。 turn the deletion history to array
     $del_history = explode(",", $del_row);
 
-	$sale_data  = $_POST["form_sale_amount"];  //売上金額
-	$sale_money = NULL;                        //商品の売上金額
-    $tax_div    = NULL;                        //課税区分
+	$sale_data  = $_POST["form_sale_amount"];  //売上金額 total sales 
+	$sale_money = NULL;                        //商品の売上金額 sales of a product
+    $tax_div    = NULL;                        //課税区分 tax classification
 
-	//売上金額の合計値計算
+	//売上金額の合計値計算 compute for the total amount of the sales
     for($i=0;$i<$max_row;$i++){
 		if($sale_data[$i] != "" && !in_array("$i", $del_history)){
 			$sale_money[] = $sale_data[$i];
@@ -932,7 +931,7 @@ if($_POST["client_search_flg"] == true){
 		}
     }
 	
-	//現在の消費税率
+	//現在の消費税率 current consumption tax
     #2009-12-21 aoyama-n
 	#$sql  = "SELECT ";
 	#$sql .= "    tax_rate_n ";
@@ -954,12 +953,12 @@ if($_POST["client_search_flg"] == true){
 	$st_money   = number_format($total_money[2]);
 
 	if($_POST["sum_button_flg"] == true){
-		//初期表示位置変更
+		//初期表示位置変更 change the initial display position
 		$height = $max_row * 100;
 		$form_potision = "<body bgcolor=\"#D8D0C8\" onLoad=\"form_potision($height);\">";
 	}
 
-	//フォームに値セット
+	//フォームに値セット set the value to form
 	$money_data["form_sale_total"]   = $sale_money;
 	$money_data["form_sale_tax"]     = $tax_money;
 	$money_data["form_sale_money"]   = $st_money;
@@ -968,37 +967,37 @@ if($_POST["client_search_flg"] == true){
 }
 
 /****************************/
-//出荷可能数入力
+//出荷可能数入力 input the deliverable number of units of product
 /****************************/
 if($_POST["recomp_flg"] == true){
-    //出荷可能数
+    //出荷可能数 deliverable number of units of product
     $designated_date = ($_POST["form_designated_date"] != null)? $_POST["form_designated_date"] : 0;
-    //数字以外が入力されている場合
+    //数字以外が入力されている場合 when other than numbers are inputted
     if(!ereg("^[0-9]+$", $designated_date)){
         $designated_date = 0;
     }
 
-//    $attach_gid   = $_POST["attach_gid"];     //得意先の所属グループ
-	$ary_goods_id = $_POST["hdn_goods_id"];   //入力した商品ID
+//    $attach_gid   = $_POST["attach_gid"];     //得意先の所属グループ group which the customer belongs to
+	$ary_goods_id = $_POST["hdn_goods_id"];   //入力した商品ID product ID inputted
 
-	//入力された商品の個数を再計算する
+	//入力された商品の個数を再計算する recompute the number of inputted product
 	for($i = 0; $i < count($ary_goods_id); $i++){
-		//商品存在判定
+		//商品存在判定 decide whether the product exists
 		if($ary_goods_id[$i] != NULL){
-			//再計算SQL
+			//再計算SQL recomputation SQL
 			$sql  = "SELECT";
 		    $sql .= "   t_goods.goods_id,";
 		    //$sql .= "   CASE t_goods.stock_manage WHEN 1 THEN COALESCE(t_stock.stock_num,0) END AS rack_num,";
 		    //$sql .= "   CASE t_goods.stock_manage WHEN 1 THEN COALESCE(t_stock_io.order_num,0) END AS on_order_num,";
 		    //$sql .= "   CASE t_goods.stock_manage WHEN 1 THEN COALESCE(t_allowance_io.allowance_io_num,0)\n";
-			//rev.1.3 ショップごとに在庫管理フラグ
+			//rev.1.3 ショップごとに在庫管理フラグ inventory control flag per shop
 		    $sql .= "   CASE t_goods_info.stock_manage WHEN 1 THEN COALESCE(t_stock.stock_num,0) END AS rack_num,";
 		    $sql .= "   CASE t_goods_info.stock_manage WHEN 1 THEN COALESCE(t_stock_io.order_num,0) END AS on_order_num,";
 		    $sql .= "   CASE t_goods_info.stock_manage WHEN 1 THEN COALESCE(t_allowance_io.allowance_io_num,0)\n";
 //            $sql .= "    - COALESCE(t_allowance_io.allowance_io_num,0) ";
 			$sql .= " END AS allowance_total,";
 			//$sql .= "   CASE t_goods.stock_manage WHEN 1 THEN";
-			$sql .= "   CASE t_goods_info.stock_manage WHEN 1 THEN";	//rev.1.3 ショップごとに在庫管理フラグ
+			$sql .= "   CASE t_goods_info.stock_manage WHEN 1 THEN";	//rev.1.3 ショップごとに在庫管理フラグ inventory control flag per shop
 		    $sql .= "   COALESCE(t_stock.stock_num,0)"; 
 		    $sql .= "   + COALESCE(t_stock_io.order_num,0)";
 //		    $sql .= "   - (COALESCE(t_stock.rstock_num,0)";
@@ -1011,7 +1010,7 @@ if($_POST["recomp_flg"] == true){
 
 		    $sql .= "   LEFT JOIN";
 
-            //在庫数
+            //在庫数 inventory count
 		    $sql .= "   (SELECT";
 		    $sql .= "       t_stock.goods_id,";
 		    $sql .= "       SUM(t_stock.stock_num)AS stock_num,";
@@ -1027,7 +1026,7 @@ if($_POST["recomp_flg"] == true){
 
 		    $sql .= "   LEFT JOIN";
 
-            //発注済数
+            //発注済数 number of purchase orders ordered
 		    $sql .= "   (SELECT";
 		    $sql .= "       t_stock_hand.goods_id,";
 		    $sql .= "       SUM(t_stock_hand.num * CASE t_stock_hand.io_div WHEN 1 THEN 1 WHEN 2 THEN -1 END ) AS order_num";
@@ -1048,7 +1047,7 @@ if($_POST["recomp_flg"] == true){
 
 		    $sql .= "   LEFT JOIN";
 
-            //引当数
+            //引当数 number of reserved products for orders
 		    $sql .= "   (SELECT";
 		    $sql .= "       t_stock_hand.goods_id,";
 		    $sql .= "       SUM(t_stock_hand.num * CASE t_stock_hand.io_div WHEN 1 THEN -1 WHEN 2 THEN 1 END ) AS allowance_io_num";
@@ -1066,7 +1065,7 @@ if($_POST["recomp_flg"] == true){
 		    $sql .= "   GROUP BY t_stock_hand.goods_id";
 		    $sql .= "   ) AS t_allowance_io ON t_goods.goods_id = t_allowance_io.goods_id";
 
-			$sql .= "    INNER JOIN t_goods_info ON t_goods.goods_id = t_goods_info.goods_id \n";	//rev.1.3 ショップごとに在庫管理フラグ
+			$sql .= "    INNER JOIN t_goods_info ON t_goods.goods_id = t_goods_info.goods_id \n";	//rev.1.3 ショップごとに在庫管理フラグ inventory control flag per shop
 
 		    $sql .= " WHERE ";
 		    $sql .= "       t_goods.goods_id = $ary_goods_id[$i]";
@@ -1075,7 +1074,7 @@ if($_POST["recomp_flg"] == true){
 		    $sql .= " AND ";
 		    $sql .= "       initial_cost.rank_cd = '1' ";
 
-			//rev.1.3 ショップごとに在庫管理フラグ
+			//rev.1.3 ショップごとに在庫管理フラグ inventory control flag per shop
 		    $sql .= " AND ";
 		    $sql .= "       t_goods_info.shop_id = $shop_id ";
 
@@ -1085,49 +1084,50 @@ if($_POST["recomp_flg"] == true){
 
 		    $goods_data = pg_fetch_array($result);
 
-			$set_designated_data["hdn_goods_id"][$i]         = $goods_data[0];   //商品ID
-			$hdn_goods_id[$search_row]                       = $goods_data[0];   //POSTする前に商品IDを総在庫数で使用する為
-			$set_designated_data["form_stock_num"][$i]       = $goods_data[1];   //実棚数
-			$set_designated_data["hdn_stock_num"][$i]        = $goods_data[1];   //実棚数（hidden）
-			$stock_num[$i]                                   = $goods_data[1];   //実棚数(リンクの値)
-			$set_designated_data["form_rorder_num"][$i]      = $goods_data[2];   //発注済数
-			$set_designated_data["form_rstock_num"][$i]      = $goods_data[3];   //引当数
-			$set_designated_data["form_designated_num"][$i]  = $goods_data[4];   //出荷可能数
+			$set_designated_data["hdn_goods_id"][$i]         = $goods_data[0];   //商品ID product ID 
+			$hdn_goods_id[$search_row]                       = $goods_data[0];   //POSTする前に商品IDを総在庫数で使用する為 for the reason that the product ID will be used for the total stock count before POST
+			$set_designated_data["form_stock_num"][$i]       = $goods_data[1];   //実棚数 actual shelf number
+			$set_designated_data["hdn_stock_num"][$i]        = $goods_data[1];   //実棚数（hidden）actual shelf number (hidden)
+			$stock_num[$i]                                   = $goods_data[1];   //実棚数(リンクの値) actual shelf number (linl's value)
+			$set_designated_data["form_rorder_num"][$i]      = $goods_data[2];   //発注済数 number of purchase orders made
+			$set_designated_data["form_rstock_num"][$i]      = $goods_data[3];   //引当数 number of products reserved for orders
+			$set_designated_data["form_designated_num"][$i]  = $goods_data[4];   //出荷可能数 deliverable number of units of products 
 		}
 	}
 
-	//出荷可能数入力フラグに空白をセット
+	//出荷可能数入力フラグに空白をセット set blank in the input deliverable number of units of product flag
     $set_designated_data["recomp_flg"] = "";
     $form->setConstants($set_designated_data);
 }
 
 /****************************/
-//商品コード入力
+//商品コード入力 input product code
 /****************************/
 if($_POST["goods_search_row"] != null){
 
-	//商品データを取得する行
+	//商品データを取得する行 row for acquiring
+ the product data
     $search_row = $_POST["goods_search_row"];
 
-	//出荷可能数取得
+	//出荷可能数取得 acquire the deliverable number of units of product
 	$designated_date = ($_POST["form_designated_date"] != null)? $_POST["form_designated_date"] : 0;
     if(!ereg("^[0-9]+$", $designated_date)){
         $designated_date = 0;
     }
 
-//   $attach_gid   = $_POST["attach_gid"];     //得意先の所属グループ
+//   $attach_gid   = $_POST["attach_gid"];     //得意先の所属グループ the group where the customer belongs
 	$sql  = "SELECT\n";
     $sql .= "   t_goods.goods_id,\n";
     $sql .= "   t_goods.name_change,\n";
     //$sql .= "   t_goods.stock_manage,\n";
-    $sql .= "   t_goods_info.stock_manage,\n";	//rev.1.3 ショップごとに在庫管理フラグ
+    $sql .= "   t_goods_info.stock_manage,\n";	//rev.1.3 ショップごとに在庫管理フラグ inventory control flag per shop
     $sql .= "   t_goods.goods_cd,\n";
     //$sql .= "   t_goods.goods_name,\n";
-    $sql .= "   (t_g_product.g_product_name || ' ' || t_goods.goods_name) AS goods_name, \n";    //正式名
+    $sql .= "   (t_g_product.g_product_name || ' ' || t_goods.goods_name) AS goods_name, \n";    //正式名 official name
     //$sql .= "   CASE t_goods.stock_manage WHEN 1 THEN COALESCE(t_stock.stock_num,0) END AS rack_num,\n";
     //$sql .= "   CASE t_goods.stock_manage WHEN 1 THEN COALESCE(t_stock_io.order_num,0) END AS on_order_num,\n";
     //$sql .= "   CASE t_goods.stock_manage WHEN 1 THEN COALESCE(t_allowance_io.allowance_io_num,0)\n";
-	//rev.1.3 ショップごとに在庫管理フラグ
+	//rev.1.3 ショップごとに在庫管理フラグ inventory control flag per shop
     $sql .= "   CASE t_goods_info.stock_manage WHEN 1 THEN COALESCE(t_stock.stock_num,0) END AS rack_num,\n";
     $sql .= "   CASE t_goods_info.stock_manage WHEN 1 THEN COALESCE(t_stock_io.order_num,0) END AS on_order_num,\n";
     $sql .= "   CASE t_goods_info.stock_manage WHEN 1 THEN COALESCE(t_allowance_io.allowance_io_num,0)\n";
@@ -1142,7 +1142,7 @@ if($_POST["goods_search_row"] != null){
     $sql .= "   initial_cost.r_price AS initial_price,\n";
     $sql .= "   sale_price.r_price AS sale_price,\n";
     $sql .= "   t_goods.tax_div, \n";
-	//rev.1.2 値引商品フラグ
+	//rev.1.2 値引商品フラグ discounted product flag 
     $sql .= "   t_goods.discount_flg \n";
     $sql .= " FROM\n";
     $sql .= "   t_goods \n";
@@ -1156,7 +1156,7 @@ if($_POST["goods_search_row"] != null){
 
     $sql .= "   LEFT JOIN\n";
 
-    //在庫数
+    //在庫数 stock number 
     $sql .= "   (SELECT\n";
     $sql .= "       t_stock.goods_id,\n";
     $sql .= "       SUM(t_stock.stock_num)AS stock_num,\n";
@@ -1172,7 +1172,7 @@ if($_POST["goods_search_row"] != null){
 
     $sql .= "   LEFT JOIN\n";
 
-    //発注済数
+    //発注済数 number of purchase orders ordered
     $sql .= "   (SELECT\n";
     $sql .= "       t_stock_hand.goods_id,\n";
     $sql .= "       SUM(t_stock_hand.num * CASE t_stock_hand.io_div WHEN 1 THEN 1 WHEN 2 THEN -1 END ) AS order_num\n";
@@ -1193,7 +1193,7 @@ if($_POST["goods_search_row"] != null){
 
     $sql .= "   LEFT JOIN\n";
 
-    //引当数
+    //引当数 number of reserved units of product for order
     $sql .= "   (SELECT\n";
     $sql .= "       t_stock_hand.goods_id,\n";
     $sql .= "       SUM(t_stock_hand.num * CASE t_stock_hand.io_div WHEN 1 THEN -1 WHEN 2 THEN 1 END ) AS allowance_io_num\n";
@@ -1234,7 +1234,7 @@ if($_POST["goods_search_row"] != null){
     $sql .= "       WHERE \n";
     $sql .= "           client_id = $client_id)\n";
 
-	//rev.1.3 ショップごとに在庫管理フラグ
+	//rev.1.3 ショップごとに在庫管理フラグ inventory control flag per shop
     $sql .= " AND \n";
     $sql .= "       t_goods_info.shop_id = $shop_id \n";
 
@@ -1246,35 +1246,35 @@ if($_POST["goods_search_row"] != null){
 	if($data_num == 1){
     	$goods_data = pg_fetch_array($result);
 
-		$set_goods_data["hdn_goods_id"][$search_row]         = $goods_data[0];   //商品ID
-		$hdn_goods_id[$search_row]                           = $goods_data[0];   //POSTする前に商品IDを総在庫数で使用する為
+		$set_goods_data["hdn_goods_id"][$search_row]         = $goods_data[0];   //商品ID product ID
+		$hdn_goods_id[$search_row]                           = $goods_data[0];   //POSTする前に商品IDを総在庫数で使用する為 For the reason that product ID will be used in the total inventory count before POST
 
-		$set_goods_data["hdn_name_change"][$search_row]      = $goods_data[1];   //品名変更フラグ
-		$hdn_name_change[$search_row]                        = $goods_data[1];   //POSTする前に商品名の変更不可判定を行なう為
+		$set_goods_data["hdn_name_change"][$search_row]      = $goods_data[1];   //品名変更フラグ product name change flag
+		$hdn_name_change[$search_row]                        = $goods_data[1];   //POSTする前に商品名の変更不可判定を行なう為 For the reason that product name will be checked if it is non-editable or not before POST
 		
-		$set_goods_data["hdn_stock_manage"][$search_row]     = $goods_data[2];   //在庫管理
-		$hdn_stock_manage[$search_row]                       = $goods_data[2];   //POSTする前に実棚数の在庫管理判定を行なう為
+		$set_goods_data["hdn_stock_manage"][$search_row]     = $goods_data[2];   //在庫管理 inventory control
+		$hdn_stock_manage[$search_row]                       = $goods_data[2];   //POSTする前に実棚数の在庫管理判定を行なう為 For the reason that actual shelf number will be decided in inventory control before POST
 
-		$set_goods_data["form_goods_cd"][$search_row]        = $goods_data[3];   //商品CD
-		$set_goods_data["form_goods_name"][$search_row]      = $goods_data[4];   //商品名
+		$set_goods_data["form_goods_cd"][$search_row]        = $goods_data[3];   //商品CD Product CD
+		$set_goods_data["form_goods_name"][$search_row]      = $goods_data[4];   //商品名 Prodcut Name
 
-		$set_goods_data["form_stock_num"][$search_row]       = number_format($goods_data[5]);   //実棚数
-		$set_goods_data["hdn_stock_num"][$search_row]        = number_format($goods_data[5]);   //実棚数（hidden）
-		$stock_num[$search_row]                              = number_format($goods_data[5]);   //実棚数(リンクの値)
+		$set_goods_data["form_stock_num"][$search_row]       = number_format($goods_data[5]);   //実棚数 actual shelf number
+		$set_goods_data["hdn_stock_num"][$search_row]        = number_format($goods_data[5]);   //実棚数（hidden） （hidden）actual shelf number (hidden)
+		$stock_num[$search_row]                              = number_format($goods_data[5]);   //実棚数(リンクの値) actual shelf number (link's value)
 
-		$set_goods_data["form_rorder_num"][$search_row]      = $goods_data[6];   //発注済数
-		$set_goods_data["form_rstock_num"][$search_row]      = $goods_data[7];   //引当数
+		$set_goods_data["form_rorder_num"][$search_row]      = $goods_data[6];   //発注済数 purchase orders ordered number
+		$set_goods_data["form_rstock_num"][$search_row]      = $goods_data[7];   //引当数 reserved quantity of products for sales order
 
-		$set_goods_data["form_designated_num"][$search_row]  = $goods_data[8];   //出荷可能数
+		$set_goods_data["form_designated_num"][$search_row]  = $goods_data[8];   //出荷可能数 deliverable number of stocks
 
-		//原価単価を整数部と少数部に分ける
+		//原価単価を整数部と少数部に分ける separate the decimal from integer for the product cost
         $cost_price = explode('.', $goods_data[9]);
-		$set_goods_data["form_cost_price"][$search_row]["i"] = $cost_price[0];  //原価単価
+		$set_goods_data["form_cost_price"][$search_row]["i"] = $cost_price[0];  //原価単価 product cost per unit
 		$set_goods_data["form_cost_price"][$search_row]["d"] = ($cost_price[1] != null)? $cost_price[1] : '00';     
 
-		//売上単価を整数部と少数部に分ける
+		//売上単価を整数部と少数部に分ける separate the decimal from integer for the sales price per unit
         $sale_price = explode('.', $goods_data[10]);
-		$set_goods_data["form_sale_price"][$search_row]["i"] = $sale_price[0];  //売上単価
+		$set_goods_data["form_sale_price"][$search_row]["i"] = $sale_price[0];  //売上単価 sales price per unit
 		$set_goods_data["form_sale_price"][$search_row]["d"] = ($sale_price[1] != null)? $sale_price[1] : '00';
 
 		//rev.1.2 出荷数と受注数の判定（金額計算）

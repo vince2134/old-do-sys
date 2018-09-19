@@ -344,9 +344,9 @@ if($aord_id != NULL){
 
         //原価単価を整数部と少数部に分ける separate the decimal from integer for the product cost
         $cost_price = explode('.', $data_list[$i][11]);
-        $update_goods_data["form_cost_price"][$i]["i"] = $cost_price[0];  //原価単価
+        $update_goods_data["form_cost_price"][$i]["i"] = $cost_price[0];  //原価単価　product cost per unit
         $update_goods_data["form_cost_price"][$i]["d"] = ($cost_price[1] != null)? $cost_price[1] : '00';     
-        $update_goods_data["form_cost_amount"][$i]     = number_format($data_list[$i][13]);  //原価金額 product cost per unit
+        $update_goods_data["form_cost_amount"][$i]     = number_format($data_list[$i][13]);  //原価金額 　total product cost
 
         //売上単価を整数部と少数部に分ける separate the decimal from integer for the sales price per unit
         $sale_price = explode('.', $data_list[$i][12]);
@@ -361,7 +361,7 @@ if($aord_id != NULL){
         $update_goods_data["hdn_discount_flg"][$i]     = $data_list[$i][15]; //値引フラグ discount flag
     }
 
-    //得意先情報復元
+    //得意先情報復元 restore customer information
     $client_id      = $client_list[0][0];        //得意先ID customer ID
     $coax           = $client_list[0][1];        //丸め区分（金額） round up/down classification (amount)
     $tax_franct     = $client_list[0][2];        //端数区分（消費税）round up/down classification (consumption tax)
