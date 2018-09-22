@@ -1127,7 +1127,7 @@ if($_POST["order"] == "受　注" || $_POST["order_conf"] == "受注確認画面へ" ){
                 $line = $i + 1;
 
                 if($stock_manage_flg[$i] == '1'){
-                    //受け払いテーブルに登録 register it in receipts and payment table 
+                    //受け払いテーブルに登録 register it in inventory store balance table 
                     $sql  = " INSERT INTO t_stock_hand (";
                     $sql .= "    goods_id,";
                     $sql .= "    enter_day,";
