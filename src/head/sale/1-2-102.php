@@ -25,29 +25,29 @@
 
 $page_title = "受注納期返信(オンライン)";
 
-// 環境設定ファイル
+// Env setting file環境設定ファイル
 require_once("ENV_local.php");
 require_once(INCLUDE_DIR."common_quickform.inc");
 
-// HTML_QuickFormを作成
+// Create HTML_QuickFormを作成
 $form =& new HTML_QuickForm("dateForm", "POST", $_SERVER["PHP_SELF"]);
 
-// テンプレート関数をレジスト
+// Register the template functionテンプレート関数をレジスト
 $smarty->register_function("Make_Sort_Link_Tpl", "Make_Sort_Link_Tpl");
 
-// DB接続
+// Connect to DB DB接続
 $db_con = Db_Connect();
 
-// 権限チェック
+// Authority check 権限チェック
 $auth       = Auth_Check($db_con);
-// ボタンDisabled
+// button disabled ボタンDisabled
 $disabled   = ($auth[0] == "r") ? "disabled" : null;
 
 
 /****************************/
-// 検索条件復元関連
+//  search condition restoration matters 検索条件復元関連
 /****************************/
-// 検索フォーム初期値配列
+// array Search form initial value 検索フォーム初期値配列
 $ary_form_list = array(
     "form_display_num"  => "1",
     "form_client"       => array("cd1" => "", "cd2" => "", "name" => ""),
@@ -64,59 +64,59 @@ $ary_form_list = array(
     "form_direct"       => "",
 );
 
-// 検索条件復元
+// search condition restoration  検索条件復元
 Restore_Filter2($form, "aord", "show_button", $ary_form_list);
 
 
 /****************************/
-// 外部変数取得
+// acquire external variable 外部変数取得
 /****************************/
 $staff_id = $_SESSION["staff_id"];
 $shop_id  = $_SESSION["shop_id"];
 
-//選択されたデータの発注IDを取得
+//acquire the purchase order ID of data selected 選択されたデータの発注IDを取得
 $ord_id = $_POST["ord_id_flg"];
 
 
 /****************************/
-// 初期値設定
+// initial value setting 初期値設定
 /****************************/
 $form->setDefaults($ary_form_list);
 
 $limit          = null;     // LIMIT
 $offset         = "0";      // OFFSET
-$total_count    = "0";      // 全件数
-$page_count     = ($_POST["f_page1"] != null) ? $_POST["f_page1"] : "1";    // 表示ページ数
+$total_count    = "0";      // all items 全件数
+$page_count     = ($_POST["f_page1"] != null) ? $_POST["f_page1"] : "1";    // pnumber of pages displayed 表示ページ数
 
 
 /****************************/
-// フォームパーツ定義
+// form parts definition フォームパーツ定義
 /****************************/
-// 表示件数
+// display items 表示件数
 $obj    =   null;
 $obj[]  =&  $form->createElement("radio", null, null, "全て", "1");
 $obj[]  =&  $form->createElement("radio", null, null, "100",  "2");
 $form->addGroup($obj, "form_display_num", "", "");
 
-// FC・取引先
+// FC・取引先 FC・business partner 
 Addelement_Client_64n($form, "form_client", "FC・取引先", "-");
 
-// FC発注日
+// FC発注日 FC purchase order date 
 Addelement_Date_Range($form, "form_ord_day", "FC発注日", "-");
 
-// FC発注番号
+// FC発注番号 FC purchase order number 
 Addelement_Slip_Range($form, "form_ord_no", "FC発注番号", "-");
 
-// 希望納期
+// 希望納期 desired delivery date
 Addelement_Date_Range($form, "form_hope_day", "希望納期", "-");
 
-// 直送先
+// 直送先 direct destination
 $form->addElement("text", "form_direct", "", "size=\"34\" maxLength=\"15\" $g_form_option");
 
-// 受注納期一覧表
+// 受注納期一覧表 list of received order and their dates
 $form->addElement("button", "aord_limit", "受注納期一覧表", "onClick=\"javascript:window.open('".HEAD_DIR."sale/1-2-109.php')\"");
 
-// ソートリンク
+// ソートリンク sort link
 $ary_sort_item = array(
     "sl_client_cd"      => "FC・取引先コード",
     "sl_client_name"    => "FC・取引先名",
@@ -127,37 +127,37 @@ $ary_sort_item = array(
 );
 AddElement_Sort_Link($form, $ary_sort_item, "sl_fc_ord_day");
 
-// 表示ボタン
+// 表示ボタン display button
 $form->addElement("submit", "show_button", "表　示");
 
-// クリアボタン
+// クリアボタン clear button
 $form->addElement("button", "clear_button", "クリア", "onClick=\"javascript:location.href('".$_SERVER["PHP_SELF"]."');\"");
 
-// 処理フラグ
+// 処理フラグ process flag
 $form->addElement("hidden", "data_cancel_flg");
 $form->addElement("hidden", "ord_id_flg");
 $form->addElement("hidden", "hdn_del_enter_date");
 
 
 /****************************/
-// 取消リンク押下時
+// 取消リンク押下時 when the cancel link is pressed
 /****************************/
 if ($_POST["data_cancel_flg"] == "true"){
 
     $hdn_del_enter_date = $_POST["hdn_del_enter_date"];
 
-    //受注データを起こしているか判定
+    //受注データを起こしているか判定 determine if the sales order data is recorded
     $sql  = "SELECT fc_ord_id FROM t_aorder_h WHERE fc_ord_id = $ord_id;";
     $result = Db_Query($db_con,$sql);
     $check_num = pg_num_rows($result);
 
     if ($check_num != 0){
 
-        //既に受注を起こしている為エラー表示
+        //既に受注を起こしている為エラー表示 error because sales order is already recorded 
         $error_msg = "既に受注データが存在している為取消できません。";
 
     }else{
-        //発注取消処理
+        //発注取消処理 process for cancelling purchase order
 
         Db_Query($db_con, "BEGIN;");
 
@@ -173,7 +173,7 @@ if ($_POST["data_cancel_flg"] == "true"){
         $data_cancel .= "AND \n";
         $data_cancel .= "   enter_day = '$hdn_del_enter_date' \n";
         $data_cancel .= ";";
-        //該当データ件数
+        //該当データ件数 corresponding number of data
         $result = Db_Query($db_con, $data_cancel);
 
         if($result == false){
@@ -184,7 +184,7 @@ if ($_POST["data_cancel_flg"] == "true"){
         Db_Query($db_con, "COMMIT;");
     }
 
-    // hiddenをクリア
+    // hiddenをクリア clear the hidden 
     $clear_hdn["data_cancel_flg"]       = "";
     $clear_hdn["hdn_del_enter_date"]    = "";
     $form->setConstants($clear_hdn);
@@ -195,33 +195,33 @@ if ($_POST["data_cancel_flg"] == "true"){
 
 
 /****************************/
-// 表示ボタン押下処理
+// 表示ボタン押下処理 process when the display button is pressed 
 /****************************/
 if ($_POST["show_button"] == "表　示"){
 
-    // 日付POSTデータの0埋め
+    // 日付POSTデータの0埋め fill the date POST data with 0s 
     $_POST["form_ord_day"]  = Str_Pad_Date($_POST["form_ord_day"]);
     $_POST["form_hope_day"] = Str_Pad_Date($_POST["form_hope_day"]);
 
     /****************************/
-    // エラーチェック
+    // エラーチェック error check
     /****************************/
-    // ■FC発注日
-    // エラーメッセージ
+    // ■FC発注日 FC purchase order date
+    // エラーメッセージ error msg
     $err_msg = "FC発注日 の日付が妥当ではありません。";
     Err_Chk_Date($form, "form_ord_day", $err_msg);
 
-    // ■希望納期
-    // エラーメッセージ
+    // ■希望納期 desired delivery date
+    // エラーメッセージ error msg
     $err_msg = "希望納期 の日付が妥当ではありません。";
     Err_Chk_Date($form, "form_hope_day", $err_msg);
 
     /****************************/
-    // エラーチェック結果集計
+    // エラーチェック結果集計 collect error result 
     /****************************/
-    // チェック適用
+    // チェック適用 apply check
     $form->validate();
-    // 結果をフラグに
+    // 結果をフラグに flag the result
     $err_flg = (count($form->_errors) > 0) ? true : false;
 
     $post_flg = ($err_flg != true) ? true : false;
@@ -230,18 +230,18 @@ if ($_POST["show_button"] == "表　示"){
 
 
 /****************************/
-// 1. 表示ボタン押下＋エラーなし時
-// 2. ページ切り替え時
+// 1. 表示ボタン押下＋エラーなし時  when display button is pressed + when there is no error
+// 2. ページ切り替え時  When page is switched 
 /****************************/
 if (($_POST["show_button"] != null && $err_flg != true) || ($_POST != null && $_POST["show_button"] == null)){
 
-    // 日付POSTデータの0埋め
+    // 日付POSTデータの0埋め Fill date POST data with 0s 
     $_POST["form_ord_day"]  = Str_Pad_Date($_POST["form_ord_day"]);
     $_POST["form_hope_day"] = Str_Pad_Date($_POST["form_hope_day"]);
 
-    // 1. フォームの値を変数にセット
-    // 2. SESSION（hidden用）の値（検索条件復元関数内でセット）を変数にセット
-    // 一覧取得クエリ条件に使用
+    // 1. フォームの値を変数にセット Set the form's value in the variable 
+    // 2. SESSION（hidden用）の値（検索条件復元関数内でセット）を変数にセット  Set the value (Set within the search condition restoration function) of SESSION (for hidden) in the variable.
+    // 一覧取得クエリ条件に使用 Use for query for acquiring the list
     $display_num    = $_POST["form_display_num"];
     $client_cd1     = $_POST["form_client"]["cd1"];
     $client_cd2     = $_POST["form_client"]["cd2"];
@@ -267,18 +267,18 @@ if (($_POST["show_button"] != null && $err_flg != true) || ($_POST != null && $_
 }
 
 
-/****************************/
-// 一覧データ取得条件作成
+/****************************/ 
+// 一覧データ取得条件作成 create condition for acquiring list data  
 /****************************/
 if ($post_flg == true && $err_flg != true){
 
     $sql = null;
 
-    // FC・取引先コード１
+    // FC・取引先コード１ FC・business partner code 1 
     $sql .= ($client_cd1 != null) ? "AND t_client.client_cd1 LIKE '$client_cd1%' \n" : null;
-    // FC・取引先コード２
+    // FC・取引先コード２ FC・business partner code 2
     $sql .= ($client_cd2 != null) ? "AND t_client.client_cd2 LIKE '$client_cd2%' \n" : null;
-    // FC・取引先名
+    // FC・取引先名 FC・business partner name
     if ($client_name != null){
         $sql .= "AND \n";
         $sql .= "   ( \n";
@@ -289,23 +289,23 @@ if ($post_flg == true && $err_flg != true){
         $sql .= "       t_client.client_cname LIKE '%$client_name%' \n";
         $sql .= "   ) \n";
     }
-    // FC発注日（開始）
+    // FC発注日（開始）FC purchase order (start)
     $ord_day_s = $ord_day_sy."-".$ord_day_sm."-".$ord_day_sd;
     $sql .= ($ord_day_s != "--") ? "AND '$ord_day_s 00:00:00' <= t_order_h.ord_time \n" : null;
-    // FC発注日（終了）
+    // FC発注日（終了）FC purchase order (end)
     $ord_day_e = $ord_day_ey."-".$ord_day_em."-".$ord_day_ed;
     $sql .= ($ord_day_e != "--") ? "AND t_order_h.ord_time <= '$ord_day_e 23:59:59' \n" : null;
-    // FC発注番号（開始）
+    // FC発注番号（開始）FC purchase order number (start)
     $sql .= ($ord_no_s != null) ? "AND t_order_h.ord_no >= '".str_pad($ord_no_s, 8, 0, STR_PAD_LEFT)."' \n" : null;
-    // FC発注番号（終了）
+    // FC発注番号（終了）FC purchase order number (end)
     $sql .= ($ord_no_e != null) ? "AND t_order_h.ord_no <= '".str_pad($ord_no_e, 8, 0, STR_PAD_LEFT)."' \n" : null;
-    // 希望納期（開始）
+    // 希望納期（開始）desired delivery date (start)
     $hope_day_s = $hope_day_sy."-".$hope_day_sm."-".$hope_day_sd;
-    $sql .= ($hope_day_s != "--") ? "AND '$hope_day_s' <= t_order_h.hope_day \n" : null;
-    // 希望納期（終了）
+    $sql .= ($hope_day_s != "--") ? "AND '$hope_day_s' <= t_order_h.hope_day \n" : null; 
+    // 希望納期（終了）desired delivery date (end)
     $hope_day_e = $hope_day_ey."-".$hope_day_em."-".$hope_day_ed;
     $sql .= ($hope_day_e != "--") ? "AND t_order_h.hope_day <= '$hope_day_e' \n" : null;
-    // 直送先
+    // 直送先 direct destination
     if ($direct_name != null){
         $sql .= "AND \n";
         $sql .= "   ( \n";
@@ -317,15 +317,15 @@ if ($post_flg == true && $err_flg != true){
         $sql .= "   ) \n";
     }
 
-    // 変数詰め替え
+    // 変数詰め替え refill the variable
     $where_sql = $sql;
 
 
     $sql = null;
 
-    // ソート順
+    // ソート順 sort order
     switch ($_POST["hdn_sort_col"]){
-        // FC・取引先コード
+        // FC・取引先コード FC・business partner code
         case "sl_client_cd":
             $sql .= "   t_client.client_cd1, \n";
             $sql .= "   t_client.client_cd2, \n";
@@ -333,7 +333,7 @@ if ($post_flg == true && $err_flg != true){
             $sql .= "   t_order_h.ord_no, \n";
             $sql .= "   t_order_d.line \n";
             break;
-        // FC・取引先名
+        // FC・取引先名 FC・business partner name
         case "sl_client_name":
             $sql .= "   t_client.client_cname, \n";
             $sql .= "   t_order_h.send_date, \n";
@@ -342,7 +342,7 @@ if ($post_flg == true && $err_flg != true){
             $sql .= "   t_client.client_cd2, \n";
             $sql .= "   t_order_d.line \n";
             break;
-        // FC発注日
+        // FC発注日 FC purchase order date 
         case "sl_fc_ord_day":
             $sql .= "   t_order_h.send_date, \n";
             $sql .= "   t_order_h.ord_no, \n";
@@ -350,7 +350,7 @@ if ($post_flg == true && $err_flg != true){
             $sql .= "   t_client.client_cd2, \n";
             $sql .= "   t_order_d.line \n";
             break;
-        // FC発注番号
+        // FC発注番号 FC purchase order number 
         case "sl_fc_ord_no":
             $sql .= "   t_order_h.ord_no, \n";
             $sql .= "   t_order_h.send_date, \n";
@@ -358,7 +358,7 @@ if ($post_flg == true && $err_flg != true){
             $sql .= "   t_client.client_cd2, \n";
             $sql .= "   t_order_d.line \n";
             break;
-        // 直送先
+        // 直送先 direct destination
         case "sl_direct":
             $sql .= "   t_direct.direct_cname, \n";
             $sql .= "   t_order_h.send_date, \n";
@@ -367,7 +367,7 @@ if ($post_flg == true && $err_flg != true){
             $sql .= "   t_client.client_cd2, \n";
             $sql .= "   t_order_d.line \n";
             break;
-        // 希望納期
+        // 希望納期 desired delivery date
         case "sl_hope_day":
             $sql .= "   t_order_h.hope_day, \n";
             $sql .= "   t_order_h.send_date, \n";
@@ -378,14 +378,14 @@ if ($post_flg == true && $err_flg != true){
             break;
     }
 
-    // 変数詰め替え
+    // 変数詰め替え refill variable
     $order_sql = $sql;
 
 }
 
 
 /****************************/
-// 出力する伝票をリストアップ
+// 出力する伝票をリストアップ list up the slip to be outputted 
 /****************************/
 if ($post_flg == true && $err_flg != true){
 
@@ -398,11 +398,11 @@ if ($post_flg == true && $err_flg != true){
     $sql .= "   t_order_h.ord_stat = '1' \n";
     $sql .= $where_sql;
 
-    // 全件数取得
+    // 全件数取得 acquire all items 
     $res            = Db_Query($db_con, $sql.";");
     $total_count    = pg_num_rows($res);
 
-    // 表示件数
+    // 表示件数 display items 
     switch ($display_num){
         case "1":
             $limit = $total_count;
@@ -412,25 +412,25 @@ if ($post_flg == true && $err_flg != true){
             break;  
     }       
 
-    // 取得開始位置
+    // 取得開始位置 starting position for acquiring
     $offset = ($page_count != null) ? ($page_count - 1) * $limit : "0";
 
-    // 行削除でページに表示するレコードが無くなる場合の対処
+    // 行削除でページに表示するレコードが無くなる場合の対処 response when there is no record to display when rows were deleted 
     if($page_count != null){
-        // 行削除でtotal_countとoffsetの関係が崩れた場合
+        // 行削除でtotal_countとoffsetの関係が崩れた場合 If the relationship of the total_ccount and offset has collapsed cos of row deletion 
         if ($total_count <= $offset){
-            // オフセットを選択件前に
+            // オフセットを選択件前に offset before the item selection 
             $offset     = $offset - $limit; 
-            // 表示するページを1ページ前に（一気に2ページ分削除されていた場合などには対応してないです）
+            // 表示するページを1ページ前に（一気に2ページ分削除されていた場合などには対応してないです） show the previous page (this does not respond to when 2 pages were deleted)
             $page_count = $page_count - 1;
-            // 選択件数以下時はページ遷移を出力させない(nullにする)
+            // 選択件数以下時はページ遷移を出力させない(nullにする) Do not output the page transition when it's fewer than the selected items (make it null)
             $page_count = ($total_count <= $display_num) ? null : $page_count;
         }       
     }else{  
         $offset = 0;
     }       
 
-    // ページ内データ取得
+    // ページ内データ取得  acquire the data within the page
     $limit_offset   = ($limit != null) ? "LIMIT $limit OFFSET $offset " : null; 
     $res            = Db_Query($db_con, $sql.$limit_offset.";");
     $match_count    = pg_num_rows($res);
@@ -440,7 +440,7 @@ if ($post_flg == true && $err_flg != true){
 
 
 /****************************/
-// 発注残データ取得SQL
+// 発注残データ取得SQL  SQL that acquire outstanding purchase orders
 /****************************/
 if ($match_count > 0 && $post_flg == true && $err_flg != true){
 
@@ -481,7 +481,7 @@ if ($match_count > 0 && $post_flg == true && $err_flg != true){
 
     $res  = Db_Query($db_con, $sql);
 
-    // ページ内データ取得
+    // ページ内データ取得 acquire the data within the page 
     $res        = Db_Query($db_con, $sql);
     $ary_data   = Get_Data($res, 2, "ASSOC");
 
@@ -489,36 +489,36 @@ if ($match_count > 0 && $post_flg == true && $err_flg != true){
 
 
 /****************************/
-// 表示用データ作成
+// 表示用データ作成  create the data for display
 /****************************/
 if ($post_flg == true && $err_flg != true){
 
     /****************************/
-    // 表示用データ整形
+    // 表示用データ整形 fix the data for display
     /****************************/
-    // ページ内データでループ
+    // ページ内データでループ oop with the data within the page 
     if (count($ary_data) > 0){
-        // No.初期値
+        // No.初期値 No.initial value
         $i = 0;
-        // 行数初期値
+        // 行数初期値 initial value of number of rows
         $row = 0;
         // 
         $html_l = null;
         foreach ($ary_data as $key => $value){
 
-            // 前・次の参照行を変数に入れて使いやすくしておく
+            // 前・次の参照行を変数に入れて使いやすくしておく Put the previous and next reference row to the variable for easy usability
             $back = $ary_data[$key-1];
             $next = $ary_data[$key+1];
 
-            // ■No.の出力設定
-            // 配列の最初、または前回と今回の発注IDが異なる場合
+            // ■No.の出力設定  output setting for No.
+            //  When the first value of array, or the previous purchase order ID is different with the current one 配列の最初、または前回と今回の発注IDが異なる場合
             if ($key == 0 || $back["ord_id"] != $value["ord_id"]){
                 $no             = ++$i;
             }else{
                 $no             = null;
             }
-            // ■FC・取引先
-            // No.がある場合
+            // ■FC・取引先 FC・Business partenr 
+            // No.がある場合 If there is a No.
             if ($no != null){
                 $client         = $value["client_cd1"];
                 $client        .= ($value["client_cd2"] != null) ? "-".$value["client_cd2"] : null;
@@ -528,101 +528,101 @@ if ($post_flg == true && $err_flg != true){
             }else{
                 $client         = null;
             }
-            // ■FC発注日
-            // No.がある場合
+            // ■FC発注日 FC purchase order date
+            // No.がある場合 If there is a No.
             if ($no != null){
                 $ord_date       = $value["ord_day"]."<br>".$value["ord_day_time"]."<br>";
             }else{
                 $ord_date       = null;
             }
-            // ■直送先
-            // No.がある場合
+            // ■直送先 Direct destination 
+            // No.がある場合 If there is a No.
             if ($no != null){
                 $direct         = htmlspecialchars($value["direct_cname"]);
             }else{
                 $direct         = null;
             }
-            // ■FC発注番号
-            // No.がある場合
+            // ■FC発注番号 FC purchase order number 
+            // No.がある場合 If there is a No.
             if ($no != null){
                 $ord_no         = $value["ord_no"];
             }else{
                 $ord_no         = null;
             }
-            // ■希望納期
-            // No.がある場合
+            // ■希望納期 Desired delivery date
+            // No.がある場合 If there is a No.
             if ($no != null){
                 $hope_day       = $value["hope_day"];
             }else{
                 $hope_day       = null;
             }
-            // ■商品
+            // ■商品 product 
             $goods              = $value["goods_cd"]."<br>".htmlspecialchars($value["goods_name"]);
-            // ■単価
+            // ■単価 price per unit
             $buy_price          = number_format($value["buy_price"], 2);
-            // ■数量
+            // ■数量 units of prod
             $num                = number_format($value["num"]);
-            // ■合計金額
+            // ■合計金額 total amount
             $buy_amount         = number_format($value["buy_amount"]);
-            // ■通信欄（本部宛）
-            // No.がある場合
+            // ■通信欄（本部宛） communication field (HQ)
+            // No.がある場合 If there is a No.
             if ($no != null){
                 $note_your      = htmlspecialchars($value["note_your"]);
             }else{
                 $note_your      = null;
             }
-            // ■出荷予定日返信リンク
-            // No.がある場合
+            // ■出荷予定日返信リンク scheduled delivery reply link
+            // No.がある場合 If there is a No.
             if ($no != null){
                 $arrival_link   = "<a href=\"./1-2-104.php?ord_id=".$value["ord_id"]."&return_flg=1\">入力</a>";
             }else{
                 $arrival_link   = null;
             }
-            // ■取消リンク
-            // No.がある場合かつ権限がある場合
+            // ■取消リンク cancel link
+            // No.がある場合かつ権限がある場合 If there is a No. and there is an authority
             if ($no != null && $disabled == null){
                 $can_link       = "<a href=\"#\" onClick=\"Order_Cancel('data_cancel_flg', 'ord_id_flg', ".$value["ord_id"].", 'hdn_del_enter_date', '".$value["enter_day"]."');\">取消</a></td>";
             }else{
                 $can_link       = null;
             }
-            // ■行色css
+            // ■行色css row color CSS
             if ($no != null){
                 $css            = (bcmod($no, 2) == 0) ? "Result2" : "Result1";
             }else{
                 $css            = $css;
             }
 
-            // ■まとめ
-            // 行色css
+            // ■まとめ overall
+            // 行色css row color CSS
             $disp_data[$row]["css"]             = $css;
             // No.
             $disp_data[$row]["no"]              = $no;
-            // FC・取引先
+            // FC・取引先 FC/business partner
             $disp_data[$row]["client"]          = $client;
-            // FC発注日
+            // FC発注日 FC purchase order date
             $disp_data[$row]["ord_date"]        = $ord_date;
-            // FC発注番号
+            // FC発注番号 FC purchase order number 
             $disp_data[$row]["ord_no"]          = $ord_no;
-            // 直送先
+            // 直送先 Direct destination
             $disp_data[$row]["direct"]          = $direct;
-            // 希望納期
+            // 希望納期 desired delivery date
             $disp_data[$row]["hope_day"]        = $hope_day;
-            // 商品
+            // 商品 product
             $disp_data[$row]["goods"]           = $goods;
-            // 単価
+            // 単価 price per unit
             $disp_data[$row]["buy_price"]       = $buy_price;
-            // 数量
+            // 数量 number of units of prod
             $disp_data[$row]["num"]             = $num;
-            // 合計金額
+            // 合計金額 total amount
             $disp_data[$row]["buy_amount"]      = $buy_amount;
-            // 通信欄（本部宛）
+            // 通信欄（本部宛）communication field (HQ)
             $disp_data[$row]["note_your"]       = $note_your;
-            // 出荷予定日返信リンク
+            // 出荷予定日返信リンク scheduled shipment date reply link
             $disp_data[$row]["arrival_link"]    = $arrival_link;
-            // 取消リンク
+            // 取消リンク cancel link
             $disp_data[$row]["can_link"]        = $can_link;
 
-            // 一覧html作成
+            // 一覧html作成 create list html
             $html_l .= "    <tr class=\"$css\">\n";
             $html_l .= "        <td align=\"right\">$no</td>\n";
             $html_l .= "        <td>$client</td>\n";
@@ -639,7 +639,7 @@ if ($post_flg == true && $err_flg != true){
             $html_l .= "        <td align=\"center\">$can_link</td>\n";
             $html_l .= "    </tr>\n";
 
-            // 行数加算
+            // 行数加算 add row numbers
             $row++;
 
         }
@@ -676,9 +676,9 @@ $order_cancel .= "}\n";
 
 
 /****************************/
-// HTML作成（検索部）
+// HTML作成（検索部）create HTML (search part)
 /****************************/
-// 検索項目
+// 検索項目 search items 
 $html_s .= "\n";
 $html_s .= "<table width=\"100%\">\n";
 $html_s .= "    <tr style=\"color: #555555;\">\n";
@@ -712,7 +712,7 @@ $html_s .= "        <td class=\"Td_Search_1\" colspan=\"3\">".($form->_elements[
 $html_s .= "    </tr>\n";
 $html_s .= "</table>\n";
 $html_s .= "\n";
-// ボタン
+// ボタン button 
 $html_s .= "<table align=\"right\"><tr><td>\n";
 $html_s .= "    ".$form->_elements[$form->_elementIndex["show_button"]]->toHtml()."　\n";
 $html_s .= "    ".$form->_elements[$form->_elementIndex["clear_button"]]->toHtml()."\n";
@@ -724,38 +724,38 @@ $html_page2 = Html_Page2($total_count, $page_count, 2, $limit);
 
 
 /****************************/
-//HTMLヘッダ
+//HTMLヘッダ header
 /****************************/
 $html_header = Html_Header($page_title);
 
 /****************************/
-//HTMLフッタ
+//HTMLフッタ footer
 /****************************/
 $html_footer = Html_Footer();
 
 /****************************/
-//メニュー作成
+//メニュー作成 create menu
 /****************************/
 $page_menu = Create_Menu_h('sale','1');
 /****************************/
-//画面ヘッダー作成
+//画面ヘッダー作成 create screen header
 /****************************/
 $page_header = Create_Header($page_title);
 
 /****************************/
-//ページ作成
+//ページ作成 create page
 /****************************/
-// Render関連の設定
+// Render関連の設定 render related setting
 $renderer =& new HTML_QuickForm_Renderer_ArraySmarty($smarty);
 $form->accept($renderer);
 
-//form関連の変数をassign
+//form関連の変数をassign assign the form related variable
 $smarty->assign('form',$renderer->toArray());
 
-//初期表示判定
+//初期表示判定 determine the initial display
 $smarty->assign('row',$page_data);
 
-//その他の変数をassign
+//その他の変数をassign assign the other variables
 $smarty->assign('var',array(
     'html_header'   => "$html_header",
     'page_menu'     => "$page_menu",
@@ -779,7 +779,7 @@ $smarty->assign("html", array(
     "html_l"        => $html_l,
 ));
 
-//テンプレートへ値を渡す
+//テンプレートへ値を渡す pass the value to the template
 $smarty->display(basename($_SERVER[PHP_SELF] .".tpl"));
 
 ?>
