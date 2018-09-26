@@ -42,26 +42,26 @@
 
 $page_title = "売上（割賦）照会";
 
-// 環境設定ファイル
+// 環境設定ファイル env setting
 require_once("ENV_local.php");
 require_once(INCLUDE_DIR."common_quickform.inc");
 
-// HTML_QuickFormを作成
+// HTML_QuickFormを作成 create HTML_QuickForm
 $form =& new HTML_QuickForm("dateForm", "POST", $_SERVER["PHP_SELF"]);
 
-// DB接続
+// DB接続 db connect
 $db_con = Db_Connect();
 
-// 権限チェック
+// 権限チェック authority check
 $auth       = Auth_Check($db_con);
-// ボタンDisabled
+// ボタンDisabled button disable
 $disabled   = ($auth[0] == "r") ? "disabled" : null;
 
 
 /****************************/
-// 検索条件復元関連
+// 検索条件復元関連 search condition restoration
 /****************************/
-// 検索フォーム初期値配列
+// 検索フォーム初期値配列 array the initial value of search form
 $ary_form_list = array(
     "form_display_num"      => "1",
     "form_output_type"      => "1",
@@ -100,73 +100,73 @@ $ary_pass_list = array(
     "form_output_type"      => "1",
 );
 
-// 検索条件復元
+// 検索条件復元 restore search condition
 Restore_Filter2($form, array("sale", "aord"), "form_show_button", $ary_form_list, $ary_pass_list);
 
 
 /*****************************/
-// 外部変数取得
+// 外部変数取得 acquire external value
 /*****************************/
 $shop_id    = $_SESSION["client_id"];
 
 
 /****************************/
-// 初期値セット
+// 初期値セット set the intitial value
 /****************************/
 $form->setDefaults($ary_form_list);
 
 $limit          = null;     // LIMIT
 $offset         = "0";      // OFFSET
-$total_count    = "0";      // 全件数
-$page_count     = ($_POST["f_page1"] != null) ? $_POST["f_page1"] : "1";    // 表示ページ数
+$total_count    = "0";      // 全件数 all items
+$page_count     = ($_POST["f_page1"] != null) ? $_POST["f_page1"] : "1";    // 表示ページ数 display page number
 
 
 /*****************************/
-// フォームパーツ定義
+// フォームパーツ定義 form parts definition 
 /*****************************/
-/* 共通フォーム */
+/* 共通フォーム coommon form */
 Search_Form_Sale_H($db_con, $form, $ary_form_list);
 
-/* モジュール別フォーム */
-// 日次更新
+/* モジュール別フォーム per module form*/
+// 日次更新 daily update
 $obj    =   null;
 $obj[]  =&  $form->createElement("radio", null, null, "指定なし", "1");
 $obj[]  =&  $form->createElement("radio", null, null, "未実施",   "2");
 $obj[]  =&  $form->createElement("radio", null, null, "実施済",   "3");
 $form->addGroup($obj, "form_renew", "");
 
-// 税込金額
+// 税込金額 amount with tax
 Addelement_Money_Range($form, "form_sale_amount", "税込金額");
 
-// 伝票番号
+// 伝票番号 slip number
 Addelement_Slip_Range($form, "form_slip_no", "伝票番号");
 
-// 受注番号
+// 受注番号 sales order number
 Addelement_Slip_Range($form, "form_aord_no", "受注番号");
 
-// 商品
+// 商品 product
 $obj    =   null;
 $obj[]  =&  $form->createElement("text", "cd", "", "size=\"10\" maxLength=\"8\" class=\"ime_disabled\" $g_form_option");
 $obj[]  =&  $form->createElement("static", "", "", " ");
 $obj[]  =&  $form->createElement("text", "name", "", "size=\"34\" maxLength=\"15\" $g_form_option");
 $form->addGroup($obj, "form_goods", "", "");
 
-// Ｍ区分
+// Ｍ区分 m classification
 $item   =   null;
 $item   =   Select_Get($db_con, "g_goods");
 $form->addElement("select", "form_g_goods", "", $item, $g_form_option_select);
 
-// 管理区分
+// 管理区分 managment cassification
 $item   =   null;
 $item   =   Select_Get($db_con, "product");
 $form->addElement("select", "form_product", "", $item, $g_form_option_select);
 
-// 商品分類
+// 商品分類 product classification
 $item   =   null;
 $item   =   Select_Get($db_con, "g_product");
 $form->addElement("select", "form_g_product", "", $item, $g_form_option_select);
 
-// 伝票発行
+// 伝票発行 slip issuance
 $obj    =   null;
 $obj[]  =&  $form->createElement("radio", null, null, "全て", "1");
 $obj[]  =&  $form->createElement("radio", null, null, "有",   "2");
@@ -174,14 +174,14 @@ $obj[]  =&  $form->createElement("radio", null, null, "指定", "3");
 $obj[]  =&  $form->createElement("radio", null, null, "無",   "4");
 $form->addGroup($obj, "form_slip_type", "");
 
-// 発行状況
+// 発行状況 issuance status
 $obj    =   null;
 $obj[]  =&  $form->createElement("radio", null, null, "全て",   "1");
 $obj[]  =&  $form->createElement("radio", null, null, "未発行", "2");
 $obj[]  =&  $form->createElement("radio", null, null, "発行済", "3");
 $form->addGroup($obj, "form_slip_out", "");
 
-// 取引区分
+// 取引区分 trade classification
 $item   =   null;
 $item   =   Select_Get($db_con, "trade_sale");
 #2009-09-28 hashimoto-y
@@ -189,7 +189,7 @@ $item   =   Select_Get($db_con, "trade_sale");
 
 $trade_form=$form->addElement('select', 'form_trade', null, null, $g_form_option_select);
 
-#値引きを廃止
+#値引きを廃止 terminate discounting
 $select_value_key = array_keys($item);
 for($i = 0; $i < count($item); $i++){
     if( $select_value_key[$i] != 14 && $select_value_key[$i] != 64){
@@ -199,16 +199,16 @@ for($i = 0; $i < count($item); $i++){
 #print_r($item);
 
 
-// 割賦回収日
+// 割賦回収日 collection date for installement
 Addelement_Date_Range($form, "form_installment_day", "", "-");
 
-// 抽出対象
+// 抽出対象 extracting object
 $obj    =   null;
 $obj[]  =&  $form->createElement("radio", null, null, "東陽以外", "1");
 $obj[]  =&  $form->createElement("radio", null, null, "全て",     "2");
 $form->addGroup($obj, "form_shop", "");
 
-// ソートリンク
+// ソートリンク soft link
 $ary_sort_item = array(
     "sl_client_cd"      => "FC・取引先コード",
     "sl_client_name"    => "FC・取引先名",
@@ -217,67 +217,67 @@ $ary_sort_item = array(
 );
 AddElement_Sort_Link($form, $ary_sort_item, "sl_sale_day");
 
-// 表示ボタン
+// 表示ボタン display button
 $form->addElement("submit", "form_show_button", "表　示",
     "onClick=\"javascript: Which_Type('form_output_type', '1-2-207.php', '".$_SERVER["PHP_SELF"]."');\""
 );
 
-// クリアボタン
+// クリアボタン clear button
 $form->addElement("button", "form_clear_button", "クリア", "onClick=\"javascript:location.href('".$_SERVER["PHP_SELF"]."');\"");
 
-// 伝票発行ボタン
+// 伝票発行ボタン slip issuance button
 $form->addElement("button", "output_slip_button", "伝票発行", "
     onClick=\"javascript: document.dateForm.elements['hdn_button'].value = '伝票発行';
     Post_book_vote('./1-2-206.php', '".$_SERVER["PHP_SELF"]."');\"
 ");
 
-// 再発行ボタン
+// 再発行ボタン reissue button
 $form->addElement("button", "output_re_slip_button", "再発行", "
     onClick=\"javascript: document.dateForm.elements['hdn_button'].value = '再発行';
     Post_book_vote('./1-2-206.php', '".$_SERVER["PHP_SELF"]."');\"
 ");
 
-// ヘッダ部リンクボタン
+// ヘッダ部リンクボタン header link button
 $form->addElement("button", "203_button", "照会・変更", "$g_button_color onClick=\"location.href='".$_SERVER["PHP_SELF"]."'\"");
 $form->addElement("button", "201_button", "入　力", "onClick=\"javascript: Referer('1-2-201.php');\"");
 
-// 処理フラグ
-$form->addElement("hidden", "del_id");                  // 削除売上ID
-$form->addElement("hidden", "data_delete_flg");         // 削除ボタン押下判定フラグ
-$form->addElement("hidden", "hdn_del_enter_date");      // 伝票作成日時
-$form->addElement("hidden", "slip_button_flg");         // 伝票発行ボタン押下フラグ
-$form->addElement("hidden", "re_slip_button_flg");      // 再発行ボタン押下フラグ
-$form->addElement("hidden", "hdn_button");              // 発行ボタンの押下区別用
+// 処理フラグ process flag
+$form->addElement("hidden", "del_id");                  // 削除売上ID delete sales ID
+$form->addElement("hidden", "data_delete_flg");         // 削除ボタン押下判定フラグ determine flag when delete button is pressed
+$form->addElement("hidden", "hdn_del_enter_date");      // 伝票作成日時 created date of slip
+$form->addElement("hidden", "slip_button_flg");         // 伝票発行ボタン押下フラグ flag when slip issuance button is pressed
+$form->addElement("hidden", "re_slip_button_flg");      // 再発行ボタン押下フラグ flag for reissue button pressed
+$form->addElement("hidden", "hdn_button");              // 発行ボタンの押下区別用 for distinguishing when issue button is pressed
 
 
 /*****************************/
-// 削除リンク押下時
+// 削除リンク押下時 when delete link is pressed
 /*****************************/
 if ($_POST["data_delete_flg"] == "true"){
 
-    /*** 削除前調査 ***/
-    // 選択されたデータの売上IDを取得
-    $del_id = $_POST["del_id"];                     // 削除する売上ID
-    // 選択された売上伝票の作成日次を取得
+    /*** 削除前調査 inspect before deleting***/
+    // 選択されたデータの売上IDを取得 acquire the sales ID of the selected data
+    $del_id = $_POST["del_id"];                     // 削除する売上ID sales data to be deleted
+    // 選択された売上伝票の作成日次を取得 acquire the created date of sales slip selected
     $enter_date = $_POST["hdn_del_enter_date"];
 
-    // POSTされた削除売上IDが正当か（伝票作成日時を元に）調べる
+    // POSTされた削除売上IDが正当か（伝票作成日時を元に）調べる search if the ID of the POSTed sales ID to be deleted is valid (using the sales slip created date)
     $valid_flg = Update_check($db_con, "t_sale_h", "sale_id", $del_id, $enter_date);
 
-    // 正当伝票なら削除処理実行
+    // 正当伝票なら削除処理実行 execute delete process if its a valid slip
     if ($valid_flg == true){
 
-        // 受注IDを抽出
+        // 受注IDを抽出 extract sales order ID
         $sql        = "SELECT aord_id FROM t_sale_h WHERE sale_id = $del_id AND renew_flg = 'f';";
         $result     = Db_Query($db_con,$sql);
         $aord_id    = Get_Data($result);
 
-        //日次更新されているか判定
+        //日次更新されているか判定 determine if its daily updated
         if ($aord_id != NULL){
 
              Db_Query($db_con, "BEGIN;");
 
-            // 受注から起こしている場合は処理状況を未処理にもどしてあげる
+            // 受注から起こしている場合は処理状況を未処理にもどしてあげる return the process status to unprocess if it was recorded from a sales order
             if($aord_id[0][0] != NULL){
                 $sql    = "UPDATE t_aorder_h SET ps_stat = '1' WHERE aord_id = ".$aord_id[0][0].";";
                 $result = Db_Query($db_con, $sql);
@@ -286,7 +286,7 @@ if ($_POST["data_delete_flg"] == "true"){
                     exit;
                 }
             }
-            // 該当する行を削除SQL
+            // 該当する行を削除SQL delete the corresponding row in SQL
             $sql = "DELETE FROM t_sale_h WHERE sale_id = $del_id;";
 
             $result     = Db_Query($db_con, $sql);
@@ -305,7 +305,7 @@ if ($_POST["data_delete_flg"] == "true"){
 
     }
 
-    // 削除データを初期化
+    // 削除データを初期化 initialize the deleted data
     $del_data["del_id"]             = "";                                   
     $del_data["hdn_del_enter_date"] = "";                                    
     $del_data["data_delete_flg"]    = "";                                    
@@ -317,26 +317,26 @@ if ($_POST["data_delete_flg"] == "true"){
 
 
 /***************************/
-// 伝票発行・再発行ボタン押下時
+// 伝票発行・再発行ボタン押下時 when issue slip and reissue button is pressed
 /***************************/
 if ($_POST["hdn_button"] != null){
 
-    // 伝票出力ID配列初期値
+    // 伝票出力ID配列初期値 array initial value of the ID of the slip to be extracted  
     $sale_id = null;
 
-    // 伝票発行ボタン押下時
+    // 伝票発行ボタン押下時 when the slip issue is pressed
     if ($_POST["slip_button_flg"] == "true"){
         $ary_check_id = $_POST["slip_check"];
-    // 再発行ボタン押下時
+    // 再発行ボタン押下時 when reissue is pressed
     }else{
         $ary_check_id = $_POST["re_slip_check"];
     }
 
-    // チェックされている伝票のIDをカンマ区切り（SQLで使用）
+    // チェックされている伝票のIDをカンマ区切り（SQLで使用）separate the checked ID of slips with comma
     if (count($ary_check_id) > 0){
         $i = 0;
         while ($check_num = each($ary_check_id)){
-            // この添字のIDを使用する
+            // この添字のIDを使用する use the letter of this print
             $check = $check_num[0];
             if ($check_num[1] != null && $check_num[1] != "f"){
                 if ($i == 0){
@@ -349,18 +349,18 @@ if ($_POST["hdn_button"] != null){
         }
     }
 
-    // チェック存在判定
+    // チェック存在判定 determine if checked
     if ($sale_id != null){
-        // チェックあり
+        // チェックあり checked
         $check_flg = true;
     }else{
-        // チェックなし
+        // チェックなし not checked
         $output_error = "発行する伝票が選択されていません。";
         $check_flg = false;
     }
 
-    // チェックがあった場合
-    // 発行状況と発行日を更新
+    // チェックがあった場合 if checked
+    // 発行状況と発行日を更新 update the issue status and issue date
     if ($check_flg == true){
 
         Db_Query($db_con, "BEGIN;");
@@ -385,7 +385,7 @@ if ($_POST["hdn_button"] != null){
 
     }
 
-    // hiddenをクリア
+    // hiddenをクリア clear the hidden 
     $clear_hdn["hdn_button"] = "";
     $form->setConstants($clear_hdn);
 
@@ -395,48 +395,48 @@ if ($_POST["hdn_button"] != null){
 
 
 /****************************/
-// 表示ボタン押下処理
+// 表示ボタン押下処理 process when display button is pressed
 /****************************/
 if ($_POST["form_show_button"] != null){
 
-    // 日付POSTデータの0埋め
+    // 日付POSTデータの0埋め fill data post data with 0s
     $_POST["form_sale_day"]         = Str_Pad_Date($_POST["form_sale_day"]);
     $_POST["form_claim_day"]        = Str_Pad_Date($_POST["form_claim_day"]);
     $_POST["form_installment_day"]  = Str_Pad_Date($_POST["form_installment_day"]);
 
     /****************************/
-    // エラーチェック
+    // エラーチェック error check
     /****************************/
-    // ■売上担当者
+    // ■売上担当者 salesperson assigned 
     $err_msg = "売上担当者 は数値のみ入力可能です。";
     Err_Chk_Num($form, "form_sale_staff", $err_msg);
 
-    // ■売上担当複数選択
+    // ■売上担当複数選択 select multiple sales staff
     $err_msg = "売上担当複数選択 は数値と「,」のみ入力可能です。";
     Err_Chk_Delimited($form, "form_multi_staff", $err_msg);
 
-    // ■売上計上日
+    // ■売上計上日 saes recorded date
     $err_msg = "売上計上日 の日付が妥当ではありません。";
     Err_Chk_Date($form, "form_sale_day", $err_msg);
 
-    // ■請求日
+    // ■請求日 invoice date
     $err_msg = "請求日 の日付が妥当ではありません。";
     Err_Chk_Date($form, "form_claim_day", $err_msg);
 
-    // ■税込金額
+    // ■税込金額 with tax amount
     $err_msg = "税込金額 は数値のみ入力可能です。";
     Err_Chk_Int($form, "form_sale_amount", $err_msg);
 
-    // ■割賦回収日
+    // ■割賦回収日 installement collection date
     $err_msg = "割賦回収日 の日付が妥当ではありません。";
     Err_Chk_Date($form, "form_installment_day", $err_msg);
 
     /****************************/
-    // エラーチェック結果集計
+    // エラーチェック結果集計 collect error check result 
     /****************************/
-    // チェック適用
+    // チェック適用 apply check
     $form->validate();
-    // 結果をフラグに
+    // 結果をフラグに flag the result
     $err_flg = (count($form->_errors) > 0) ? true : false;
 
     $post_flg = ($err_flg != true) ? true : false;
@@ -445,19 +445,19 @@ if ($_POST["form_show_button"] != null){
 
 
 /****************************/
-// 1. 表示ボタン押下＋エラーなし時
-// 2. ページ切り替え時
+// 1. 表示ボタン押下＋エラーなし時 when display button is pressed + when there is no error
+// 2. ページ切り替え時 when page was transitioned
 /****************************/
 if (($_POST["form_show_button"] != null && $err_flg != true) || ($_POST != null && $_POST["form_show_button"] == null)){
 
-    // 日付POSTデータの0埋め
+    // 日付POSTデータの0埋め fill data post DATA with 0s 
     $_POST["form_sale_day"]         = Str_Pad_Date($_POST["form_sale_day"]);
     $_POST["form_claim_day"]        = Str_Pad_Date($_POST["form_claim_day"]);
     $_POST["form_installment_day"]  = Str_Pad_Date($_POST["form_installment_day"]);
 
-    // 1. フォームの値を変数にセット
-    // 2. SESSION（hidden用）の値（検索条件復元関数内でセット）を変数にセット
-    // 一覧取得クエリ条件に使用
+    // 1. フォームの値を変数にセット set the value of form in variable
+    // 2. SESSION（hidden用）の値（検索条件復元関数内でセット）を変数にセット set the value (set within the search condition restoration fuunction) of SESSION (for hidden) in variable
+    // 一覧取得クエリ条件に使用 use in acquire list query condition
     $display_num        = $_POST["form_display_num"];
     $output_type        = $_POST["form_output_type"];
     $client_cd1         = $_POST["form_client"]["cd1"];
@@ -511,18 +511,18 @@ if (($_POST["form_show_button"] != null && $err_flg != true) || ($_POST != null 
 
 
 /****************************/
-// 一覧データ取得条件作成
+// 一覧データ取得条件作成 create list data acquire condition
 /****************************/
 if ($post_flg == true && $err_flg != true){
 
     /* WHERE */
     $sql = null;
 
-    // FC・取引先コード1
+    // FC・取引先コード1 FC・business partner code 1
     $sql .= ($client_cd1 != null) ? "AND t_sale_h.client_cd1 LIKE '$client_cd1%' \n" : null;
-    // FC・取引先コード2
+    // FC・取引先コード2 business partner code 2
     $sql .= ($client_cd2 != null) ? "AND t_sale_h.client_cd2 LIKE '$client_cd2%' \n" : null;
-    // FC・取引先名
+    // FC・取引先名 FC/business partner name
     if ($client_name != null){
         $sql .= "AND \n";
         $sql .= "   ( \n";
@@ -533,17 +533,17 @@ if ($post_flg == true && $err_flg != true){
         $sql .= "       t_sale_h.client_cname LIKE '%$client_name%' \n";
         $sql .= "   ) \n";
     }
-    // 売上担当者コード
+    // 売上担当者コード sales staff code 
     $sql .= ($sale_staff_cd != null) ? "AND t_staff.charge_cd = '$sale_staff_cd' \n" : null;
-    // 売上担当者セレクト
+    // 売上担当者セレクト sales staff select
     $sql .= ($sale_staff_select != null) ? "AND t_staff.staff_id = $sale_staff_select \n" : null;
-    // 倉庫
+    // 倉庫 warehouse
     $sql .= ($ware != null) ? "AND t_sale_h.ware_id = $ware \n" : null;
-    // 請求先コード１   
+    // 請求先コード１ invoice code 1   
     $sql .= ($claim_cd1 != null) ? "AND t_client_claim.client_cd1 LIKE '$claim_cd1%' \n" : null;
-    // 請求先コード２
+    // 請求先コード２ invoice code 2
     $sql .= ($claim_cd2 != null) ? "AND t_client_claim.client_cd2 LIKE '$claim_cd2%' \n" : null;
-    // 請求先名
+    // 請求先名 invoice name
     if ($claim_name != null){
         $sql .= "AND \n";
         $sql .= "   ( \n";
@@ -554,7 +554,7 @@ if ($post_flg == true && $err_flg != true){
         $sql .= "       t_client_claim.client_cname LIKE '%$claim_name%' \n";
         $sql .= "   ) \n";
     }
-    // 売上担当複数選択
+    // 売上担当複数選択 salect multiple sales staff 
     if ($multi_staff != null){
         $ary_multi_staff = explode(",", $multi_staff);
         $sql .= "AND \n";
@@ -564,34 +564,34 @@ if ($post_flg == true && $err_flg != true){
             $sql .= ($key+1 < count($ary_multi_staff)) ? ", " : ") \n";
         }
     }
-    // 売上計上日（開始）
+    // 売上計上日（開始） sales recorded date (start)
     $sale_day_s  = $sale_day_sy."-".$sale_day_sm."-".$sale_day_sd;
     $sql .= ($sale_day_s != "--") ? "AND '$sale_day_s' <= t_sale_h.sale_day \n" : null;
-    // 売上計上日（終了）
+    // 売上計上日（終了）sales recorded date (end)
     $sale_day_e  = $sale_day_ey."-".$sale_day_em."-".$sale_day_ed;
     $sql .= ($sale_day_e != "--") ? "AND t_sale_h.sale_day <= '$sale_day_e' \n" : null;
-    // 請求日（開始）
+    // 請求日（開始） invoice date (start)
     $claim_day_s  = $claim_day_sy."-".$claim_day_sm."-".$claim_day_sd;
     $sql .= ($claim_day_s != "--") ? "AND t_sale_h.claim_day >= '$claim_day_s' \n" : null; 
-    // 請求日（終了）
+    // 請求日（終了） invoice date (end)
     $claim_day_e  = $claim_day_ey."-".$claim_day_em."-".$claim_day_ed;
     $sql .= ($claim_day_e != "--") ? "AND t_sale_h.claim_day <= '$claim_day_e' \n" : null; 
-    // 日次更新
+    // 日次更新 daily update
     if ($renew == "2"){
         $sql .= "AND t_sale_h.renew_flg = 'f' \n";
     }else
     if ($renew == "3"){
         $sql .= "AND t_sale_h.renew_flg = 't' \n";
     }
-    // 伝票番号（開始）
+    // 伝票番号（開始）slip number (start)
     $sql .= ($slip_no_s != null) ? "AND t_sale_h.sale_no >= '".str_pad($slip_no_s, 8, 0, STR_PAD_LEFT)."' \n" : null; 
-    // 伝票番号（終了）
+    // 伝票番号（終了）slip number (end)
     $sql .= ($slip_no_e != null) ? "AND t_sale_h.sale_no <= '".str_pad($slip_no_e, 8, 0, STR_PAD_LEFT)."' \n" : null; 
-    // 受注番号（開始）
+    // 受注番号（開始）slip number (start)
     $sql .= ($aord_no_s != null) ? "AND t_aorder_h.ord_no >= '".str_pad($aord_no_s, 8, 0, STR_PAD_LEFT)."' \n" : null; 
-    // 受注番号（終了）
+    // 受注番号（終了）slip number (end)
     $sql .= ($aord_no_e != null) ? "AND t_aorder_h.ord_no <= '".str_pad($aord_no_e, 8, 0, STR_PAD_LEFT)."' \n" : null; 
-    // 商品コード
+    // 商品コード product code
     if ($goods_cd != null){
         $sql .= "AND \n";
         $sql .= "   t_sale_h.sale_id IN \n";
@@ -602,7 +602,7 @@ if ($post_flg == true && $err_flg != true){
         $sql .= "       GROUP BY t_sale_h.sale_id \n";
         $sql .= "   ) \n";
     }
-    // 商品名
+    // 商品名 product name
     if ($goods_name != null){
         $sql .= "AND \n";
         $sql .= "   t_sale_h.sale_id IN \n";
@@ -613,7 +613,7 @@ if ($post_flg == true && $err_flg != true){
         $sql .= "       GROUP BY t_sale_h.sale_id \n";
         $sql .= "   ) \n";
     }
-    // Ｍ区分
+    // Ｍ区分 m classification
     if ($g_goods != null){
         $sql .= "AND \n";
         $sql .= "   t_sale_h.sale_id IN \n";
@@ -625,7 +625,7 @@ if ($post_flg == true && $err_flg != true){
         $sql .= "       GROUP BY t_sale_h.sale_id \n";
         $sql .= "   ) \n";
     }
-    // 管理区分
+    // 管理区分 mgt classification
     if ($product != null){
         $sql .= "AND \n";
         $sql .= "   t_sale_h.sale_id IN \n";
@@ -637,7 +637,7 @@ if ($post_flg == true && $err_flg != true){
         $sql .= "       GROUP BY t_sale_h.sale_id \n";
         $sql .= "   ) \n";
     }
-    // 商品分類
+    // 商品分類 prod classification
     if ($g_product != null){
         $sql .= "AND \n";
         $sql .= "   t_sale_h.sale_id IN \n";
@@ -650,18 +650,18 @@ if ($post_flg == true && $err_flg != true){
         $sql .= "   ) \n";
     }
 /*
-    // 商品コード
+    // 商品コード prod code
     $sql .= ($goods_cd != null) ? "AND t_sale_d.goods_cd LIKE '$goods_cd%' " : null;
-    // 商品名
+    // 商品名 prod name
     $sql .= ($goods_name != null) ? "AND t_sale_d.official_goods_name LIKE '%$goods_name%' \n" : null;
-    // Ｍ区分
+    // Ｍ区分 m classifcation
     $sql .= ($g_goods != null) ? "AND t_g_goods.g_goods_id = $g_goods \n" : null;
-    // 管理区分
+    // 管理区分 mgt classification
     $sql .= ($product != null) ? "AND t_product.product_id = $product \n" : null;
-    // 商品分類
+    // 商品分類 prod classfication
     $sql .= ($g_product != null) ? "AND t_g_product.g_product_id = $g_product \n" : null;
 */
-    // 伝票発行
+    // 伝票発行 issue slip
     if ($slip_type == "2"){
         $sql .= "AND t_sale_h.slip_out = '1' \n";
     }else
@@ -671,17 +671,17 @@ if ($post_flg == true && $err_flg != true){
     if ($slip_type == "4"){
         $sql .= "AND t_sale_h.slip_out = '3' \n";
     }
-    // 発行状況
+    // 発行状況 issue status
     if ($slip_out == "2"){
         $sql .= "AND t_sale_h.slip_flg = 'f' \n";
     }else
     if ($slip_out == "3"){
         $sql .= "AND t_sale_h.slip_flg = 't' \n";
     }
-    // 取引区分
+    // 取引区分 trade classification
     $sql .= ($trade != null) ? "AND t_sale_h.trade_id = $trade \n" : null;
-    // 割賦回収日（開始）
-    // 割賦回収日（終了）
+    // 割賦回収日（開始） installment collection date (start)
+    // 割賦回収日（終了）installment collection date (end)
     $installment_day_s  = $installment_day_sy."-".$installment_day_sm."-".$installment_day_sd;
     $installment_day_e  = $installment_day_ey."-".$installment_day_em."-".$installment_day_ed;
     if ($installment_day_s != "--" || $installment_day_e != "--"){
@@ -701,10 +701,10 @@ if ($post_flg == true && $err_flg != true){
         $sql .= "   ) \n";
     }
 
-    // 変数詰め替え（CSV出力用）
+    // 変数詰め替え（CSV出力用） refill variable (for CSV)
     $csv_where_sql = $sql;
 
-    // 税込金額（開始）
+    // 税込金額（開始） tax included amount (start)
     if ($sale_amount_s != null){
         $sql .= "AND \n";
         $sql .= "   ( \n";
@@ -717,7 +717,7 @@ if ($post_flg == true && $err_flg != true){
         $sql .= "   ) \n";
         $sql .= "   >= $sale_amount_s \n";
     }
-    // 税込金額（終了）
+    // 税込金額（終了）tax included amount (end)
     if ($sale_amount_e != null){
         $sql .= "AND \n";
         $sql .= "   ( \n";
@@ -730,12 +730,12 @@ if ($post_flg == true && $err_flg != true){
         $sql .= "   ) \n";
         $sql .= "   <= $sale_amount_e \n";
     }
-    // 抽出対象
+    // 抽出対象 extract object
     if ($shop == "1"){
         $sql .= "AND t_sale_h.client_id != 93 \n";
     }
 
-    // 変数詰め替え（画面出力用）
+    // 変数詰め替え（画面出力用） refill variables (for screen)
     $disp_where_sql = $sql;
 
 
@@ -743,7 +743,7 @@ if ($post_flg == true && $err_flg != true){
 
     $sql = null;
 
-    // 税込金額（開始） 
+    // 税込金額（開始） tax included amouynt (start)
     if ($sale_amount_s != null){
         $sql  = "HAVING \n";
         $sql .= "   ( \n";
@@ -758,7 +758,7 @@ if ($post_flg == true && $err_flg != true){
         $sql .= "   ) \n";
         $sql .= "   >= $sale_amount_s \n";
     }
-    // 税込金額（終了）
+    // 税込金額（終了）tax included amount (end)
     if ($sale_amount_e != null){
         $sql .= ($sale_amount_s == null) ? "HAVING \n" : "AND \n";
         $sql .= "   ( \n";
@@ -774,26 +774,26 @@ if ($post_flg == true && $err_flg != true){
         $sql .= "   <= $sale_amount_e \n";
     }
 
-    // 変数詰め替え（CSV用）
+    // 変数詰め替え（CSV用）refill variable (csv)
     $csv_having_sql = $sql;
 
 
     /* ORDER BY */
     $sql = null;
 
-    // 画面出力
-    // CSV出力
+    // 画面出力 screen output
+    // CSV出力 csv output
     if ($output_type == "1" || $output_type == "3"){
 
         switch ($_POST["hdn_sort_col"]){
-            // 得意先コード
+            // 得意先コード customer code
             case "sl_client_cd":
                 $sql .= "   t_sale_h.client_cd1, \n";
                 $sql .= "   t_sale_h.client_cd2, \n";
                 $sql .= "   t_sale_h.sale_day, \n";
                 $sql .= "   t_sale_h.sale_no \n";
                 break;
-            // 得意先名
+            // 得意先名 customer name
             case "sl_client_name":
                 $sql .= "   t_sale_h.client_cname, \n";
                 $sql .= "   t_sale_h.sale_day, \n";
@@ -801,11 +801,11 @@ if ($post_flg == true && $err_flg != true){
                 $sql .= "   t_sale_h.client_cd1, \n";
                 $sql .= "   t_sale_h.client_cd2 \n";
                 break;
-            // 伝票番号
+            // 伝票番号 slip number 
             case "sl_slip":
                 $sql .= "   t_sale_h.sale_no \n";
                 break;
-            // 売上計上日
+            // 売上計上日 sales recorded date
             case "sl_sale_day":
                 $sql .= "   t_sale_h.sale_day, \n";
                 $sql .= "   t_sale_h.sale_no, \n";
@@ -816,55 +816,55 @@ if ($post_flg == true && $err_flg != true){
 
     }
 
-    // 変数詰め替え
+    // 変数詰め替え refill variable
     $order_sql = $sql;
 
 }
 
 
 /****************************/
-// 一覧データ取得
+// 一覧データ取得 acquire list data
 /****************************/
 if ($post_flg == true && $err_flg != true){
 
-    // 画面出力時
+    // 画面出力時 at screen output
     if ($output_type == "1"){
 
         $sql  = "SELECT \n";
-        $sql .= "   t_sale_h.sale_id, \n";              // 売上ID
-        $sql .= "   t_sale_h.sale_no, \n";              // 伝票番号
-        $sql .= "   t_sale_h.client_cd1, \n";           // FC・取引先コード１
-        $sql .= "   t_sale_h.client_cd2, \n";           // FC・取引先コード２
-        $sql .= "   t_sale_h.client_cname, \n";         // FC・取引先名
-        $sql .= "   t_sale_h.sale_day, \n";             // 売上計上日
-        $sql .= "   t_sale_h.trade_id, \n";             // 取引区分ID
-        $sql .= "   t_trade.trade_name, \n";            // 取引区分
+        $sql .= "   t_sale_h.sale_id, \n";              // 売上ID sales ID
+        $sql .= "   t_sale_h.sale_no, \n";              // 伝票番号 slip number
+        $sql .= "   t_sale_h.client_cd1, \n";           // FC・取引先コード１ FC business partner code 1
+        $sql .= "   t_sale_h.client_cd2, \n";           // FC・取引先コード２ FC business partner code 2
+        $sql .= "   t_sale_h.client_cname, \n";         // FC・取引先名 FC business partner name
+        $sql .= "   t_sale_h.sale_day, \n";             // 売上計上日 sales recorded date
+        $sql .= "   t_sale_h.trade_id, \n";             // 取引区分ID trade classification ID
+        $sql .= "   t_trade.trade_name, \n";            // 取引区分 trade Classification
         $sql .= "   ( \n";
         $sql .= "       CASE \n";
         $sql .= "           WHEN t_sale_h.trade_id IN (11, 15, 61) \n";
         $sql .= "           THEN (t_sale_h.net_amount) *  1 \n";
         $sql .= "           ELSE (t_sale_h.net_amount) * -1 \n";
         $sql .= "       END \n";
-        $sql .= "   ) AS notax_amount, \n";             // 税抜金額
+        $sql .= "   ) AS notax_amount, \n";             // 税抜金額 tax excluded amount 
         $sql .= "   ( \n";
         $sql .= "       CASE \n";
         $sql .= "           WHEN t_sale_h.trade_id IN (11, 15, 61) \n";
         $sql .= "           THEN (t_sale_h.tax_amount) *  1 \n";
         $sql .= "           ELSE (t_sale_h.tax_amount) * -1 \n";
         $sql .= "       END \n";
-        $sql .= "   ) AS tax_amount, \n";               // 消費税額
+        $sql .= "   ) AS tax_amount, \n";               // 消費税額 tax amount
         $sql .= "   ( \n";
         $sql .= "       CASE \n";
         $sql .= "           WHEN t_sale_h.trade_id IN (11, 15, 61) \n";
         $sql .= "           THEN (t_sale_h.net_amount + t_sale_h.tax_amount) *  1 \n";
         $sql .= "           ELSE (t_sale_h.net_amount + t_sale_h.tax_amount) * -1 \n";
         $sql .= "       END \n";
-        $sql .= "   ) AS sale_amount, \n";              // 税込金額
-        $sql .= "   t_aorder_h.aord_id, \n";            // 受注ID
-        $sql .= "   t_aorder_h.ord_no, \n";             // 受注番号
-        $sql .= "   t_sale_h.total_split_num, \n";      // 分割回数
-        $sql .= "   t_sale_h.enter_day, \n";            // 作成日時
-        $sql .= "   t_sale_h.renew_flg, \n";            // 日次更新フラグ
+        $sql .= "   ) AS sale_amount, \n";              // 税込金額 tax included amount 
+        $sql .= "   t_aorder_h.aord_id, \n";            // 受注ID sales order ID
+        $sql .= "   t_aorder_h.ord_no, \n";             // 受注番号 sales order number
+        $sql .= "   t_sale_h.total_split_num, \n";      // 分割回数 division number
+        $sql .= "   t_sale_h.enter_day, \n";            // 作成日時 date of creation
+        $sql .= "   t_sale_h.renew_flg, \n";            // 日次更新フラグ flag for daily update
         $sql .= "   to_char(t_sale_h.renew_day, 'yyyy-mm-dd') AS renew_day, \n";
 
         $sql .= "   ( \n";
@@ -874,10 +874,10 @@ if ($post_flg == true && $err_flg != true){
         $sql .= "           ELSE (t_sale_h.cost_amount) * -1 \n";
         $sql .= "       END \n";
         $sql .= "   ) AS cost_amount, ";
-                                                        // 日次更新日
-        $sql .= "   t_sale_h.slip_out, \n";             // 伝票形式
-        $sql .= "   t_sale_h.slip_flg, \n";             // 発行状況
-        $sql .= "   t_sale_h.slip_out_day \n";          // 伝票発行日
+                                                        // 日次更新日 date of daily update 
+        $sql .= "   t_sale_h.slip_out, \n";             // 伝票形式 slip format
+        $sql .= "   t_sale_h.slip_flg, \n";             // 発行状況 issu status
+        $sql .= "   t_sale_h.slip_out_day \n";          // 伝票発行日 slip issue date
         $sql .= "FROM \n";
         $sql .= "   t_sale_h \n";
         $sql .= "   LEFT  JOIN t_aorder_h                 ON t_sale_h.aord_id = t_aorder_h.aord_id \n";
@@ -905,7 +905,7 @@ if ($post_flg == true && $err_flg != true){
         $sql .= "ORDER BY \n";
         $sql .= $order_sql;
 
-    // CSV出力時
+    // CSV出力時 at csv output 
     }elseif ($output_type == "3"){
 
         $sql  = "SELECT \n";
@@ -921,7 +921,7 @@ if ($post_flg == true && $err_flg != true){
         $sql .= "   t_sale_h.c_staff_name, \n";
         $sql .= "   t_product.product_name, \n";
 		//-- 2009/06/18 改修No.36 追加
-		// 商品コード
+		// 商品コード product code
 		$sql .= "	t_sale_d.goods_cd, \n";
 		//--
         $sql .= "   t_sale_d.official_goods_name, \n";
@@ -1019,11 +1019,11 @@ if ($post_flg == true && $err_flg != true){
 
     }
 
-    // 全件数取得
+    // 全件数取得 acquire all items
     $total_result   = Db_Query($db_con, $sql.";");
     $total_count    = pg_num_rows($total_result);
 
-    // 表示件数
+    // 表示件数 display items 
     switch ($display_num){
         case "1":
             $limit = $total_count;
@@ -1033,18 +1033,18 @@ if ($post_flg == true && $err_flg != true){
             break;
     }
 
-    // 取得開始位置
+    // 取得開始位置 starting position of acquisition
     $offset = ($page_count != null) ? ($page_count - 1) * $limit : "0";
 
-    // 行削除でページに表示するレコードが無くなる場合の対処
+    // 行削除でページに表示するレコードが無くなる場合の対処 response when there is no data to be displayed because of row deletion
     if($page_count != null){
-        // 行削除でtotal_countとoffsetの関係が崩れた場合
+        // 行削除でtotal_countとoffsetの関係が崩れた場合 if the relationship of total_count and offset has collapsed because of row deletion
         if ($total_count <= $offset){
-            // オフセットを選択件前に
+            // オフセットを選択件前に offset before selecting data
             $offset     = $offset - $limit;
-            // 表示するページを1ページ前に（一気に2ページ分削除されていた場合などには対応してないです）
+            // 表示するページを1ページ前に（一気に2ページ分削除されていた場合などには対応してないです） display the previous page (this doesnt work if 2 pages are deleted at the same time)
             $page_count = $page_count - 1;
-            // 選択件数以下時はページ遷移を出力させない(nullにする)
+            // 選択件数以下時はページ遷移を出力させない(nullにする) do not output the page transsition (null it)　if its lower than the selected item
             $page_count = ($total_count <= $display_num) ? null : $page_count;
         }   
     }else{ 
@@ -1062,16 +1062,16 @@ if ($post_flg == true && $err_flg != true){
 
 
 /****************************/
-// CSV出力
+// CSV出力 csv output 
 /****************************/
 if ($post_flg == true && $err_flg != true && $output_type == "3"){
 
     $page_data  = Get_Data($total_result, 2);
 
-    // ファイル名
+    // ファイル名 file name
     $csv_file_name = "売上明細一覧.csv";
 
-    //CSVヘッダ作成
+    //CSVヘッダ作成 create csv header 
     $csv_header = array(
         "得意先コード",
         "得意先名",
@@ -1098,7 +1098,7 @@ if ($post_flg == true && $err_flg != true && $output_type == "3"){
         "日次更新日",
     );
 
-    //CSVデータ取得
+    //CSVデータ取得 acquire csv data 
     for($i=0;$i<count($page_data);$i++){
         $sale_data[$i][0]  = $page_data[$i][0];
         $sale_data[$i][1]  = $page_data[$i][1];
@@ -1136,7 +1136,7 @@ if ($post_flg == true && $err_flg != true && $output_type == "3"){
 
 
 /****************************/
-// HTML用関数
+// HTML用関数 HTML function
 /****************************/
 function Number_Format_Color($num){
     return ($num < 0) ? "<span style=\"color: #ff0000;\">".number_format($num)."</span>" : number_format($num);
@@ -1144,46 +1144,46 @@ function Number_Format_Color($num){
 
 
 /****************************/
-// HTML作成（一覧部）
+// HTML作成（一覧部） create html for list 
 /****************************/
 if ($post_flg == true && $err_flg != true){
 
-    /* ページ分け */
+    /* ページ分け page division */
     $html_page  = Html_Page2($total_count, $page_count, 1, $limit);
     $html_page2 = Html_Page2($total_count, $page_count, 2, $limit);
 
     $html_l = null;
 
-    // 取得データでループ
+    // 取得データでループ loop with acquire data
     if (count($page_data) > 0){
         foreach ($page_data as $key => $value){
 
-            /* 前処理 */
-            // 行色css
+            /* 前処理 pre process*/
+            // 行色css css color
             $row_color      = (bcmod($key, 2) == 0) ? "Result1" : "Result2";
             // No.
             $no             = $page_count * $limit - $limit + 1 + $key;
-            // FC・取引先
+            // FC・取引先 fc business partner
             $client         = $value["client_cd1"]."-".$value["client_cd2"]."<br>".htmlspecialchars($value["client_cname"])."<br>";
-            // 伝票番号リンク
+            // 伝票番号リンク slip number link
             if ($value["renew_flg"] == "t"){
                 $slip_no_link   = "<a href=\"./1-2-205.php?sale_id=".$value["sale_id"]."&slip_flg=true\">".$value["sale_no"]."</a>";
             }else{
                 $slip_no_link   = "<a href=\"./1-2-201.php?sale_id=".$value["sale_id"]."\">".$value["sale_no"]."</a>";
             }
-            // 受注番号リンク
+            // 受注番号リンク slaes order link 
             if ($value["aord_id"] != null){
                 $aord_no_link   = "<a href=\"./1-2-108.php?aord_id=".$value["aord_id"]."\">".$value["ord_no"]."</a>";
             }else{
                 $aord_no_link   = null;
             }
-            // 分割回数リンク
+            // 分割回数リンク division number link
             if ($value["trade_id"] == "15"){
                 $split_link     = "<a href=\"./1-2-208.php?sale_id=".$value["sale_id"]."&division_flg=true\">".$value["total_split_num"]."回</a>";
             }else{
                 $split_link     = null;
             }
-            // 削除リンク
+            // 削除リンク delete link 
             if ($value["renew_flg"] == "f" && $disabled == null){
                 $del_link       = "<a href=\"#\" onClick=\"Order_Delete";
                 $del_link      .= "('data_delete_flg', 'del_id', ".$value["sale_id"].", 'hdn_del_enter_date', '".$value["enter_day"]."');";
@@ -1192,28 +1192,28 @@ if ($post_flg == true && $err_flg != true){
                 $del_link       = null;
             }
             /*
-            メモ
-                １．以下条件全てに該当する伝票のみ伝票発行可能
-                    ・伝票発行"有"（旧通常伝票）
-                ２．上記条件かつ発行状況が"発行済"の場合は「再発行」で発行
-                ３．伝票発行"無"は伝票発行しない
+            メモ memo
+                １．以下条件全てに該当する伝票のみ伝票発行可能 slips that meet all conditions below can be the only slip to be issued
+                    ・伝票発行"有"（旧通常伝票）(slip issue *yes* (old normal slip)
+                ２．上記条件かつ発行状況が"発行済"の場合は「再発行」で発行 if the status is *issued* then only allow reissuance
+                ３．伝票発行"無"は伝票発行しない if the slip issue is 無*none* then dont issue slip
             */
-            // 売上伝票発行チェック
-            // 伝票発行"有"＋未発行
+            // 売上伝票発行チェック check sales slip issuance
+            // 伝票発行"有"＋未発行 issue slip 有yes + not yet issued 
             if ($value["slip_out"] == "1" && $value["slip_flg"] == "f"){
                 $form->addElement("advcheckbox", "slip_check[$key]", null, null, null, array(null, $value["sale_id"]));
                 $slip_print[$key]   = "print";
                 $slip_data[$key]    = $value["sale_id"];
                 $ckear_check["slip_check[$key]"] = "";
             }else
-            // 伝票発行"有"＋発行済
+            // 伝票発行"有"＋発行済 issue slip 有yes + issued 
             if ($value["slip_out"] == "1" && $value["slip_flg"] == "t"){
                 $form->addElement("static", "output_day[$key]", "", $value["slip_out_day"]);
                 $slip_print[$key]   = "output_day";
             }else{
             }
-            // 再発行チェック
-            // 伝票発行"有"＋未発行
+            // 再発行チェック reissue check 
+            // 伝票発行"有"＋未発行 issue slip 有yes + not yet issued 
             if ($value["slip_out"] == "1" && $value["slip_flg"] == "t"){
                 $form->addElement("advcheckbox", "re_slip_check[$key]", null, null, null, array(null, $value["sale_id"]));
                 $re_slip_print[$key]= "print";
@@ -1221,7 +1221,7 @@ if ($post_flg == true && $err_flg != true){
                 $ckear_check["re_slip_check[$key]"] = "";
             }
 
-            /* 一覧html作成 */
+            /* 一覧html作成 create list html */
             $html_l .= "<tr class=\"$row_color\">\n";
             $html_l .= "    <td align=\"right\">$no</td>\n";
             $html_l .= "    <td>$client</td>\n";
@@ -1251,7 +1251,7 @@ if ($post_flg == true && $err_flg != true){
             }
             $html_l .= "</tr>\n";
 
-            /* 合計テーブル用に金額加算 */
+            /* 合計テーブル用に金額加算 computation for the total table*/
             switch ($value["trade_id"]){
                 case "11":
                 case "15":
@@ -1270,7 +1270,7 @@ if ($post_flg == true && $err_flg != true){
                     break;
             }
 
-            /* 合計行用に金額加算 */
+            /* 合計行用に金額加算 computation for the total row */
             switch ($value["trade_id"]){
                 case "11":
                 case "15":
@@ -1304,18 +1304,18 @@ if ($post_flg == true && $err_flg != true){
         }
     }
 
-    // チェックボックスのチェックをクリア
+    // チェックボックスのチェックをクリア clear the checks in the checkbox
     $clear_check["slip_check_all"]      = "";
     $clear_check["re_slip_check_all"]   = "";
     $form->setConstants($clear_check);
 
-    // 掛と現金の合計算出
+    // 掛と現金の合計算出 get the total of receivable and cash 
     $notax_amount   = $kake_notax_amount + $genkin_notax_amount;
     $tax_amount     = $kake_tax_amount   + $genkin_tax_amount;
     $ontax_amount   = $kake_ontax_amount + $genkin_ontax_amount;
     $cost_amount    = $gross_cost_amount + $minus_cost_amount;
 
-    // 一覧htmlフッタ
+    // 一覧htmlフッタ html list footer 
     $html_m  = "    <tr class=\"Result3\">\n";
     $html_m .= "        <td><b>合計</b></td>\n";
     $html_m .= "        <td></td>\n";
@@ -1355,15 +1355,15 @@ if ($post_flg == true && $err_flg != true){
     $html_m2 .= "        <td align=\"center\">".$form->_elements[$form->_elementIndex["output_re_slip_button"]]->toHtml()."</td>\n";
     $html_m2 .= "    </tr>\n";
 
-    // 発行ALLチェックフォーム作成
+    // 発行ALLチェックフォーム作成 create issue all check form 
     $form->addElement("checkbox", "slip_check_all",    "", "売上伝票発行", "onClick=\"javascript:All_Check_Slip('slip_check_all');\"");
     $form->addElement("checkbox", "re_slip_check_all", "", "再発行",       "onClick=\"javascript:All_Check_Re_Slip('re_slip_check_all');\"");
 
-    // 上記ALLチェックフォーム用jsを作成
+    // 上記ALLチェックフォーム用jsを作成 create Js for issue all check form
     $javascript .= Create_Allcheck_Js("All_Check_Slip",    "slip_check",    $slip_data);
     $javascript .= Create_Allcheck_Js("All_Check_Re_Slip", "re_slip_check", $re_slip_data);
 
-    // 一覧htmlヘッダ
+    // 一覧htmlヘッダ list html header 
     $html_h  = "    <tr align=\"center\" style=\"font-weight: bold;\">\n";
     $html_h .= "        <td class=\"Title_Pink\">No.</td>\n";
     $html_h .= "        <td class=\"Title_Pink\">\n";
@@ -1386,7 +1386,7 @@ if ($post_flg == true && $err_flg != true){
     $html_h .= "        <td class=\"Title_Pink\">".$form->_elements[$form->_elementIndex["re_slip_check_all"]]->toHtml()."</td>\n";
     $html_h .= "    </tr>\n";
 
-    // 一覧テーブルを合体させる
+    // 一覧テーブルを合体させる combine the list table 
     $html_p  = "\n";
     $html_p .= "<table class=\"List_Table\" border=\"1\" width=\"100%\">\n";
     $html_p .= $html_h;
@@ -1395,7 +1395,7 @@ if ($post_flg == true && $err_flg != true){
     $html_p .= $html_m2;
     $html_p .= "</table>\n";
 
-    // 合計テーブルhtml作成
+    // 合計テーブルhtml作成 crate the html for total table 
     $html_g  = "<table class=\"List_Table\" border=\"1\" align=\"right\">\n";
     $html_g .= "<col width=\"80px\" align=\"center\" style=\"font-weight: bold;\">\n";
     $html_g .= "<col width=\"80px\" align=\"right\">\n";
@@ -1460,9 +1460,9 @@ $order_delete .= "}\n";
 
 
 /****************************/
-// HTML作成（検索部）
+// HTML作成（検索部） create  html for search 
 /****************************/
-// モジュール個別テーブルの共通部分１
+// モジュール個別テーブルの共通部分１ common parts of per module table 1
 $html_s_tps  = "<br style=\"font-size: 4px;\">\n";
 $html_s_tps .= "\n";
 $html_s_tps .= "<table class=\"Table_Search\">\n";
@@ -1471,56 +1471,56 @@ $html_s_tps .= "    <col width=\"300px\">\n";
 $html_s_tps .= "    <col width=\"130px\" style=\"font-weight: bold;\">\n";
 $html_s_tps .= "    <col width=\"300px\">\n";
 $html_s_tps .= "    <tr>\n";
-// モジュール個別テーブルの共通部分２
+// モジュール個別テーブルの共通部分２ common parts of per module table 2
 $html_s_tpe .= "    </tr>\n";
 $html_s_tpe .= "</table>\n";
 $html_s_tpe .= "\n";
 
-// 共通検索テーブル
+// 共通検索テーブル common search table 
 $html_s  = Search_Table_Sale_H($form);
-// モジュール個別検索テーブル１
+// モジュール個別検索テーブル１ per module search table 1 
 $html_s .= $html_s_tps;
 $html_s .= "        <td class=\"Td_Search_3\">日次更新</td>\n";
 $html_s .= "        <td class=\"Td_Search_3\">".$form->_elements[$form->_elementIndex["form_renew"]]->toHtml()."</td>\n";
 $html_s .= "        <td class=\"Td_Search_3\">税込金額</td>\n";
 $html_s .= "        <td class=\"Td_Search_3\">".$form->_elements[$form->_elementIndex["form_sale_amount"]]->toHtml()."</td>\n";
 $html_s .= $html_s_tpe;
-// モジュール個別検索テーブル２
+// モジュール個別検索テーブル２ per module search table 2
 $html_s .= $html_s_tps;
 $html_s .= "        <td class=\"Td_Search_3\">伝票番号</td>\n";
 $html_s .= "        <td class=\"Td_Search_3\">".$form->_elements[$form->_elementIndex["form_slip_no"]]->toHtml()."</td>\n";
 $html_s .= "        <td class=\"Td_Search_3\">受注番号</td>\n";
 $html_s .= "        <td class=\"Td_Search_3\">".$form->_elements[$form->_elementIndex["form_aord_no"]]->toHtml()."</td>\n";
 $html_s .= $html_s_tpe;
-// モジュール個別検索テーブル３
+// モジュール個別検索テーブル３ per module search table 3
 $html_s .= $html_s_tps;
 $html_s .= "        <td class=\"Td_Search_3\">商品</td>\n";
 $html_s .= "        <td class=\"Td_Search_3\">".$form->_elements[$form->_elementIndex["form_goods"]]->toHtml()."</td>\n";
 $html_s .= "        <td class=\"Td_Search_3\">Ｍ区分</td>\n";
 $html_s .= "        <td class=\"Td_Search_3\">".$form->_elements[$form->_elementIndex["form_g_goods"]]->toHtml()."</td>\n";
 $html_s .= $html_s_tpe;
-// モジュール個別検索テーブル４
+// モジュール個別検索テーブル４ per module search table 4
 $html_s .= $html_s_tps;
 $html_s .= "        <td class=\"Td_Search_3\">管理区分</td>\n";
 $html_s .= "        <td class=\"Td_Search_3\">".$form->_elements[$form->_elementIndex["form_product"]]->toHtml()."</td>\n";
 $html_s .= "        <td class=\"Td_Search_3\">商品分類</td>\n";
 $html_s .= "        <td class=\"Td_Search_3\">".$form->_elements[$form->_elementIndex["form_g_product"]]->toHtml()."</td>\n";
 $html_s .= $html_s_tpe;
-// モジュール個別検索テーブル５
+// モジュール個別検索テーブル５ per module search table 5
 $html_s .= $html_s_tps;
 $html_s .= "        <td class=\"Td_Search_3\">伝票発行</td>\n";
 $html_s .= "        <td class=\"Td_Search_3\">".$form->_elements[$form->_elementIndex["form_slip_type"]]->toHtml()."</td>\n";
 $html_s .= "        <td class=\"Td_Search_3\">発行状況</td>\n";
 $html_s .= "        <td class=\"Td_Search_3\">".$form->_elements[$form->_elementIndex["form_slip_out"]]->toHtml()."</td>\n";
 $html_s .= $html_s_tpe;
-// モジュール個別検索テーブル６
+// モジュール個別検索テーブル６ per module search table 6
 $html_s .= $html_s_tps;
 $html_s .= "        <td class=\"Td_Search_3\">取引区分</td>\n";
 $html_s .= "        <td class=\"Td_Search_3\">".$form->_elements[$form->_elementIndex["form_trade"]]->toHtml()."</td>\n";
 $html_s .= "        <td class=\"Td_Search_3\">割賦回収日</td>\n";
 $html_s .= "        <td class=\"Td_Search_3\">".$form->_elements[$form->_elementIndex["form_installment_day"]]->toHtml()."</td>\n";
 $html_s .= $html_s_tpe;
-// モジュール個別検索テーブル７
+// モジュール個別検索テーブル７ per module search table 7
 $html_s .= $html_s_tps;
 $html_s .= "        <td class=\"Td_Search_3\">抽出対象</td>\n";
 $html_s .= "        <td class=\"Td_Search_3\">".$form->_elements[$form->_elementIndex["form_shop"]]->toHtml()."</td>\n";
@@ -1534,55 +1534,55 @@ $html_s .= "\n";
 
 
 /****************************/
-// HTMLヘッダ
+// HTMLヘッダ html header 
 /****************************/
 $html_header = Html_Header($page_title);
 
 /****************************/
-// HTMLフッタ
+// HTMLフッタ html footer 
 /****************************/
 $html_footer = Html_Footer();
 
 /****************************/
-// メニュー作成
+// メニュー作成 create menu 
 /****************************/
 $page_menu = Create_Menu_h("sale", "2");
 
 /****************************/
-// 画面ヘッダー作成
+// 画面ヘッダー作成 create screen header 
 /****************************/
 $page_title .= "　".$form->_elements[$form->_elementIndex["203_button"]]->toHtml();
 $page_title .= "　".$form->_elements[$form->_elementIndex["201_button"]]->toHtml();
 $page_header = Create_Header($page_title);
 
 /****************************/
-// ページ作成
+// ページ作成 create page 
 /****************************/
-// ページ数を取得
+// ページ数を取得 acquire page number 
 $html_page =  Html_Page2($total_count, $page_count, 1, $limit);
 $html_page2 = Html_Page2($total_count, $page_count, 2, $limit);
 
-// Render関連の設定
+// Render関連の設定 render related setting
 $renderer =& new HTML_QuickForm_Renderer_ArraySmarty($smarty);
 $form->accept($renderer);
 
-// form関連の変数をassign
+// form関連の変数をassign assign form related varibale
 $smarty->assign("form", $renderer->toArray());
 
-// その他の変数をassign
+// その他の変数をassign assign other variabled
 $smarty->assign("var", array(
-    // 共通
+    // 共通 common 
     "html_header"           => "$html_header",
     "page_menu"             => "$page_menu",
     "page_header"           => "$page_header",
     "html_footer"           => "$html_footer",
-    // エラーメッセージ（伝票削除、伝票発行）
+    // エラーメッセージ（伝票削除、伝票発行）error message (delete slip, issue slip)
     "del_error_msg"         => "$del_error_msg",
     "output_error_msg"      => "$output_error_msg",
     // js
     "order_delete"          => "$order_delete",
     "javascript"            => $javascript,
-    // フラグ
+    // フラグ flag 
     "post_flg"              => "$post_flg",
     "err_flg"               => "$err_flg",
 ));
@@ -1595,6 +1595,6 @@ $smarty->assign("html", array(
     "html_page2"    => $html_page2,
 ));
 
-// テンプレートへ値を渡す
+// テンプレートへ値を渡す pass the value to template 
 $smarty->display(basename($_SERVER[PHP_SELF].".tpl"));
 ?>
