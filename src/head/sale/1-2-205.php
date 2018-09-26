@@ -8,16 +8,16 @@
  ************************************/
 $page_title = "売上照会";
 
-//環境設定ファイル
+//環境設定ファイル env setting file
 require_once("ENV_local.php");
 
-//HTML_QuickFormを作成
+//HTML_QuickFormを作成 create HTML_quickform
 $form =& new HTML_QuickForm("dateForm", "POST", $_SERVER["PHP_SELF"]);
 
-//DB接続
+//DB接続 connect to db
 $db_con = Db_Connect();
 
-// 権限チェック
+// 権限チェック authority check
 $auth       = Auth_Check($db_con);
 
 
@@ -35,15 +35,15 @@ $auth       = Auth_Check($db_con);
  */
 
 /****************************/
-//データ項目作成関数
+//データ項目作成関数 create function for data items
 /****************************/
-//(引数：受注ID)
+//(引数：受注ID) argument: sales order ID 
 function Get_Sale_Item($aord_id){
     if($aord_id != NULL){
-        //受注から興したか
+        //受注から興したか was it recorded from sales order
         $row_item[] = array("No.","商品コード<br>商品名","受注数","現在庫数","出荷数","原価単価<br>売上単価","原価金額<br>売上金額");
     }else{
-        //売上から興したか
+        //売上から興したか was it recorded from sales 
         $row_item[] = array("No.","商品コード<br>商品名","現在庫数","出荷数","原価単価<br>売上単価","原価金額<br>売上金額");
     }
 
@@ -51,7 +51,7 @@ function Get_Sale_Item($aord_id){
 }
 
 /****************************/
-//伝票発行処理
+//伝票発行処理 issue slip process
 /****************************/
 $order_sheet  = " function Order_Sheet(hidden1,ord_id){\n";
 $order_sheet .= "    res = window.confirm(\"伝票を発行します。よろしいですか？\");\n";
@@ -73,36 +73,36 @@ $order_sheet .= "    }\n";
 $order_sheet .= "}\n";
 
 /****************************/
-//契約関数定義
+//契約関数定義 function definition for contract
 /****************************/
 require_once(INCLUDE_DIR."function_keiyaku.inc");
 /****************************/
-//外部変数取得
+//外部変数取得 acquire external vairiable
 /****************************/
 $staff_id     = $_SESSION[staff_id];
 $shop_id      = $_SESSION[client_id];
-$sale_id      = $_GET["sale_id"];             //受注ID
-$input_flg    = $_GET["input_flg"];           //売上入力識別フラグ
-$slip_flg     = $_GET["slip_flg"];           //売上照会・一括発行識別フラグ
-$del_flg     = $_GET["del_flg"];                //削除フラグ
-$renew_flg     = $_GET["renew_flg"];           //日次更新フラグ
-$aord_del_flg  = $_GET["aord_del_flg"];     //受注削除フラグ
-$aord_finish_flg  = $_GET["aord_finish_flg"];     //受注削除フラグ
+$sale_id      = $_GET["sale_id"];             //受注ID Sales order ID
+$input_flg    = $_GET["input_flg"];           //売上入力識別フラグ sales input identification flag
+$slip_flg     = $_GET["slip_flg"];           //売上照会・一括発行識別フラグ sales inquiry/ issue all at once identification flag
+$del_flg     = $_GET["del_flg"];                //削除フラグ delete flag 
+$renew_flg     = $_GET["renew_flg"];           //日次更新フラグ daily update flag
+$aord_del_flg  = $_GET["aord_del_flg"];     //受注削除フラグ sales order delete flag
+$aord_finish_flg  = $_GET["aord_finish_flg"];     //受注削除フラグ sales order delete flag
 
 if($aord_del_flg != true && $aord_finish_flg != true && $_GET["inst_err"] != true){
-    //不正値チェック判定
+    //不正値チェック判定 determine invald value
     Get_Id_Check2($_GET["sale_id"]);
     Get_Id_Check3($_GET["sale_id"]);
 
     if($del_flg != 'true' && $renew_flg != 'true'){
-        //整合性判定関数
+        //整合性判定関数 function for determining compatibility 
         Injustice_check($db_con,"sale",$sale_id,$shop_id);
     }
 }
 /****************************/
-//部品定義
+//部品定義 component definition
 /****************************/
-//売上計上日
+//売上計上日 sales recorded date
 $text="";
 $text[] =& $form->createElement("static","y","","");
 $text[] =& $form->createElement("static","","","-");
@@ -111,7 +111,7 @@ $text[] =& $form->createElement("static","","","-");
 $text[] =& $form->createElement("static","d","","");
 $form->addGroup( $text,"form_sale_day","form_sale_day");
 
-//請求日
+//請求日 invoice date
 $text="";
 $text[] =& $form->createElement("static","y","","");
 $text[] =& $form->createElement("static","","","-");
@@ -120,12 +120,12 @@ $text[] =& $form->createElement("static","","","-");
 $text[] =& $form->createElement("static","d","","");
 $form->addGroup( $text,"form_claim_day","form_claim_day");
 
-//伝票番号
+//伝票番号 slip number 
 $form->addElement("static","form_sale_no","","");
-//受注番号
+//受注番号 sales order number 
 $form->addElement("static","form_ord_no","","");
 
-//得意先名
+//得意先名 customer name
 $form_client[] =& $form->createElement("static","cd1","","");
 $form_client[] =& $form->createElement("static","","","-");
 $form_client[] =& $form->createElement("static","cd2","","");
@@ -133,60 +133,60 @@ $form_client[] =& $form->createElement("static","",""," ");
 $form_client[] =& $form->createElement("static","name","","");
 $form->addGroup( $form_client, "form_client", "");
 
-//グリーン指定
+//グリーン指定 green designation
 $form->addElement("static","form_trans_check","","");
-//運送業者名
+//運送業者名 carrier 
 $form->addElement("static","form_trans_name","","");
-//直送先名
+//直送先名 direct destination name
 $form->addElement("static","form_direct_name","","");
-//出荷倉庫
-$form->addElement("static","form_ware_name","","");
-//取引区分
+//出荷倉庫 shipping warehouse
+$form->addElement("static","form_w are_name","","");
+//取引区分 trade classification
 $form->addElement("static","form_trade_sale","","");
-//受注担当者
+//受注担当者 sales order staff
 $form->addElement("static","form_staff_name","","");
-//売上担当者
+//売上担当者 sales staff
 $form->addElement("static","form_cstaff_name","","");
-//備考
-//備考
+//備考 remakrs
+//備考 remarks 
 $form->addElement("static","form_note","","");
 
-//伝票発行
+//伝票発行 issue slip
 $form->addElement("button","order_button","伝票発行","onClick=\"javascript:Order_Sheet('order_sheet_id',$sale_id);\"");
-//伝票発行ID
+//伝票発行ID issue slip ID
 $form->addElement("hidden", "order_sheet_id");
 
-//遷移元チェック
+//遷移元チェック check the page transitioned from
 if($input_flg == true){
-    //売上入力画面
-    //OKボタン
+    //売上入力画面 sales input screen
+    //OKボタン ok button
     $form->addElement("button", "ok_button", "Ｏ　Ｋ",
         "onClick=\"location.href='".Make_Rtn_Page("sale")."'\""
     );
-    //戻る
+    //戻る back 
     $form->addElement("button","return_button","戻　る","onClick=\"location.href='1-2-201.php?sale_id=$sale_id'\"");
 
-    //納品書出力
+    //納品書出力 delivery note output
     $form->addElement("button","order_button","伝票発行","onClick=\"javascript:Order_Sheet('order_sheet_id',$sale_id);\"");
 
-    $freeze_flg = true;    //売上完了メッセージ表示フラグ
+    $freeze_flg = true;    //売上完了メッセージ表示フラグ sales complete message display flag
 
 }else{
-    //遷移元識別判定
+    //遷移元識別判定 determine the page transitioned from
     if($slip_flg == true){
-        //売上照会
-        //戻る
+        //売上照会 sales inquiry 
+        //戻る back 
         $form->addElement("button", "return_button", "戻　る",
         "onClick=\"location.href='".Make_Rtn_Page("sale")."'\""
         );
     }else{
-        //一括発行画面
-        //戻る
+        //一括発行画面 issue all at one screen
+        //戻る back
         $form->addElement("button","return_button","戻　る","onClick=\"location.href='1-2-202.php'\"");
     }
 }
 
-//売上金額合計
+//売上金額合計 total sales 
 $form->addElement(
     "text","form_sale_total","",
     "size=\"25\" maxLength=\"18\" 
@@ -196,7 +196,7 @@ $form->addElement(
     text-align: right\" readonly'"
 );
 
-//消費税額(合計)
+//消費税額(合計) tax total
 $form->addElement(
         "text","form_sale_tax","",
         "size=\"25\" maxLength=\"18\" 
@@ -207,7 +207,7 @@ $form->addElement(
         readonly"
 );
 
-//売上金額（税込合計)
+//売上金額（税込合計) sales total with tax
 $form->addElement(
         "text","form_sale_money","",
         "size=\"25\" maxLength=\"18\" 
@@ -220,7 +220,7 @@ $form->addElement(
 
 if($del_flg != 'true' && $renew_flg != 'true' && $aord_del_flg != 'true' && $_GET["inst_err"] != true && $_GET["aord_finish_flg"] != true){
     /****************************/
-    //売上ヘッダー抽出判定処理
+    //売上ヘッダー抽出判定処理 sales header extraction determination process
     /****************************/
     $sql  = "SELECT ";
     $sql .= "    aord_id,";
@@ -234,16 +234,16 @@ if($del_flg != 'true' && $renew_flg != 'true' && $aord_del_flg != 'true' && $_GE
     $sql .= ";";
     $result = Db_Query($db_con,$sql);
 
-    //GETデータ判定
+    //GETデータ判定 determine GET data
     Get_Id_Check($result);
     $stat = Get_Data($result);
-    $aord_id   = $stat[0][0];            //受注ID
-    $renew_flg = $stat[0][1];            //日次更新フラグ
+    $aord_id   = $stat[0][0];            //受注ID sales order ID 
+    $renew_flg = $stat[0][1];            //日次更新フラグ daily update flag
 
-    //日次更新フラグがtrueか
+    //日次更新フラグがtrueか is the daily update flag true
     if($renew_flg == 't'){
         /****************************/
-        //売上ヘッダ抽出SQL（日次更新後）
+        //売上ヘッダ抽出SQL（日次更新後） sales header extract SQL (after daily update)
         /****************************/
         $sql  = "SELECT ";                             
         $sql .= "    t_sale_h.sale_no,";
@@ -290,7 +290,7 @@ if($del_flg != 'true' && $renew_flg != 'true' && $aord_del_flg != 'true' && $_GE
         exit;
     }else{
         /****************************/
-        //売上ヘッダー抽出SQL
+        //売上ヘッダー抽出SQL sales header extract SQL
         /****************************/
 
         $sql  = "SELECT \n";
@@ -358,10 +358,10 @@ if($del_flg != 'true' && $renew_flg != 'true' && $aord_del_flg != 'true' && $_GE
     $h_data_list = Get_Data($result);
 
     /****************************/
-    //売上データ抽出SQL
+    //売上データ抽出SQL sales data extract SQL
     /****************************/
     $data_sql  = "SELECT ";
-    //日次更新フラグがtrueか
+    //日次更新フラグがtrueか daily update flag is true or not?
     if($renew_flg == 't'){
         $data_sql .= "    t_sale_d.goods_cd,";
     }else{
@@ -375,7 +375,7 @@ if($del_flg != 'true' && $renew_flg != 'true' && $aord_del_flg != 'true' && $_GE
     $data_sql .= "    t_sale_d.sale_price,";
     $data_sql .= "    t_sale_d.cost_amount, ";
     $data_sql .= "    t_sale_d.sale_amount, ";
-    //受注IDがある場合は、受注数を表示
+    //受注IDがある場合は、受注数を表示 display the ordered number of units received if there is a sales order ID 
     if($aord_id != NULL){
         $data_sql .= "    t_aorder_d.num, ";
     }
@@ -386,11 +386,11 @@ if($del_flg != 'true' && $renew_flg != 'true' && $aord_del_flg != 'true' && $_GE
     $data_sql .= "FROM ";
     $data_sql .= "    t_sale_d ";
     $data_sql .= "    INNER JOIN t_sale_h ON t_sale_d.sale_id = t_sale_h.sale_id ";
-    //受注IDがある場合は、受注データテーブルと結合
+    //受注IDがある場合は、受注データテーブルと結合 combine with sales order data table if there is a sales order ID
     if($aord_id != NULL){
         $data_sql .= "    INNER JOIN t_aorder_d ON t_sale_d.aord_d_id = t_aorder_d.aord_d_id ";
     }
-    //日次更新フラグがtrueか
+    //日次更新フラグがtrueか is the faily update id true
     //if($renew_flg == 't'){
         $data_sql .= "    INNER JOIN t_goods ON t_sale_d.goods_id = t_goods.goods_id ";
     //}
@@ -421,7 +421,7 @@ if($del_flg != 'true' && $renew_flg != 'true' && $aord_del_flg != 'true' && $_GE
 
     $data_sql .= "ORDER BY ";
     //aoyama-n 2009-07-06
-    //日次更新フラグがtrueか
+    //日次更新フラグがtrueか is the daily update flag true 
     //if($renew_flg == 't'){
     //    $data_sql .= "    t_sale_d.goods_cd;";
     //}else{
@@ -433,82 +433,82 @@ if($del_flg != 'true' && $renew_flg != 'true' && $aord_del_flg != 'true' && $_GE
     $result = Db_Query($db_con,$data_sql);
 
     /****************************/
-    //売上データー表示
+    //売上データー表示 display sales data
     /****************************/
-    //行項目部品を作成
+    //行項目部品を作成 create row items components 
     $row_item = Get_Sale_Item($aord_id);
 
-    //行データ部品を作成
+    //行データ部品を作成 create row data component 
     $row_data = Get_Data($result);
     for($i=0;$i<count($row_data);$i++){
         for($j=0;$j<count($row_data[$i]);$j++){
-            //原価単価・売上単価
+            //原価単価・売上単価 costper unit, selling price per unit 
             if($j==3 || $j==4){
                 $row_data[$i][$j] = number_format($row_data[$i][$j],2);
             }
-            //出荷数・原価金額・売上金額
+            //出荷数・原価金額・売上金額 number of units to be shipped, cost price, sales price
             if($j==2 || $j==5 || $j==6){
                 $row_data[$i][$j] = number_format($row_data[$i][$j]);
             }
-            //受注数を表示する場合、一つずれる為
+            //受注数を表示する場合、一つずれる為 it will deviate one each if number of units will be displayed 
             if($aord_id != NULL && $j==7){
                 $row_data[$i][$j] = number_format($row_data[$i][$j]);
             }
         
-            //受注数表示判定
+            //受注数表示判定 determine if the ordered number of units will be displayed 
             if($aord_id != NULL && $j==8){
-                //現在庫数
+                //現在庫数 current inv number 
                 $row_data[$i][$j] = number_format($row_data[$i][$j]);
             }else if($aord_id == NULL && $j==7){
-                //現在庫数
+                //現在庫数 current inv number
                 $row_data[$i][$j] = number_format($row_data[$i][$j]);
             }
         }
     }
     /****************************/
-    //売上ヘッダー表示
+    //売上ヘッダー表示 display sales header
     /****************************/
-    $def_fdata["form_sale_no"]                      =   $h_data_list[0][0];                          //伝票番号
-    $def_fdata["form_ord_no"]                       =   $h_data_list[0][1];                          //受注番号
+    $def_fdata["form_sale_no"]                      =   $h_data_list[0][0];                          //伝票番号 slip number 
+    $def_fdata["form_ord_no"]                       =   $h_data_list[0][1];                          //受注番号 saleso rrder number 
 
-    //日付生成
+    //日付生成 create daily update 
     $form_sale_day                                  =   explode('-',$h_data_list[0][2]);
     $form_claim_day                                 =   explode('-',$h_data_list[0][3]);
 
-    $def_fdata["form_sale_day"]["y"]                =   $form_sale_day[0];                           //売上日(年)
-    $def_fdata["form_sale_day"]["m"]                =   $form_sale_day[1];                           //売上日(月)
-    $def_fdata["form_sale_day"]["d"]                =   $form_sale_day[2];                           //売上日(日)
+    $def_fdata["form_sale_day"]["y"]                =   $form_sale_day[0];                           //売上日(年) sales date year
+    $def_fdata["form_sale_day"]["m"]                =   $form_sale_day[1];                           //売上日(月) sales date month
+    $def_fdata["form_sale_day"]["d"]                =   $form_sale_day[2];                           //売上日(日) sales date day
 
-    $def_fdata["form_claim_day"]["y"]               =   $form_claim_day[0];                          //請求日(年)
-    $def_fdata["form_claim_day"]["m"]               =   $form_claim_day[1];                          //請求日(月)
-    $def_fdata["form_claim_day"]["d"]               =   $form_claim_day[2];                          //請求日(日)
+    $def_fdata["form_claim_day"]["y"]               =   $form_claim_day[0];                          //請求日(年) invoice date year 
+    $def_fdata["form_claim_day"]["m"]               =   $form_claim_day[1];                          //請求日(月) invoice date month 
+    $def_fdata["form_claim_day"]["d"]               =   $form_claim_day[2];                          //請求日(日) invoice date day
 
-    $def_fdata["form_client"]["cd1"]                =   $h_data_list[0][4];                          //得意先cd1
-    $def_fdata["form_client"]["cd2"]                =   $h_data_list[0][5];                          //得意先cd2
-    $def_fdata["form_client"]["name"]               =   $h_data_list[0][6];                          //得意先名
+    $def_fdata["form_client"]["cd1"]                =   $h_data_list[0][4];                          //得意先cd1 customer code 1 
+    $def_fdata["form_client"]["cd2"]                =   $h_data_list[0][5];                          //得意先cd2customer code 2
+    $def_fdata["form_client"]["name"]               =   $h_data_list[0][6];                          //得意先名 cusotmer name
 
     $client_id                                      =   $h_data_list[0][18];
 
-    //グリーン指定判定
+    //グリーン指定判定 determube uf green destination is checked
     if($h_data_list[0][7] == 't'){
         $def_fdata["form_trans_check"]              = "グリーン指定あり　";
     }
-    $def_fdata["form_trans_name"]                   =   $h_data_list[0][8];                         //運送業者
-    $def_fdata["form_direct_name"]                  =   $h_data_list[0][9];                         //直送先
-    $def_fdata["form_ware_name"]                    =   $h_data_list[0][10];                         //倉庫
-    $def_fdata["form_trade_sale"]                   =   $h_data_list[0][11];                         //取引区分
-    $def_fdata["form_cstaff_name"]                   =   $h_data_list[0][12];                         //売上担当者
+    $def_fdata["form_trans_name"]                   =   $h_data_list[0][8];                         //運送業者 carrier
+    $def_fdata["form_direct_name"]                  =   $h_data_list[0][9];                         //直送先 direct destination
+    $def_fdata["form_ware_name"]                    =   $h_data_list[0][10];                         //倉庫 waarehouse
+    $def_fdata["form_trade_sale"]                   =   $h_data_list[0][11];                         //取引区分 trade classification
+    $def_fdata["form_cstaff_name"]                   =   $h_data_list[0][12];                         //売上担当者 sales staff
     $def_fdata["form_note"]                         =   $h_data_list[0][13];
 
-    $def_fdata["form_sale_total"]                   =   number_format($h_data_list[0][14]);          //税抜金額
-    $def_fdata["form_sale_tax"]                     =   number_format($h_data_list[0][15]);          //消費税
-    $total_money                                    =   $h_data_list[0][14] + $h_data_list[0][15];   //税込金額
+    $def_fdata["form_sale_total"]                   =   number_format($h_data_list[0][14]);          //税抜金額 amount with no tax
+    $def_fdata["form_sale_tax"]                     =   number_format($h_data_list[0][15]);          //消費税 tax
+    $total_money                                    =   $h_data_list[0][14] + $h_data_list[0][15];   //税込金額 amt with tax
     $def_fdata["form_sale_money"]                   =   number_format($total_money);                         
-    $def_fdata["form_staff_name"]                   =   $h_data_list[0][16];                         //受注担当者                         
+    $def_fdata["form_staff_name"]                   =   $h_data_list[0][16];                         //受注担当者           sales order slaff              
     $form->setDefaults($def_fdata);
 
     /****************************/
-    //伝票発行ボタン押下処理
+    //伝票発行ボタン押下処理 when the issue slip button is pressed 
     /****************************/
     if($_POST["order_sheet_id"]!=NULL){
 
@@ -525,7 +525,7 @@ if($del_flg != 'true' && $renew_flg != 'true' && $aord_del_flg != 'true' && $_GE
         $flg_update .= "    slip_flg ='f' ";
         $flg_update .= ";";
 
-        //該当データ件数
+        //該当データ件数 number of corresponding data
         $result = @Db_Query($db_con, $flg_update);
         if($result == false){
             Db_Query($db_con, "ROLLBACK");
@@ -536,10 +536,10 @@ if($del_flg != 'true' && $renew_flg != 'true' && $aord_del_flg != 'true' && $_GE
     }
 
     if($h_data_list[0][11] == "割賦売上" && $input_flg == true){
-        //分割売上入力
+        //分割売上入力 input sales divided into 7 
         //$form->addElement("button","slip_bill_button","分割請求","onClick=\"location.href='1-2-208.php?sale_id=$sale_id'\"");
 	    $form->addElement("button","slip_bill_button","分割請求","onClick=\"SubMenu2('".HEAD_DIR."sale/1-2-208.php?sale_id=".$sale_id."')\"");
-	    $form->addElement("hidden","slip_bill_flg");    //売上入力遷移フラグ 
+	    $form->addElement("hidden","slip_bill_flg");    //売上入力遷移フラグ flag for transitioning to salses input  
 	
 	    $slip_data["slip_bill_flg"] = true;
 	    $form->setConstants($slip_data);   
@@ -548,38 +548,38 @@ if($del_flg != 'true' && $renew_flg != 'true' && $aord_del_flg != 'true' && $_GE
 
 
 /****************************/
-// 得意先の状態出力
+// 得意先の状態出力 output the customer status 
 /****************************/
 $client_state_print = Get_Client_State($db_con, $client_id);
 
 
 /****************************/
-//HTMLヘッダ
+//HTMLヘッダ html header 
 /****************************/
 $html_header = Html_Header($page_title);
 
 /****************************/
-//HTMLフッタ
+//HTMLフッタ html footer 
 /****************************/
 $html_footer = Html_Footer();
 
 /****************************/
-//メニュー作成
+//メニュー作成 create menu 
 /****************************/
 $page_menu = Create_Menu_h('sale','2');
 /****************************/
-//画面ヘッダー作成
+//画面ヘッダー作成 create screen header 
 /****************************/
 $page_header = Create_Header($page_title);
 
-// Render関連の設定
+// Render関連の設定 render related settings 
 $renderer =& new HTML_QuickForm_Renderer_ArraySmarty($smarty);
 $form->accept($renderer);
 
-//form関連の変数をassign
+//form関連の変数をassign assign form related variable
 $smarty->assign('form',$renderer->toArray());
 
-//その他の変数をassign
+//その他の変数をassign assign other variables
 $smarty->assign('var',array(
     'html_header'   => "$html_header",
     'page_menu'     => "$page_menu",
@@ -593,7 +593,7 @@ $smarty->assign('var',array(
 ));
 $smarty->assign('item',$row_item);
 $smarty->assign('row',$row_data);
-//テンプレートへ値を渡す
+//テンプレートへ値を渡す pass the value to the template 
 $smarty->display(basename($_SERVER[PHP_SELF] .".tpl"));
 
 ?>
