@@ -59,33 +59,33 @@
 
 $page_title = "出荷予定日返信入力";
 
-//環境設定ファイル
+//環境設定ファイル env set file
 require_once("ENV_local.php");
 
-//HTML_QuickFormを作成
+//HTML_QuickFormを作成 create html_quickform
 $form =& new HTML_QuickForm( "$_SERVER[PHP_SELF]","POST");
 
-//DB接続
+//DB接続 connect to db
 $db_con = Db_Connect();
 
-// 権限チェック
+// 権限チェック auth check
 $auth       = Auth_Check($db_con);
-// 入力・変更権限無しメッセージ
+// 入力・変更権限無しメッセージ no input/edit auth message
 $auth_r_msg = ($auth[0] == "r") ? $auth[3] : null;
-// ボタンDisabled
+// ボタンDisabled button disabled
 $disabled   = ($auth[0] == "r") ? "disabled" : null;
-// 削除ボタンDisabled
+// 削除ボタンDisabled delete button disabled
 $del_disabled = ($auth[1] == "f") ? "disabled" : null;
 
 /****************************/
-//SESSION情報取得
+//SESSION情報取得 acquire session info
 /****************************/
 $s_client_id = $_SESSION[client_id];
 $staff_id = $_SESSION[staff_id];
 //$s_shop_gid = $_SESSION[shop_gid];
 
 /****************************/
-//新規判別
+//新規判別 determine if new
 /****************************/
 Get_Id_Check3($_GET["ord_id"]);
 $g_ord_id = $_GET["ord_id"];
@@ -99,14 +99,14 @@ if(isset($_GET["ord_id"])){
 }
 
 /****************************/
-//処理判別
+//処理判別 determine process
 /****************************/
 if($_POST["button"]["entry"] == "登録／返信確認画面へ" || $_POST["button"]["alert_ok"] == "警告を無視して登録" || $_POST["comp_button"] == "登録／返信OK"){
     $add_button_flg = true;
 
 
     /*******************************/
-    //受注入力前に登録済みかチェック
+    //受注入力前に登録済みかチェック check if it is already registered before inputting the sales order
     /*******************************/
 /*
     $sql  = "SELECT\n";
@@ -124,7 +124,7 @@ if($_POST["button"]["entry"] == "登録／返信確認画面へ" || $_POST["button"]["aler
     if($update_check_flg === false){ 
 
         /*******************************/
-        //受注入力前に発注データの存在をチェック
+        //受注入力前に発注データの存在をチェック check the existence of purchase order data before inputting the sales order
         /*******************************/
 /*
         $sql  = "SELECT\n";
@@ -150,7 +150,7 @@ if($_POST["button"]["entry"] == "登録／返信確認画面へ" || $_POST["button"]["aler
 */ 
 
     /*********************************/
-    //受注データ登録前に発注ステータスの確認を行う
+    //受注データ登録前に発注ステータスの確認を行う check the purchase order status before registering the sales order
     /*********************************/
     $sql  = "SELECT \n";
     $sql .= "   ord_stat \n";
@@ -164,11 +164,11 @@ if($_POST["button"]["entry"] == "登録／返信確認画面へ" || $_POST["button"]["aler
 
     $ord_stat = pg_fetch_result($result, 0,0);
 
-    //登録前に発注が取り消されていた場合
+    //登録前に発注が取り消されていた場合 if the purchase order was cancelled before being registered
     if($ord_stat == '3'){
         header("Location: ./1-2-108.php?del_flg=true");
         exit;
-    //受注が既に完了している場合
+    //受注が既に完了している場合 if sales order is already completed
     }elseif($ord_stat == '2'){
         header("Location: ./1-2-108.php?add_flg=true");
         exit;
@@ -180,9 +180,9 @@ if($_POST["button"]["entry"] == "登録／返信確認画面へ" || $_POST["button"]["aler
 
 
 /****************************/
-//デフォルト値設定
+//デフォルト値設定 set the default value
 /****************************/
-//基本出荷倉庫を抽出
+//基本出荷倉庫を抽出 extract the basic outoging warehouse
 $sql  = "SELECT";
 $sql .= "   ware_id ";
 $sql .= "FROM";
@@ -209,14 +209,14 @@ $def_fdata = array(
 $form->setDefaults($def_fdata);
 
 /****************************/
-//初期表示処理
+//初期表示処理 initial display process
 /****************************/
 
 #2009-12-21 aoyama-n
-//税率クラス　インスタンス生成
+//税率クラス　インスタンス生成 tax percentage class create instance
 $tax_rate_obj = new TaxRate($s_client_id);
 
-//自動採番の発注番号取得
+//自動採番の発注番号取得 acquire the purchase order number of auto assigning number 
 $select_sql = " SELECT";
 $select_sql .= "     COALESCE( CAST(MAX(ord_no) AS int)+1,1)";
 $select_sql .= "  FROM";
@@ -235,9 +235,9 @@ $auto_order_no = str_pad($auto_order_no, 8, 0, STR_PAD_LEFT);
 $defa_data["form_order_no"] = $auto_order_no;
 
 //***************************/
-//グリーン指定チェック処理
+//グリーン指定チェック処理 green designation check process
 /****************************/
-//チェックの場合は、運送業者のプルダウンの値を変更する
+//チェックの場合は、運送業者のプルダウンの値を変更する if it is checked, then change the value of the dropdown
 if($_POST["trans_check_flg"] == true){
     $where  = " WHERE ";
 //    $where .= "    shop_gid = $shop_gid";
@@ -245,7 +245,7 @@ if($_POST["trans_check_flg"] == true){
     $where .= " AND";
     $where .= "    green_trans = 't'";
 
-    //初期化
+    //初期化 initialization 
     $trans_data["trans_check_flg"]   = "";
     $form->setConstants($trans_data);
 }else{
@@ -255,7 +255,7 @@ if($_POST["trans_check_flg"] == true){
 
 if($new_flg == false){
 
-    //発注ヘッダ情報抽出
+    //発注ヘッダ情報抽出 extract purchase order header information
     $select_sql  = "SELECT \n";
     $select_sql .= "    t_order_h.hope_day,\n";
     $select_sql .= "    t_order_h.green_flg,\n";
@@ -298,49 +298,49 @@ if($new_flg == false){
     $select_sql .= "    t_order_h.ord_stat = '1'\n";
     $select_sql .= ";\n";
 
-    //クエリ発行
+    //クエリ発行 issue query 
     $result = Db_Query($db_con, $select_sql);
 
     Get_Id_Check($result);
 
-    //データ取得
+    //データ取得 acquire data
     //$order_h_data = @pg_fetch_array ($result, 0);
     $order_h_data = Get_Data($result,1);
 
-    $hope_day           = $order_h_data[0][0];         //希望納期
+    $hope_day           = $order_h_data[0][0];         //希望納期 desired delivery date
 
-	//初期表示のみ復元
+	//初期表示のみ復元 only restore at initial display
 	if(count($_POST) == 0){
-		//チェック付けるか判定
+		//チェック付けるか判定 determine if it will be checkded or not 
 		if($order_h_data[0][1] == 't'){
-			$con_data["form_trans_check"]  = $order_h_data[0][1];  //グリーン指定あり
+			$con_data["form_trans_check"]  = $order_h_data[0][1];  //グリーン指定あり if there is a green designation
 			$form->setConstants($con_data);
 		}
 	}
 /*
     if($order_h_data[1] == 't'){
-        $defa_data["form_trans_check"]  = '1';      //グリーン指定
+        $defa_data["form_trans_check"]  = '1';      //グリーン指定 green designation
     }else{
-        $defa_data["form_trans_check"]  = '0';      //グリーン指定
+        $defa_data["form_trans_check"]  = '0';      //グリーン 指定 green designation
     }
 */
 //print_array($_POST);
 
-    $client_id          = $order_h_data[0][2];         //発注テーブルでの得意先ID
-    $aord_client_id     = $order_h_data[0][7];         //受注としての得意先ID
-    $client_name        = $order_h_data[0][3];         //得意先名
-    $direct_id          = $order_h_data[0][4];         //直送先ID
-    $direct_name        = $order_h_data[0][5];         //直送先名
-    $note_my            = $order_h_data[0][6];         //通信欄（本部宛）
-    $def_note_my        = $order_h_data[0][6];         //通信欄（本部宛）
-    $fc_ord_id          = str_pad($order_h_data[0][8], 8, 0, STR_PAD_LEFT); //FC発注番号
-    $coax               = $order_h_data[0][9];         //金額まるめ区分
+    $client_id          = $order_h_data[0][2];         //発注テーブルでの得意先ID customer ID in the purchase order table
+    $aord_client_id     = $order_h_data[0][7];         //受注としての得意先ID customer ID as sales
+    $client_name        = $order_h_data[0][3];         //得意先名 custoemr name
+    $direct_id          = $order_h_data[0][4];         //直送先ID direct destination ID
+    $direct_name        = $order_h_data[0][5];         //直送先名 direct destination na,me
+    $note_my            = $order_h_data[0][6];         //通信欄（本部宛）communication field (HQ)
+    $def_note_my        = $order_h_data[0][6];         //通信欄（本部宛）communication field (HQ)
+    $fc_ord_id          = str_pad($order_h_data[0][8], 8, 0, STR_PAD_LEFT); //FC発注番号 FC purchase order number
+    $coax               = $order_h_data[0][9];         //金額まるめ区分 amount rounding off classification
     $client_cd          = $order_h_data[0][11]." - ".$order_h_data[0][12];
     
     $defa_data["form_sale_total"]   = number_format($order_h_data[0][13]);
     $defa_data["form_sale_tax"]     = number_format($order_h_data[0][14]);
     $defa_data["form_sale_money"]   = number_format($order_h_data[0][13] + $order_h_data[0][14]);
-    $defa_data["hdn_ord_enter_day"] = $order_h_data["10"];   //登録日
+    $defa_data["hdn_ord_enter_day"] = $order_h_data["10"];   //登録日 registration date
     $defa_data["form_trade_select"] = $order_h_data[0]["15"];
 
     $form->setDefaults($defa_data);
@@ -456,7 +456,7 @@ if($new_flg == false){
     $select_sql .= "     t_goods ON t_order_d.goods_id = t_goods.goods_id\n";
     $select_sql .= "        INNER JOIN\n";
 
-    //原価単価
+    //原価単価 cost per unit
     $select_sql .= "     (SELECT\n";
     $select_sql .= "         t_price.goods_id,\n";
     $select_sql .= "         t_price.r_price AS cost_price\n";
@@ -470,7 +470,7 @@ if($new_flg == false){
     $select_sql .= "     ON t_order_d.goods_id = t_cost_price.goods_id\n";
     $select_sql .= "        INNER JOIN\n";
 
-    //売上単価
+    //売上単価 sales per unit
     $select_sql .= "     (SELECT\n";
     $select_sql .= "         t_price.goods_id,\n";
     $select_sql .= "         t_price.r_price AS sale_price\n ";
@@ -486,7 +486,7 @@ if($new_flg == false){
     $select_sql .= "    ON t_order_d.goods_id = t_sale_price.goods_id\n";
     $select_sql .= "        LEFT JOIN\n";
 
-    //在庫数
+    //在庫数 inventory number
     $select_sql .= "    (SELECT\n";
     $select_sql .= "        t_stock.goods_id,\n";
     $select_sql .= "        SUM(t_stock.stock_num) AS stock_num,\n";
@@ -506,7 +506,7 @@ if($new_flg == false){
 
     $select_sql .= "        LEFT JOIN\n";
 
-    //発注済数
+    //発注済数 number of units already delivered as purchases
     $select_sql .= "    (SELECT\n";
     $select_sql .= "        t_stock_hand.goods_id,\n";
     $select_sql .= "        SUM(t_stock_hand.num * CASE t_stock_hand.io_div WHEN 1 THEN 1 WHEN 2 THEN -1 END ) AS order_num\n";
@@ -531,7 +531,7 @@ if($new_flg == false){
 
     $select_sql .= "        LEFT JOIN\n";
 
-    //引当数
+    //引当数 number of units already reserved for purchase order
     $select_sql .= "    (SELECT\n";
     $select_sql .= "        t_stock_hand.goods_id,\n";
     $select_sql .= "        SUM(t_stock_hand.num * CASE t_stock_hand.io_div WHEN 1 THEN -1 WHEN 2 THEN 1 END ) AS allowance_io_num\n";
@@ -564,7 +564,7 @@ if($new_flg == false){
     $select_sql .= " ORDER BY t_order_d.line\n";
     $select_sql .= ";\n";
 
-    //クエリ発行
+    //クエリ発行 issue query
     $result = Db_Query($db_con, $select_sql);
 
     $num = pg_num_rows($result);
@@ -572,30 +572,30 @@ if($new_flg == false){
 
 
     for($i=0;$i<$num;$i++){
-        $goods_id[$i]           = $order_d_data[$i][0];         //商品ID
-        $aord_num[$i]           = $order_d_data[$i][3];         //受注数
+        $goods_id[$i]           = $order_d_data[$i][0];         //商品ID product ID
+        $aord_num[$i]           = $order_d_data[$i][3];         //受注数 number of sales order
 
-        $cost_price[$i]         = $order_d_data[$i][4];         //原価単価
-        $sale_price[$i]         = $order_d_data[$i][5];         //売上単価
+        $cost_price[$i]         = $order_d_data[$i][4];         //原価単価 cost per unit
+        $sale_price[$i]         = $order_d_data[$i][5];         //売上単価 sales per unit
 
-        $cost_amount[$i]        = bcmul($cost_price[$i], $aord_num[$i], 2); // 原価金額
+        $cost_amount[$i]        = bcmul($cost_price[$i], $aord_num[$i], 2); // 原価金額 total cost
         $cost_amount[$i]        = Coax_Col($coax, $cost_amount[$i]);
         $order_d_data[$i][6]    = $cost_amount[$i];
 
-        $sale_amount[$i]        = bcmul($sale_price[$i], $aord_num[$i], 2); // 売上金額
+        $sale_amount[$i]        = bcmul($sale_price[$i], $aord_num[$i], 2); // 売上金額 total sales
         $sale_amount[$i]        = Coax_Col($coax, $sale_amount[$i]);
         $order_d_data[$i][7]    = $sale_amount[$i];
 
-//        $cost_amount[$i]        = $order_d_data[$i][6];         //原価金額
-//        $sale_amount[$i]        = $order_d_data[$i][7];         //売上金額
+//        $cost_amount[$i]        = $order_d_data[$i][6];         //原価金額 total cost
+//        $sale_amount[$i]        = $order_d_data[$i][7];         //売上金額 total sales
 
-        $tax_div[$i]            = $order_d_data[$i][8];         //課税区分
+        $tax_div[$i]            = $order_d_data[$i][8];         //課税区分 tax cclassification
 
-        $buy_price[$i]          = $order_d_data[$i][9];         //FC発注単価
-        $buy_amount[$i]         = bcmul($buy_price[$i], $aord_num[$i], 2);  //FC発注金額
+        $buy_price[$i]          = $order_d_data[$i][9];         //FC発注単価 FC purchase price per unit
+        $buy_amount[$i]         = bcmul($buy_price[$i], $aord_num[$i], 2);  //FC発注金額 FC total purchase price
         $buy_amount[$i]         = Coax_Col($coax, $buy_amount[$i]);
 
-        //後から処理を変更したため、代入の順番が気持ち悪くなってしまった！！
+        //後から処理を変更したため、代入の順番が気持ち悪くなってしまった！！ the order of substitution got weird because the process was changed afterwards
         $order_d_data[$i][14]   = $order_d_data[$i][12];
         $order_d_data[$i][15]   = $order_d_data[$i][13];
         $order_d_data[$i][12]   = $order_d_data[$i][10];
@@ -603,11 +603,11 @@ if($new_flg == false){
 
         $order_d_data[$i][10]   = $buy_amount[$i];
 
-        //FC発注単価とマスタ単価を比べる
-        //異なる場合は、フラグを立てる
+        //FC発注単価とマスタ単価を比べる compare the FC purchase price and the master price
+        //異なる場合は、フラグを立てる if different then flag it
         $order_d_data[$i][11] = ($sale_amount[$i] != $buy_amount[$i])? true : false;
 
-        $def_data["form_forward_num"][$i][0] = $aord_num[$i];   //出荷数
+        $def_data["form_forward_num"][$i][0] = $aord_num[$i];   //出荷数 number of units shipped
     }
     $form->setDefaults($def_data);
 /*
@@ -652,12 +652,12 @@ if($new_flg == false){
         $select_sql .= "ORDER BY t_order_d.line \n";
         $select_sql .= ";\n";
 
-        //クエリ発行
+        //クエリ発行 issue query
         $result = pg_query($db_con, $select_sql);
         $st_num = pg_num_rows($result);
         $stock_data = Get_Data($result);
 
-        //実在庫数･引当可能数がnullの場合0を代入
+        //実在庫数･引当可能数がnullの場合0を代入 substitute 0 if the existing number of units and possible units to be reserve are null
         for($i = 0;$i < $num;$i++){
             for($j = 0;$j <= $st_num;$j++){
                 if($stock_data[$j][0] != $order_d_data[$i][0]){
@@ -675,9 +675,9 @@ if($new_flg == false){
 }
 
 /****************************/
-//部品定義
-/****************************/
-//発注番号
+//部品定義 definition of component
+/****************************/ 
+//発注番号 purchase order number
 $form->addElement(
     "text","form_order_no","",
     "style=\"color : #000000; 
@@ -686,14 +686,14 @@ $form->addElement(
     text-align: left\" readonly'"
 );
 
-//出荷回数
+//出荷回数 number of shipment
 $select_page_arr = array(1,2,3,4,5,6,7,8,9,10);
 for($i=0;$i<$num;$i++){
 
-    //出荷回数
+    //出荷回数 num of shipment
     $form->addElement('select', 'form_forward_times['.$i.']', "出荷回数", $select_page_arr,"onChange=\"javascript:Button_Submit('forward_num_flg','#','true', this)\"");
 
-    //出荷予定日
+    //出荷予定日 date of shipment
     $form_forward_day = "";
     $form_forward_day[] =& $form->createElement(
             "text","year","テキストフォーム","size=\"4\" maxLength=\"4\" style=\"$g_form_style;\"
@@ -714,20 +714,20 @@ for($i=0;$i<$num;$i++){
             );
     $form->addGroup( $form_forward_day,"form_forward_day[".$i."][0]","form_forward_day","-");
 
-    //出荷数
+    //出荷数 number of units to be shipped
     $form->addElement(
             "text","form_forward_num[".$i."][0]","テキストフォーム","class=\"money\" size=\"11\" maxLength=\"9\" 
             style=\"$g_form_style;text-align: right\"
             \".$g_form_option.\""
             );
-    //●必須チェック
+    //●必須チェック required field check
     $form->addRule("form_forward_num[".$i."][0]", "出荷数は半角数値のみです。","required");
     $form->addRule("form_forward_num[".$i."][0]", "出荷数は半角数値のみです。","numeric");
 
     if($_POST["forward_num_flg"] == true){
         $forward_number = $_POST["form_forward_times"][$i];
         for($j=1;$j<=$forward_number;$j++){
-            //出荷予定日
+            //出荷予定日 plan of shipment
             $form_forward_day = "";
             $form_forward_day[] =& $form->createElement(
                     "text","year","テキストフォーム","size=\"4\" maxLength=\"4\" style=\"$g_form_style;\"
@@ -748,15 +748,15 @@ for($i=0;$i<$num;$i++){
                     );
             $form->addGroup( $form_forward_day,"form_forward_day[".$i."][".$j."]","form_forward_day","-");
 
-            //出荷数
+            //出荷数 number of units to be shipped
             $form->addElement(
                     "text","form_forward_num[".$i."][".$j."]","テキストフォーム","class=\"money\" size=\"11\" maxLength=\"9\" 
                     style=\"$g_form_style;text-align: right\"
                     \".$g_form_option.\""
             );
             /*
-            //■出荷予定日
-            //●半角数字チェック
+            //■出荷予定日 date of shipent
+            //●半角数字チェック check the half-width number 
             $form->addGroupRule("form_forward_day[".$i."][0]", array(
                     'year' => array(
                             array('出荷予定日は半角数値のみです。', 'required'),
@@ -771,8 +771,8 @@ for($i=0;$i<$num;$i++){
                             array('出荷予定日は半角数値のみです。', 'numeric')
                     ),
             ));
-            //■出荷数
-            //●必須チェック
+            //■出荷数 number of units to be shipped
+            //●必須チェック required field check
             $form->addRule("form_forward_num[".$i."][0]", "出荷数は半角数値のみです。","required");
             $form->addRule("form_forward_num[".$i."][0]", "出荷数は半角数値のみです。","numeric");
             */
@@ -780,7 +780,7 @@ for($i=0;$i<$num;$i++){
     }
 }
 
-//出荷予定日（一括指定用）
+//出荷予定日（一括指定用）planned date of shipment (for assigning all at once)
 $form_def_day[] =& $form->createElement(
         "text","year","テキストフォーム","size=\"4\" maxLength=\"4\" style=\"$g_form_style;\"
         onkeyup=\"changeText(this.form,'form_def_day[year]','form_def_day[month]',4)\"
@@ -800,7 +800,7 @@ $form_def_day[] =& $form->createElement(
         );
 $form->addGroup( $form_def_day,"form_def_day","form_def_day","-");
 
-//受注日
+//受注日 sales oreder date
 $form_ord_day[] =& $form->createElement(
         "text","year","テキストフォーム","size=\"4\" maxLength=\"4\" style=\"$g_form_style;\"
         onkeyup=\"changeText(this.form,'form_ord_day[year]','form_ord_day[month]',4)\"
@@ -820,30 +820,30 @@ $form_ord_day[] =& $form->createElement(
         );
 $form->addGroup( $form_ord_day,"form_ord_day","form_ord_day","-");
 
-//グリーン指定
+//グリーン指定 green designation
 $form->addElement('checkbox', 'form_trans_check', 'グリーン指定', '<b>グリーン指定</b>　',"onClick=\"javascript:Link_Submit('form_trans_check','trans_check_flg','#','true')\"");
 
-//通信欄（得意先宛）
+//通信欄（得意先宛） communication field (for customer)
 $form->addElement("textarea","form_note_your","テキストフォーム","rows=\"2\" cols=\"75\" \".$g_form_option_area.\" ");
 
-//運送業者
+//運送業者 carrier
 $select_value = Select_Get($db_con,'trans',$where);
 $form->addElement('select', 'form_trans_select', 'セレクトボックス', $select_value,$g_form_option_select);
 
-//倉庫
+//倉庫 warehouse
 $select_value = Select_Get($db_con,'ware');
 //$form->addElement('select', 'form_ware_select', 'セレクトボックス', $select_value,"onChange=\"javascript:Button_Submit('forward_ware_flg','#','true')\"");
 $form->addElement('select', 'form_ware_select', 'セレクトボックス', $select_value);
 
-//取引区分
+//取引区分 trade classification
 $select_value = Select_Get($db_con,'trade_aord');
 $form->addElement('select', 'form_trade_select', 'セレクトボックス', $select_value,$g_form_option_select);
 
-//担当者
+//担当者 assigned staff
 $select_value = Select_Get($db_con,'staff',null,true);
 $form->addElement('select', 'form_staff_select', 'セレクトボックス', $select_value,$g_form_option_select);
 
-//出荷可能数
+//出荷可能数 possible number of units to be shipped
 $form->addElement(
     "text","form_designated_date","",
     "size=\"4\" maxLength=\"4\" 
@@ -853,7 +853,7 @@ $form->addElement(
     "
 );
 
-//売上金額合計
+//売上金額合計 total sales price
 $form->addElement(
     "text","form_sale_total","",
     "size=\"25\" maxLength=\"18\" 
@@ -863,7 +863,7 @@ $form->addElement(
     text-align: right\" readonly'"
 );
 
-//消費税額(合計)
+//消費税額(合計) total tax 
 $form->addElement(
         "text","form_sale_tax","",
         "size=\"25\" maxLength=\"18\" 
@@ -874,7 +874,7 @@ $form->addElement(
         readonly"
 );
 
-//売上金額（税込合計)
+//売上金額（税込合計) sales price (with tax)
 $form->addElement(
         "text","form_sale_money","",
         "size=\"25\" maxLength=\"18\" 
@@ -886,17 +886,17 @@ $form->addElement(
 );
 
 //hidden
-$form->addElement("hidden","forward_ware_flg");    //出荷倉庫選択
-$form->addElement("hidden","forward_num_flg");     //出荷回数選択
-$form->addElement("hidden", "trans_check_flg");    //グリーン指定チェックフラグ
-$form->addElement("hidden", "first_page_flg", "t");    //初期表示フラグ
-$form->addElement("hidden", "recomp_flg");          //出荷可能数フラグ
+$form->addElement("hidden","forward_ware_flg");    //出荷倉庫選択 choose the shipping warehouse
+$form->addElement("hidden","forward_num_flg");     //出荷回数選択 choose the number of shipment to be made
+$form->addElement("hidden", "trans_check_flg");    //グリーン指定チェックフラグ check flag for green designation
+$form->addElement("hidden", "first_page_flg", "t");    //初期表示フラグ initial display flag
+$form->addElement("hidden", "recomp_flg");          //出荷可能数フラグ possible number of shipment flag
 
 /****************************/
-//エラーチェック(QuickForm)
+//エラーチェック(QuickForm) error check
 /****************************/
-//■受注日
-//●必須チェック
+//■受注日 sales order date 
+//●必須チェック required field check
 $form->addGroupRule('form_ord_day', array(
         'year' => array(
                 array('正しい受注日を入力してください。', 'required'),
@@ -912,8 +912,8 @@ $form->addGroupRule('form_ord_day', array(
         ),
 ));
 
-//出荷予定日
-//半角チェック
+//出荷予定日 planned date for shipment 
+//半角チェック check if half-width
 $form->addGroupRule('form_def_day', array(
         'year' => array(
                 array('正しい出荷予定日を入力してください。', 'numeric')
@@ -925,27 +925,27 @@ $form->addGroupRule('form_def_day', array(
                 array('正しい出荷予定日を入力してください。', 'numeric')
         ),
 ));
-//■出荷倉庫
-//●必須チェック
+//■出荷倉庫 shipping warehouse
+//●必須チェック required field check
 $form->addRule("form_ware_select", "出荷倉庫を選択して下さい。","required");
 
-//■取引区分
-//●必須チェック
+//■取引区分 trade classification
+//●必須チェック required field check
 $form->addRule("form_trade_select", "取引区分を選択して下さい。","required");
 
-//■担当者
-//●必須チェック
+//■担当者 assigned staff
+//●必須チェック required field check
 $form->addRule("form_staff_select", "担当者を選択して下さい。","required");
 
-//通信欄   //●文字数チェック
+//通信欄   communication field //●文字数チェック check the number of strings
 $form->registerRule("mb_maxlength", "function", "Mb_Maxlength");
 $form->addRule("form_note_your","通信欄（得意先宛）は50文字以内です。","mb_maxlength","50");
 
 /********************************/
-//合計金額・消費税・伝票合計取得
+//合計金額・消費税・伝票合計取得 acquire the total amount, tax, and slip total
 /********************************/
 
-//得意先の情報を抽出
+//得意先の情報を抽出 extract the information of the customer
 $sql  = "SELECT";
 $sql .= "   t_client.coax,";
 $sql .= "   t_client.tax_franct";
@@ -958,11 +958,11 @@ $sql .= ";";
 $result = Db_Query($db_con, $sql); 
 $client_list = Get_Data($result);
 
-//得意先情報復元
-$coax           = $client_list[0][0];        //丸め区分（金額）
-$tax_franct     = $client_list[0][1];        //端数区分（消費税）
+//得意先情報復元 restore the customer info
+$coax           = $client_list[0][0];        //丸め区分（金額）rounding off (amount as in money)
+$tax_franct     = $client_list[0][1];        //端数区分（消費税） rounding off (as in tax)
 
-//現在の消費税率
+//現在の消費税率 current tax rate
 #2009-12-21 aoyama-n
 #$sql  = "SELECT ";
 #$sql .= "    tax_rate_n ";
@@ -971,7 +971,7 @@ $tax_franct     = $client_list[0][1];        //端数区分（消費税）
 #$sql .= "WHERE ";
 #$sql .= "    client_id = $_SESSION[h_client_id];";
 #$result = Db_Query($db_con, $sql); 
-#$tax_num = pg_fetch_result($result, 0,0);    //現在の消費税
+#$tax_num = pg_fetch_result($result, 0,0);    //現在の消費税 current tax rate
 
 #2009-12-21 aoyama-n
 $tax_rate_obj->setTaxRateDay($_POST["form_ord_day"]["year"]."-".$_POST["form_ord_day"]["month"]."-".$_POST["form_ord_day"]["day"]);
@@ -983,46 +983,46 @@ $tax_money  = number_format($total_money[1]);
 $st_money   = number_format($total_money[2]);
 
 /*
-    //フォームに値セット
+    //フォームに値セット set the value to form
     $money_data["form_sale_total"]   = $sale_money;
     $money_data["form_sale_tax"]     = $tax_money;
     $money_data["form_sale_money"]   = $st_money;
     $form->setConstants($money_data);
 */
 
-//登録処理
+//登録処理 registration process
 if($_POST["button"]["entry"] == "登録／返信確認画面へ" || $_POST["button"]["alert_ok"] == "警告を無視して登録" || $_POST["comp_button"] == "登録／返信OK"){
 
 
-    $ord_no          = $_POST["form_order_no"];              //発注番号
+    $ord_no          = $_POST["form_order_no"];              //発注番号 purchase order number
     #2010-01-20 aoyama-n
     #潜在バグ　0埋めされていない日付を入力すると受注ヘッダのINSERT文でSQLエラーとなる
-    #$ord_day         = $_POST["form_ord_day"]["year"];       //受注日
+    #$ord_day         = $_POST["form_ord_day"]["year"];       //受注日 sales order date
     #$ord_day        .= $_POST["form_ord_day"]["month"];
     #$ord_day        .= $_POST["form_ord_day"]["day"];
-    $ord_day         = $_POST["form_ord_day"]["year"]."-";       //受注日
+    $ord_day         = $_POST["form_ord_day"]["year"]."-";       //受注日 sales order date
     $ord_day        .= $_POST["form_ord_day"]["month"]."-";
     $ord_day        .= $_POST["form_ord_day"]["day"];
-    $def_day         = $_POST["form_def_day"]["year"];       //出荷予定日
+    $def_day         = $_POST["form_def_day"]["year"];       //出荷予定日 planned shipment date
     $def_day        .= $_POST["form_def_day"]["monty"];
     $def_day        .= $_POST["form_def_day"]["day"];
-    $green           = $_POST["form_trans_check"];           //グリーン指定
-    $note_your       = $_POST["form_note_your"];             //通信欄（自社宛）
-    $trans_id        = $_POST["form_trans_select"];          //運送業者
-    $ware_id         = $_POST["form_ware_select"];           //倉庫
-    $trade_id        = $_POST["form_trade_select"];          //取引区分
-    $c_staff_id      = $_POST["form_staff_select"];          //担当者
+    $green           = $_POST["form_trans_check"];           //グリーン指定 green designation
+    $note_your       = $_POST["form_note_your"];             //通信欄（自社宛） communication field (for own company)
+    $trans_id        = $_POST["form_trans_select"];          //運送業者 carrier
+    $ware_id         = $_POST["form_ware_select"];           //倉庫 waarehouse
+    $trade_id        = $_POST["form_trade_select"];          //取引区分 trade classificatio
+    $c_staff_id      = $_POST["form_staff_select"];          //担当者 assigned staff
     $post_flg = true;
 
     /********************************/
-    //エラーチェック
+    //エラーチェック error check 
     /********************************/
-    //運送業者
+    //運送業者 carrier
     if($green == '1'){
         $form->addRule("form_trans_select","運送業者を選択して下さい。","required");
     }
 
-    //■受注日
+    //■受注日 sales order date
     $aord_yy  =  str_pad($_POST["form_ord_day"]["year"], 4, 0, STR_PAD_LEFT);
     $aord_mm  =  str_pad($_POST["form_ord_day"]["month"], 2, 0, STR_PAD_LEFT);
     $aord_dd  =  str_pad($_POST["form_ord_day"]["day"], 2, 0, STR_PAD_LEFT);
@@ -1040,7 +1040,7 @@ if($_POST["button"]["entry"] == "登録／返信確認画面へ" || $_POST["button"]["aler
         }
     }
 
-    //■出荷予定日
+    //■出荷予定日 planned shipment date
 //    $defd_yy = str_pad($_POST["form_def_day"]["year"], 4, 0, STR_PAD_LEFT);
 //    $defd_mm = str_pad($_POST["form_def_day"]["month"], 2, 0, STR_PAD_LEFT);
 //    $defd_dd = str_pad($_POST["form_def_day"]["day"], 2, 0, STR_PAD_LEFT);
@@ -1055,7 +1055,7 @@ if($_POST["button"]["entry"] == "登録／返信確認画面へ" || $_POST["button"]["aler
         $err_flg = true;
     }elseif($defd_yy != null || $defd_mm != null || $defd_dd != null){
 
-        //■受注日と出荷予定日を比べる
+        //■受注日と出荷予定日を比べる compare the sales order date and ythe planned shipment date
         $aord_yy = str_pad($aord_yy, '4', '0', STR_PAD_LEFT);
         $aord_mm = str_pad($aord_mm, '2', '0', STR_PAD_LEFT);
         $aord_dd = str_pad($aord_dd, '2', '0', STR_PAD_LEFT);
@@ -1082,7 +1082,7 @@ if($_POST["button"]["entry"] == "登録／返信確認画面へ" || $_POST["button"]["aler
         }
     }
 
-    //商品毎に出荷予定日に空が一つの場合はデフォルトの日付を入力する
+    //商品毎に出荷予定日に空が一つの場合はデフォルトの日付を入力する input the default dates per product if the number of blank planned shipement date is one 
     for($i = 0; $i< $num; $i++){
         for($j=0;$j<=$_POST["form_forward_times"][$i];$j++){
             $arv_yy = $_POST["form_forward_day"][$i][$j]["year"];
@@ -1095,14 +1095,14 @@ if($_POST["button"]["entry"] == "登録／返信確認画面へ" || $_POST["button"]["aler
             }
         }
 
-        //空白がひつの場合
+        //空白がひつの場合 if the blank is one
         if(count($null_row) == 1 && $defd_err != true){
             $row = $null_row[0];
             $_POST["form_forward_day"][$i][$row]["year"] = $defd_yy;
             $_POST["form_forward_day"][$i][$row]["month"] = $defd_mm;
             $_POST["form_forward_day"][$i][$row]["day"] = $defd_dd;
 
-        //空白が二つ以上の場合
+        //空白が二つ以上の場合 if the blank is more than one
         }elseif(count($null_row) > 1){
             $forward_day_err = "分納出荷予定日の日付は妥当ではありません。";
             $err_flg = true;
@@ -1111,15 +1111,15 @@ if($_POST["button"]["entry"] == "登録／返信確認画面へ" || $_POST["button"]["aler
         $null_row = null;
     }
 
-    //■出荷予定日
-    //商品数（種類）ループ
+    //■出荷予定日 planned shipment date
+    //商品数（種類）ループ loop throught the number of products (type)
     for($i=0;$i<$num;$i++){
-        //出荷回数を配列に保持
+        //出荷回数を配列に保持 store the number of shipment in array
         $array_count[$i] = $_POST["form_forward_times"][$i];
-        //出荷回数ループ
+        //出荷回数ループ loop through the number of shipment to be made
         for($j=0;$j<=$_POST["form_forward_times"][$i];$j++){
 
-            //日付がNULLでなければ0埋め
+            //日付がNULLでなければ0埋め fill with 0s if the dates are not null
             if($_POST["form_forward_day"][$i][$j]["year"] != NULL){
                 $_POST["form_forward_day"][$i][$j]["year"] = str_pad($_POST["form_forward_day"][$i][$j]["year"], 4, 0, STR_PAD_LEFT);
             }
@@ -1130,33 +1130,33 @@ if($_POST["button"]["entry"] == "登録／返信確認画面へ" || $_POST["button"]["aler
                 $_POST["form_forward_day"][$i][$j]["day"] = str_pad($_POST["form_forward_day"][$i][$j]["day"], 2, 0, STR_PAD_LEFT);
             }
 
-            //出荷予定日 （$yy $mm $dd のNULLチェックは日付の妥当性を確認するため行なわない）
+            //出荷予定日 （$yy $mm $dd のNULLチェックは日付の妥当性を確認するため行なわない）planned shipment date (the null check of $yy $mm $dd will not be done because validity of the date will be checked  )
             $yy  = $_POST["form_forward_day"][$i][$j]["year"];
             $mm  = $_POST["form_forward_day"][$i][$j]["month"];
             $dd  = $_POST["form_forward_day"][$i][$j]["day"];
             $ymd = $yy.$mm.$dd;
 
-            //出荷予定日がNULLでない場合
+            //出荷予定日がNULLでない場合 if the planned shipment date is not null
             if($ymd != NULL){
 
-                //日付が妥当な場合
-                if(checkdate((int)$mm, (int)$dd, (int)$yy)){  //キャストで0をNULLに変換
+                //日付が妥当な場合 if the date is valid
+                if(checkdate((int)$mm, (int)$dd, (int)$yy)){  //キャストで0をNULLに変換 convert 0 to null with cast
 
-                    //出荷予定日が半角数字ではない場合
+                    //出荷予定日が半角数字ではない場合 if the planned shipment date is not half-width nmber
                     if(!ereg("^[0-9]+$", $yy) || !ereg("^[0-9]+$", $mm) || !ereg("^[0-9]+$", $dd)){
                         $forward_day_err = "分納出荷予定日の日付は妥当ではありません。";
                         $err_flg = true;
                     }
 
-                    //出荷予定日が重複する場合
+                    //出荷予定日が重複する場合 if the planned shipment date is overlapping
                     if($all_ymd_goods[$i][$ymd] == "1"){
                         $forward_day_err = "同一の商品で分納出荷予定日が重複しています。";
                         $err_flg = true;
                     }else{
-                        $all_ymd_goods[$i][$ymd] = 1; //商品($i)の出荷日にフラグを立てる
+                        $all_ymd_goods[$i][$ymd] = 1; //商品($i)の出荷日にフラグを立てる flag the product($i)'s shipment date
                     }
 
-                    //出荷予定日が受注日以前の場合
+                    //出荷予定日が受注日以前の場合 if the planned shipment date is before the sales order date
                     if($err_flg == true && $ymd < $aord_ymd){
                         $forward_day_err = "分納出荷予定日は受注日以降の日付を設定して下さい。";
                         $err_flg = true;
@@ -1168,29 +1168,29 @@ if($_POST["button"]["entry"] == "登録／返信確認画面へ" || $_POST["button"]["aler
                         $err_flg = true;
                     }
 
-                //日付が妥当でない場合
+                //日付が妥当でない場合 if the date is not valid
                 }else{
                     $forward_day_err = "分納出荷予定日の日付は妥当ではありません。";
                     $err_flg = true;
                 }
             }
 
-            //■出荷数チェック
-            //●必須チェック
+            //■出荷数チェック check the number of units to be shipped 
+            //●必須チェック required field
             if($_POST["form_forward_num"][$i][$j] == null || !ereg("^[0-9]+$", $_POST["form_forward_num"][$i][$j]) || $_POST["form_forward_num"][$i][$j] == 0){
                 $forward_num_err = "出荷数は半角数値のみです。";
                 $err_flg = true;
 
-            //出荷数が入力されている場合
+            //出荷数が入力されている場合 if the number of units to be shipped is inputted
             }else{
-                //入力された出荷数合計
+                //入力された出荷数合計 total number of units to be shipped is inputted
                 $enter_num[$i] = $enter_num[$i]+$_POST["form_forward_num"][$i][$j];
             }
         }
 
-        //通常の登録の場合は総出荷数をチェックする
+        //通常の登録の場合は総出荷数をチェックする if its a normal registration thenc check the total number of units to be shipped
         if( $_POST["button"]["entry"] == "登録／返信確認画面へ"){
-            //出荷数をチェックする
+            //出荷数をチェックする check the number of units to be shipped
             if($aord_num[$i] < $enter_num[$i]){
                 $gyou_no = $i+1;
                 $alert_message .= "　No.$gyou_no 商品の総出荷数が受注数を超えています。<br>";
@@ -1201,82 +1201,82 @@ if($_POST["button"]["entry"] == "登録／返信確認画面へ" || $_POST["button"]["aler
                 $alert_flg = true;
             }
 
-            //fc発注単価とマスタ単価が異なる場合は警告を表示
+            //fc発注単価とマスタ単価が異なる場合は警告を表示 show a warning if the FC purchase price and the master price are different
             if($order_d_data[$i][11] == true){
                 $price_warning .= " No.".($i+1)." 商品のFC発注時金額と売上金額が異なっています。<br>";
             }
         }
     }
     /********************************/
-    //登録処理
+    //登録処理 registration process
     /********************************/
-    //入力エラーが無い場合
+    //入力エラーが無い場合 if there is no input error
     if($post_flg == true && $err_flg != true){ 
         $insert_flg = true;
-        $alert_output = true; //エラーが無い場合は警告を表示
+        $alert_output = true; //エラーが無い場合は警告を表示 if there is no error then show a warning 
     }    
 
-    //入力エラーが無い　かつ　警告が無い　場合は登録処理を開始
+    //入力エラーが無い　かつ　警告が無い　場合は登録処理を開始 start the registration process if there is no input error and no warning.
     if($insert_flg == true && $alert_flg != true && $form->validate()){ 
-        //日付を結合
+        //日付を結合 combine the dates
         $defd_ymd = $defd_yy."-".$defd_mm."-".$defd_dd;
-        //登録判定
+        //登録判定 determine registration
         if($_POST["comp_button"] == "登録／返信OK"){
             /********************************/
-            //受注の登録に必要なデータを作成
+            //受注の登録に必要なデータを作成 create the data necessary to register the sales order
             /********************************/
-            //空白データはNULL（文字列）に置き換える
+            //空白データはNULL（文字列）に置き換える blank data will be changed to NULL (string)
             if($trans_id == "") $trans_id = "NULL";
             if($ware_id == "") $ware_id = "NULL";
             if($direct_id == "") $direct_id = "NULL";
 
-            //商品数（種類）ループ
+            //商品数（種類）ループ loop through the number of units (type)
             for($i=0;$i<$num;$i++){
-                $forward_times[$i] = $_POST["form_forward_times"][$i];   //出荷回数
+                $forward_times[$i] = $_POST["form_forward_times"][$i];   //出荷回数 number of shipment
 
-                //出荷回数ループ
+                //出荷回数ループ loop through the num of shipment
                 for($j=0;$j<=$forward_times[$i];$j++){
 
-                    //出荷予定日
+                    //出荷予定日 planned shipment date
                     $f_yy  = $_POST["form_forward_day"][$i][$j]["year"];
                     $f_mm  = $_POST["form_forward_day"][$i][$j]["month"];
                     $f_dd  = $_POST["form_forward_day"][$i][$j]["day"];
                     $f_ymd = $f_yy.$f_mm.$f_dd;
-                    $all_ymd[] = $f_yy.$f_mm.$f_dd; //全出荷予定日
+                    $all_ymd[] = $f_yy.$f_mm.$f_dd; //全出荷予定日 all planned shipment date
 
-                    //変数名変更
-                    $goods_id     = $order_d_data[$i][0];                         //商品ID
-                    $forward_num  = $_POST["form_forward_num"][$i][$j];           //出荷数
+                    //変数名変更 change the variable name
+                    $goods_id     = $order_d_data[$i][0];                         //商品ID product ID
+                    $forward_num  = $_POST["form_forward_num"][$i][$j];           //出荷数 number of units to be shipped
 
-                    //■受注ヘッダ用
-                    $data_h[$f_ymd]["原価金額"][] = $order_d_data[$i][4] * $forward_num; //原価金額(伝票計算出に利用)
-                    $data_h[$f_ymd]["売上金額"][] = $order_d_data[$i][9] * $forward_num; //売上金額(伝票計算出に利用)
+                    //■受注ヘッダ用 for sales order header
+                    $data_h[$f_ymd]["原価金額"][] = $order_d_data[$i][4] * $forward_num; //原価金額(伝票計算出に利用) total cost (used for computing for the slip)
+                    $data_h[$f_ymd]["売上金額"][] = $order_d_data[$i][9] * $forward_num; //売上金額(伝票計算出に利用) total sales (used for computing for the slip)
                     $data_h[$f_ymd]["課税区分"][] = $order_d_data[$i][8];
 
-                    //■受注データ用
-                    $data_d[$f_ymd]["good_id"][]                   = $goods_id;                           //商品ID
-                    $data_d[$f_ymd]["line"][]                      = $i;                                  //行数
-                    $data_d[$f_ymd][$goods_id."-".$i][goods_name]  = addslashes($order_d_data[$i][2]);    //商品名
-                    $data_d[$f_ymd][$goods_id."-".$i][num]         = $forward_num;                        //出荷数
-                    $data_d[$f_ymd][$goods_id."-".$i][cost_price]  = $order_d_data[$i][4];                //原価単価
-                    $data_d[$f_ymd][$goods_id."-".$i][sale_price]  = $order_d_data[$i][9];                //FC発注単価
-                    $data_d[$f_ymd][$goods_id."-".$i][cost_amount] = $order_d_data[$i][4] * $forward_num; //原価金額（商品合計）
-                    $data_d[$f_ymd][$goods_id."-".$i][sale_amount] = $order_d_data[$i][9] * $forward_num; //FC発注金額（商品合計）
-                    $data_d[$f_ymd][$goods_id."-".$i][tax_div]     = $order_d_data[$i][8];                //課税区分
+                    //■受注データ用 for ssales order data
+                    $data_d[$f_ymd]["good_id"][]                   = $goods_id;                           //商品ID prduct id
+                    $data_d[$f_ymd]["line"][]                      = $i;                                  //行数 number of rows
+                    $data_d[$f_ymd][$goods_id."-".$i][goods_name]  = addslashes($order_d_data[$i][2]);    //商品名 prodcut name
+                    $data_d[$f_ymd][$goods_id."-".$i][num]         = $forward_num;                        //出荷数 number of units to be shipped
+                    $data_d[$f_ymd][$goods_id."-".$i][cost_price]  = $order_d_data[$i][4];                //原価単価 cost per unit
+                    $data_d[$f_ymd][$goods_id."-".$i][sale_price]  = $order_d_data[$i][9];                //FC発注単価 FC purchase order price
+                    $data_d[$f_ymd][$goods_id."-".$i][cost_amount] = $order_d_data[$i][4] * $forward_num; //原価金額（商品合計）total cost (total for all producsts)
+                    $data_d[$f_ymd][$goods_id."-".$i][sale_amount] = $order_d_data[$i][9] * $forward_num; //FC発注金額（商品合計）total FC purchase price (total of all products)
+                    $data_d[$f_ymd][$goods_id."-".$i][tax_div]     = $order_d_data[$i][8];                //課税区分 tax classification
 
                 }
             }
             Db_Query($db_con, "BEGIN;");
 
-            //出荷予定日から重複を削除する
+            //出荷予定日から重複を削除する delete the overlaps from the planned shipment date
             $all_ymd_uniq = array_unique($all_ymd);
             asort($all_ymd_uniq);
             //print_array($all_ymd_uniq);
 
             /********************************/
-            //受注ヘッダ登録
+            //受注ヘッダ登録 register sales order header
             /********************************/
-            //二重に登録できなくするために、一度Getした発注IDに元ずくデータを削除する
+            //二重に登録できなくするために、一度Getした発注IDに元ずくデータを削除する delete the data corresponding to the purchase order ID that was GET to not allow duplicate registration
             $sql  = "DELETE FROM \n";
             $sql .= "   t_aorder_h \n";
             $sql .= "WHERE \n";
@@ -1289,22 +1289,22 @@ if($_POST["button"]["entry"] == "登録／返信確認画面へ" || $_POST["button"]["aler
                 exit;
             }
 
-            //出荷予定日(重複削除済)の数だけ受注ヘッダを登録する
+            //出荷予定日(重複削除済)の数だけ受注ヘッダを登録する register sales order header as many as there are planned shipment dates (duplication deleted)
             while($fw_day = array_shift($all_ymd_uniq)){
-                //伝票番号
+                //伝票番号 slip number
                 //$order_no ++; //MAX+1
 //                $order_no_pad = str_pad($auto_order_no, 8, 0, STR_PAD_LEFT);
                 $order_no_pad = str_pad($ord_no, 8, 0, STR_PAD_LEFT);
 
-                //■原価合計(税込)を求める
-                $cost_amount_h = array_sum($data_h["$fw_day"]["原価金額"]); //DBにカラムなし
+                //■原価合計(税込)を求める compute the total cost (with tax)
+                $cost_amount_h = array_sum($data_h["$fw_day"]["原価金額"]); //DBにカラムなし no column in DB
 
-                //■売上合計(税込)を　売上合計（税抜）と　消費税に分ける
+                //■売上合計(税込)を　売上合計（税抜）と　消費税に分ける separate the total sales (with tax) to sales (without tax) and tax amount
                 $total_amount = Total_Amount($data_h["$fw_day"]["売上金額"], $data_h["$fw_day"]["課税区分"], $coax,$tax_franct,$tax_num, $client_id, $db_con);
-                $net_amount_h = $total_amount[0]; //売上合計
-                $tax_amount_h = $total_amount[1]; //消費税
+                $net_amount_h = $total_amount[0]; //売上合計 sales total
+                $tax_amount_h = $total_amount[1]; //消費税 tax
 
-                //受注ヘッダテーブル登録
+                //受注ヘッダテーブル登録 register in sales order header table
                 $insert_sql  = " INSERT INTO t_aorder_h (\n";
                 $insert_sql .= "    aord_id,\n";
                 $insert_sql .= "    ord_no,\n";
@@ -1332,7 +1332,7 @@ if($_POST["button"]["entry"] == "登録／返信確認画面へ" || $_POST["button"]["aler
                 $insert_sql .= "    tax_amount,\n";
                 $insert_sql .= "    shop_id,\n";
 //              $insert_sql .= "    shop_gid";
-//履歴用
+//履歴用 for history
                 $insert_sql .= "    client_name,\n";
                 $insert_sql .= "    client_name2,\n";
                 $insert_sql .= "    client_cname,\n";
@@ -1383,21 +1383,21 @@ if($_POST["button"]["entry"] == "登録／返信確認画面へ" || $_POST["button"]["aler
                 $insert_sql .= "    $net_amount_h,\n";
                 $insert_sql .= "    $tax_amount_h,\n";
                 $insert_sql .= "    $s_client_id,\n";
-                $insert_sql .= "    (SELECT client_name FROM t_client WHERE client_id = $aord_client_id), \n";  //得意先名履歴用
-                $insert_sql .= "    (SELECT client_name2 FROM t_client WHERE client_id = $aord_client_id), \n"; //得意先名２履歴用
-                $insert_sql .= "    (SELECT client_cname FROM t_client WHERE client_id = $aord_client_id), \n"; //略称履歴用
-                $insert_sql .= "    (SELECT client_cd1 FROM t_client WHERE client_id = $aord_client_id), \n";   //得意先コード１履歴用
-                $insert_sql .= "    (SELECT client_cd2 FROM t_client WHERE client_id = $aord_client_id), \n";   //得意先コード２履歴用
-                $insert_sql .= "    (SELECT direct_name FROM t_direct WHERE direct_id = $direct_id),\n";        //直送先名履歴用
-                $insert_sql .= "    (SELECT direct_name2 FROM t_direct WHERE direct_id = $direct_id), \n";      //直送先名２履歴用
-                $insert_sql .= "    (SELECT direct_cname FROM t_direct WHERE direct_id = $direct_id), \n";      //直送先(略称)履歴用
-                $insert_sql .= "    (SELECT trans_name FROM t_trans WHERE trans_id = $trans_id), \n";           //運送業者履歴用
-                $insert_sql .= "    (SELECT trans_cname FROM t_trans WHERE trans_id = $trans_id), \n";          //運送業者(略称)履歴用
-                $insert_sql .= "    (SELECT ware_name FROM t_ware WHERE ware_id = $ware_id), \n";               //倉庫ID履歴用
-                $insert_sql .= "    (SELECT staff_name FROM t_staff WHERE staff_id = $c_staff_id),\n";          //受注担当者履歴用
-                $insert_sql .= "    (SELECT staff_name FROM t_staff WHERE staff_id = $staff_id),\n";             //発注担当者履歴用
-                $insert_sql .= "    (SELECT claim_id FROM t_claim WHERE client_id = $aord_client_id AND claim_div = '1'), \n"; //請求先ID
-                $insert_sql .= "    '1' \n";                                                                    //請求先区分
+                $insert_sql .= "    (SELECT client_name FROM t_client WHERE client_id = $aord_client_id), \n";  //得意先名履歴用 for customer name history
+                $insert_sql .= "    (SELECT client_name2 FROM t_client WHERE client_id = $aord_client_id), \n"; //得意先名２履歴用 for customer name 2 history
+                $insert_sql .= "    (SELECT client_cname FROM t_client WHERE client_id = $aord_client_id), \n"; //略称履歴用 for abbreviation history
+                $insert_sql .= "    (SELECT client_cd1 FROM t_client WHERE client_id = $aord_client_id), \n";   //得意先コード１履歴用 for customer code history
+                $insert_sql .= "    (SELECT client_cd2 FROM t_client WHERE client_id = $aord_client_id), \n";   //得意先コード２履歴用 for customer code 2 hisotry
+                $insert_sql .= "    (SELECT direct_name FROM t_direct WHERE direct_id = $direct_id),\n";        //直送先名履歴用 for direct destination name history
+                $insert_sql .= "    (SELECT direct_name2 FROM t_direct WHERE direct_id = $direct_id), \n";      //直送先名２履歴用 for direct destination 2 name history
+                $insert_sql .= "    (SELECT direct_cname FROM t_direct WHERE direct_id = $direct_id), \n";      //直送先(略称)履歴用 for direct destination (abbreviation) history
+                $insert_sql .= "    (SELECT trans_name FROM t_trans WHERE trans_id = $trans_id), \n";           //運送業者履歴用 for carreir history
+                $insert_sql .= "    (SELECT trans_cname FROM t_trans WHERE trans_id = $trans_id), \n";          //運送業者(略称)履歴用 for carrier (abbreviation) history
+                $insert_sql .= "    (SELECT ware_name FROM t_ware WHERE ware_id = $ware_id), \n";               //倉庫ID履歴用 for warehouse ID history
+                $insert_sql .= "    (SELECT staff_name FROM t_staff WHERE staff_id = $c_staff_id),\n";          //受注担当者履歴用 for sales order assigned staff history 
+                $insert_sql .= "    (SELECT staff_name FROM t_staff WHERE staff_id = $staff_id),\n";             //発注担当者履歴用 for purchase order assigned staff
+                $insert_sql .= "    (SELECT claim_id FROM t_claim WHERE client_id = $aord_client_id AND claim_div = '1'), \n"; //請求先ID billing ID
+                $insert_sql .= "    '1' \n";                                                                    //請求先区分 billing classification
 //                $insert_sql .= "    $s_shop_gid";
                 $insert_sql .= " );\n";
 
@@ -1409,7 +1409,7 @@ if($_POST["button"]["entry"] == "登録／返信確認画面へ" || $_POST["button"]["aler
                     exit;
                 }
 */
-                //発注番号が重複した場合は再度採番しなおす
+                //発注番号が重複した場合は再度採番しなおす if the purchase order number is overlapping then reassign number again
                 if($result === false){
                     $err_message = pg_last_error();
                     $err_format = "t_aorder_h_ord_no_key";
@@ -1418,7 +1418,7 @@ if($_POST["button"]["entry"] == "登録／返信確認画面へ" || $_POST["button"]["aler
                     if(strstr($err_message, $err_format) != false){
                         $error = "同時に受注を行ったため、受注NOが重複しました。もう一度受注をして下さい。";
 
-                        //再度発注NOを取得する
+                        //再度発注NOを取得する acquire the purchase order number again
                         $sql  = "SELECT ";
                         $sql .= "   MAX(ord_no)";
                         $sql .= " FROM";
@@ -1443,48 +1443,48 @@ if($_POST["button"]["entry"] == "登録／返信確認画面へ" || $_POST["button"]["aler
                     }
                 }
 
-                //伝票番号
+                //伝票番号 slip number
 //                (int)$auto_order_no ++;
                 (int)$ord_no ++;
 
                 /********************************/
-                //受注データ登録
+                //受注データ登録 register the sales order data
                 /********************************/
                 $line = 0;
-                //$fw_day に出荷商品分ループ処理
+                //$fw_day に出荷商品分ループ処理 loop process te $fw_day for all the products to be shipped 
                 while( $fw_goods_id = array_shift($data_d[$fw_day]["good_id"])){
 
-                    //出荷商品の入力行
+                    //出荷商品の入力行 input row for the product to be shipped
                     $fw_goods_line = array_shift($data_d[$fw_day]["line"]);
 
-                    //受注番号が重複した場合は以下の処理は実行しない
+                    //受注番号が重複した場合は以下の処理は実行しない do not execute this process if the sales order number is overlapping
                     if($duplicate_flg == true){
                         break;
                     }
 
-                    $tax_div       = $data_d[$fw_day][$fw_goods_id."-".$fw_goods_line][tax_div];     //課税区分
-                    $num           = $data_d[$fw_day][$fw_goods_id."-".$fw_goods_line][num];         //出荷数
-                    $cost_price    = $data_d[$fw_day][$fw_goods_id."-".$fw_goods_line][cost_price];  //原価単価
-                    $sale_price    = $data_d[$fw_day][$fw_goods_id."-".$fw_goods_line][sale_price];  //売上単価
+                    $tax_div       = $data_d[$fw_day][$fw_goods_id."-".$fw_goods_line][tax_div];     //課税区分 tax classification
+                    $num           = $data_d[$fw_day][$fw_goods_id."-".$fw_goods_line][num];         //出荷数 number of units to be shipped
+                    $cost_price    = $data_d[$fw_day][$fw_goods_id."-".$fw_goods_line][cost_price];  //原価単価 cost per unit
+                    $sale_price    = $data_d[$fw_day][$fw_goods_id."-".$fw_goods_line][sale_price];  //売上単価 sales per unit
                     //print_array ($data_d);
 
-//金額計算の際に精度関数がしようされていない
+//金額計算の際に精度関数がしようされていない the function is not being used in the computation of amount
 /*
-                    $cost_amount   = $num * $cost_price;                          //原価金額
-                    $sale_amount   = $num * $sale_price;                          //売上金額
+                    $cost_amount   = $num * $cost_price;                          //原価金額 cost amount
+                    $sale_amount   = $num * $sale_price;                          //売上金額 sales amount
 */
                     $cost_amount   = bcmul($num, $cost_price, 1);
                     $cost_amount   = Coax_Col($coax, $cost_amount);
                     $sale_amount   = bcmul($num, $sale_price, 1);
                     $sale_amount   = Coax_Col($coax, $sale_amount);
-                    $goods_name    = $data_d[$fw_day][$fw_goods_id."-".$fw_goods_line][goods_name];  //商品名
-                    $line++;       //行数
+                    $goods_name    = $data_d[$fw_day][$fw_goods_id."-".$fw_goods_line][goods_name];  //商品名 product name
+                    $line++;       //行数 row number
 
-                    //消費税
+                    //消費税 tax amount
     //                $tax = Total_Amount($sale_price, $tax_div,$coax,$tax_franct,$tax_num);
-                    #echo $tax[1]."<br>"; //消費税
+                    #echo $tax[1]."<br>"; //消費税 tax amount
 
-                   //受注データテーブル登録
+                   //受注データテーブル登録 sales order data table registration
                    $insert_sql  = " INSERT INTO t_aorder_d (";
                    $insert_sql .= "    aord_d_id,";
                    $insert_sql .= "    aord_id,";
@@ -1524,7 +1524,7 @@ if($_POST["button"]["entry"] == "登録／返信確認画面へ" || $_POST["button"]["aler
                        Db_Query($db_con, "ROLLBACK;");
                        exit;
                    }
-                    //受注データID取得 
+                    //受注データID取得  acquire the sales order data ID
                    $select_sql = " SELECT";
                    $select_sql .= "    t_aorder_d.aord_d_id";
                    $select_sql .= " FROM";
@@ -1547,7 +1547,7 @@ if($_POST["button"]["entry"] == "登録／返信確認画面へ" || $_POST["button"]["aler
                        exit;
                    }
 
-                   //在庫受払テーブルにINSERT
+                   //在庫受払テーブルにINSERT INSERT in the stock receipt table
                    $insert_sql = " INSERT INTO t_stock_hand(";
                    $insert_sql .= "    goods_id,";
                    $insert_sql .= "    enter_day,";
@@ -1586,7 +1586,7 @@ if($_POST["button"]["entry"] == "登録／返信確認画面へ" || $_POST["button"]["aler
             }
 
             if($duplicate_flg != true){
-                //発注ヘッダテーブル更新
+                //発注ヘッダテーブル更新 update the purchase order header table
                 $update_sql = " UPDATE t_order_h";
                 $update_sql .= " SET ";
                 $update_sql .= "    arrival_day = ";
@@ -1611,13 +1611,13 @@ if($_POST["button"]["entry"] == "登録／返信確認画面へ" || $_POST["button"]["aler
                 header("Location: ./1-2-108.php?fc_ord_id=$g_ord_id");
             }
         }else{
-            //登録確認画面を表示フラグ
+            //登録確認画面を表示フラグ display flag the registration confirmation screen
             $comp_flg = true;
         }
     }
 }
 
-//登録確認画面では、以下のボタンを表示しない
+//登録確認画面では、以下のボタンを表示しない do not display the following buttons in the registration confirmation screen
 if($comp_flg != true){
 
     $button[] = $form->createElement("submit","entry","登録／返信確認画面へ","$disabled");
@@ -1637,28 +1637,28 @@ if($comp_flg != true){
     $form->addGroup($button, "button", "");
 
 }else{
-    //登録確認画面では以下のボタンを表示
-    //戻る
+    //登録確認画面では以下のボタンを表示 display the following buttons in the reg confirmation screen
+    //戻る back
     $form->addElement("button","return_button","戻　る","onClick=\"javascript:history.back()\"");
     
-    //OK
+    //OK ok 
     $form->addElement("submit","comp_button","登録／返信OK","$disabled");
     
     $form->freeze();
 }
 
-//各行の出荷数分の要素の配列定義
+//各行の出荷数分の要素の配列定義 array definition of the element of the units to be shipped for each row  
 for($x=0;$x<count($array_count);$x++){
     for($j=0;$j<=$array_count[$x];$j++){
         $disp_count[$x][$j] = "a";
     }
 }
 
-//ナンバーフォーマット等
+//ナンバーフォーマット等 number formatting
 for($i = 0; $i < count($order_d_data); $i++){
     $order_d_data[$i][2]  = htmlspecialchars($order_d_data[$i][2]);
 
-    //受注数が実棚数より多い場合、数字を赤くする
+    //受注数が実棚数より多い場合、数字を赤くする if the sales order is largeer than the current inventory, make it red
     if($order_d_data[$i][12] < $order_d_data[$i][3]){
         $tmp  = "<font color=\"red\">";
         $tmp .= (string)number_format($order_d_data[$i][3]);
@@ -1683,37 +1683,37 @@ for($i = 0; $i < count($order_d_data); $i++){
 
 
 /****************************/
-//HTMLヘッダ
+//HTMLヘッダ html header
 /****************************/
 $html_header = Html_Header($page_title);
 
 /****************************/
-//HTMLフッタ
+//HTMLフッタ html footer
 /****************************/
 $html_footer = Html_Footer();
 
 /****************************/
-//メニュー作成
+//メニュー作成 create menu 
 /****************************/
 $page_menu = Create_Menu_h('sale','1');
 /****************************/
-//画面ヘッダー作成
+//画面ヘッダー作成 create screen header
 /****************************/
 $page_header = Create_Header($page_title);
 
 
-// Render関連の設定
+// Render関連の設定 render related settings
 $renderer =& new HTML_QuickForm_Renderer_ArraySmarty($smarty);
 $form->accept($renderer);
 
-//form関連の変数をassign
+//form関連の変数をassign assign form related variables
 $smarty->assign('form',$renderer->toArray());
 $smarty->assign('row',$order_d_data);
 $smarty->assign('stock',$stock_data);
 $smarty->assign('num',$select_page_arr);
 $smarty->assign('disp_count',$disp_count);
 
-//その他の変数をassign
+//その他の変数をassign assign other variables
 $smarty->assign('var',array(
     'html_header'       => "$html_header",
     'page_menu'         => "$page_menu",
@@ -1738,7 +1738,7 @@ $smarty->assign('var',array(
     'price_warning'     => "$price_warning",
     'client_cd'         => "$client_cd",
 ));
-//テンプレートへ値を渡す
+//テンプレートへ値を渡す pass the value to the template
 $smarty->display(basename($_SERVER[PHP_SELF] .".tpl"));
 
 /*
