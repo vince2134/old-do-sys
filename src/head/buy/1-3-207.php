@@ -26,26 +26,26 @@
 
 $page_title = "仕入入力";
 
-//環境設定ファイル
+//環境設定ファイル environment setting file
 require_once("ENV_local.php");
 require_once(INCLUDE_DIR."function_motocho.inc");
 require_once(INCLUDE_DIR."function_buy.inc");
 //print_array($_POST);
 
-//HTML_QuickFormを作成
+//HTML_QuickFormを作成 create
 $form =& new HTML_QuickForm("dateForm", "POST", "$_SERVER[PHP_SELF]");
 
-//DB接続
+//DB接続 connect db
 $db_con = Db_Connect();
 
-// 権限チェック
+// 権限チェック auth check
 $auth       = Auth_Check($db_con);
-// ボタンDisabled
+// ボタンDisabled disabled button
 $disabled   = ($auth[0] == "r") ? "disabled" : null;
 
 
 /*****************************/
-//外部変数取得
+//外部変数取得 acquire external variable
 /*****************************/
 $shop_id  = $_SESSION["client_id"];
 $rank_cd  = $_SESSION["rank_cd"];
@@ -53,23 +53,23 @@ $staff_id = $_SESSION["staff_id"];
 
 
 /*****************************/
-// 再遷移先をSESSIONにセット
+// 再遷移先をSESSIONにセット set the retransition page to SESSION
 /*****************************/
-// GET、POSTが無い場合
+// GET、POSTが無い場合 if there is not GET_POST
 if ($_GET == null && $_POST["form_buy_button"] == null && $_POST["form_comp_button"] == null){
     Set_Rtn_Page("buy");
 }
 
 
 /*****************************/
-//初期表示設定
+//初期表示設定 set the inital display
 /*****************************/
 
 #2009-12-21 aoyama-n
-//税率クラス　インスタンス生成
+//税率クラス　インスタンス生成 tax class create instance
 $tax_rate_obj = new TaxRate($shop_id);
 
-//自動採番の発注番号取得
+//自動採番の発注番号取得 acquire the purchase order number of the automatic numbering
 $sql  = "SELECT";
 $sql .= "   MAX(buy_no)";
 $sql .= " FROM";
@@ -85,8 +85,8 @@ $order_no = str_pad($order_no, 8, 0, STR_PAD_LEFT);
 
 $def_data["form_buy_no"] = $order_no;
 
-//倉庫
-//倉庫が選択されていた場合は倉庫選択フラグを立てる
+//倉庫 warehouse
+//倉庫が選択されていた場合は倉庫選択フラグを立てる if the warehouse was selected then have a warehouse selection flag
 $ware_search_flg = ($_POST["form_ware"] != null)? true : false;
 
 $sql  = "SELECT";
@@ -105,34 +105,34 @@ if($def_ware_flg != null){
 
 $def_data["form_ware"] = $def_ware_id;
 
-//出荷可能数
+//出荷可能数 deliverable number of units
 $def_data["form_designated_date"] = 7;
 
-//担当者
+//担当者 assigned staff
 $def_data["form_buy_staff"] = $staff_id;
 
-//取引区分
+//取引区分 trade classification
 $def_data["form_trade"] = 21;
 
-// 入荷日
+// 入荷日 purchase arrival date
 $def_data["form_arrival_day"]["y"] = date("Y");
 $def_data["form_arrival_day"]["m"] = date("m");
 $def_data["form_arrival_day"]["d"] = date("d");
 
-// 仕入日
+// 仕入日 purchase date
 $def_data["form_buy_day"]["y"] = date("Y");
 $def_data["form_buy_day"]["m"] = date("m");
 $def_data["form_buy_day"]["d"] = date("d");
 
 $form->setDefaults($def_data);
 
-//初期表示位置変更
+//初期表示位置変更 change initial display position 
 $form_potision = "<body bgcolor=\"#D8D0C8\">";
 
 /*****************************/
-//初期設定＆共通処理
+//初期設定＆共通処理 initial setting common process
 /*****************************/
-//自分の消費税を抽出
+//自分の消費税を抽出 extract your tax
 #2009-12-21 aoyama-n
 #$sql  = "SELECT";
 #$sql .= "   tax_rate_n";
@@ -144,110 +144,110 @@ $form_potision = "<body bgcolor=\"#D8D0C8\">";
 
 #$result = Db_Query($db_con, $sql);
 #$tax_rate = pg_fetch_result($result,0,0);
-#$rate  = bcdiv($tax_rate,100,2);        //消費税率
+#$rate  = bcdiv($tax_rate,100,2);        //消費税率 tax rate
 
-//データ表示行数
+//データ表示行数 number of data rows to be displayed 
 if($_POST["max_row"] != NULL){
     $max_row = $_POST["max_row"];
-//初期表示のみ
+//初期表示のみ only initial display
 }else{
     $max_row = 5;
 }
 
-//仕入先IDの有無により、仕入先情報を取得
+//仕入先IDの有無により、仕入先情報を取得 acquire the purchase client info based on whether there is a purchase client ID or not
 $client_search_flg = ($_POST["hdn_client_id"] != NULL)? true : false;
 
 if($client_search_flg == true){
-    //仕入先の情報を取得
-    $client_id  = $_POST["hdn_client_id"];      //仕入先ID
-    $coax       = $_POST["hdn_coax"];           //丸め区分
-    $tax_franct = $_POST["hdn_tax_franct"];     //端数区分
+    //仕入先の情報を取得 acquire the purchase client info
+    $client_id  = $_POST["hdn_client_id"];      //仕入先ID purchase client id 
+    $coax       = $_POST["hdn_coax"];           //丸め区分 rounding up/down
+    $tax_franct = $_POST["hdn_tax_franct"];     //端数区分 round up/down
 }else{
     $client_search_flg = false;
 }
 
-//発注IDがあれば、発注フラグを立てる
+//発注IDがあれば、発注フラグを立てる if there is a purchase order Id then have a purchase order flag
 $order_flg = ($_POST["hdn_order_id"] != null)? true : false;
 
 if($order_flg == true){
      $order_id = $_POST["hdn_order_id"];
 }
 
-//削除行数
+//削除行数 number of delete rows
 $del_history[] = NULL;
 
-//Submitした場合に持ちまわるデータ
+//Submitした場合に持ちまわるデータ data that comes along when Submit
 $goods_id       = $_POST["hdn_goods_id"];
 $stock_manage   = $_POST["hdn_stock_manage"];
 $name_change    = $_POST["hdn_name_change"];
 $order_d_id     = $_POST["hdn_order_d_id"];
 
 /****************************/
-//行削除処理
+//行削除処理 delete row process
 /****************************/
 if($_POST["del_row"] != NULL){
-    $now_form = NULL;    //削除リストを取得
-    $del_row = $_POST["del_row"];    //削除履歴を配列にする。
+    $now_form = NULL;    //削除リストを取得 acquire delete list
+    $del_row = $_POST["del_row"];    //削除履歴を配列にする。array the delete history
     $del_history = explode(",", $del_row);
 
-    //削除したデータの商品ID等にNULLをセット
+    //削除したデータの商品ID等にNULLをセット set the product ID of the data deleted to NULL
     for($i = 0; $i < count($del_history); $i++){
         $goods_id[$del_histoty[$i]]     = null;
         $stock_num[$del_history[$i]]    = null;
         $stock_manage[$del_history[$i]] = null;
         $name_change[$del_history[$i]]  = null;
     }
-    //削除した行数
+    //削除した行数 number of rows deleted
     $del_num     = count($del_history)-1;
 }
 
 /****************************/
-//行数追加
+//行数追加 add number of rows
 /****************************/
 if($_POST["add_row_flg"]== 'true'){
-    //最大行に、＋５する
+    //最大行に、＋５する +5 to the max rows
     $max_row = $_POST["max_row"]+5;
 
-    //行数追加フラグをクリア
+    //行数追加フラグをクリア clear the number rows added flag
     $add_row_data["add_row_flg"] = "";
     $form->setConstants($add_row_data);
 }
 
 /****************************/
-//各処理判定
+//各処理判定 determine each process
 /****************************/
-//仕入先が入力された場合、仕入先検索フラグにtrueをセット
-$client_input_flg = ($_POST["hdn_client_search_flg"] == 'true')? true : false;       //仕入先入力判定フラグ
+//仕入先が入力された場合、仕入先検索フラグにtrueをセット set the purchase search flag to true when purchase client is inputted
+$client_input_flg = ($_POST["hdn_client_search_flg"] == 'true')? true : false;       //仕入先入力判定フラグ  decision flag for purchase client input 
 
-//商品が選択された場合、商品検索フラグにtrueをセット
-$goods_search_flg = ($_POST["hdn_goods_search_flg"] != NULL)? true : false;       //商品検索フラグ
+//商品が選択された場合、商品検索フラグにtrueをセット set the product search flag to true when product is inputted
+$goods_search_flg = ($_POST["hdn_goods_search_flg"] != NULL)? true : false;       //商品検索フラグ product search flag
 
-//合計ボタンが押下された場合
-$sum_button_flg = ($_POST["hdn_sum_button_flg"] == 't')? true : false;            //合計ボタン押下フラグ
+//合計ボタンが押下された場合 when the total button is pressed
+$sum_button_flg = ($_POST["hdn_sum_button_flg"] == 't')? true : false;            //合計ボタン押下フラグ flag for when total button is pressed
 
-//変更の場合（ord_idがGetで渡ってきた場合）、変更フラグにtrueをセット
-$update_data_flg = ($_GET["buy_id"] != NULL)? true : false;                            //発注変更フラグ
+//変更の場合（ord_idがGetで渡ってきた場合）、変更フラグにtrueをセットif it's and edit (if ord_id was passed with Get) then set the edit flag to true
+$update_data_flg = ($_GET["buy_id"] != NULL)? true : false;                            //発注変更フラグ purchase order edit flag
 Get_Id_Check3($_GET["buy_id"]);
 $update_flg = ($_POST["hdn_buy_id"] != null)? true : false;
 $get_buy_id = $_POST["hdn_buy_id"];
 
-//表示ボタンが押下された場合
-$show_button_flg = ($_POST["hdn_show_button_flg"] == "t")? true : false;   //表示ボタン押下フラグ
+//表示ボタンが押下された場合 if the display button is pressed
+$show_button_flg = ($_POST["hdn_show_button_flg"] == "t")? true : false;   //表示ボタン押下フラグ flag for when display button is pressed
 
-//GETで発注IDがあった場合
-$get_ord_id_flg  = ($_GET["ord_id"] != null)? true : false;                     //発注残からの遷移フラグ
+//GETで発注IDがあった場合 If purchase order ID existed in GET
+$get_ord_id_flg  = ($_GET["ord_id"] != null)? true : false;                     //発注残からの遷移フラグ transition flag from outstanding order list
 Get_Id_Check3($_GET["ord_id"]);
 /****************************/
-//合計処理
+//合計処理 total process
 /****************************/
-//合計ボタン押下フラグがtrueの場合
+//合計ボタン押下フラグがtrueの場合 if the total button pressed flag is true
 if($sum_button_flg == true){
 
-    $buy_data   = $_POST["form_buy_amount"];   //仕入金額
-    $price_data = NULL;                        //商品の仕入金額
-    $tax_div    = NULL;                        //課税区分
+    $buy_data   = $_POST["form_buy_amount"];   //仕入金額 purchase amount 
+    $price_data = NULL;                        //商品の仕入金額 purchase amount of a product
+    $tax_div    = NULL;                        //課税区分 tax classification
 
-    //仕入金額の合計値計算
+    //仕入金額の合計値計算 total amount calculation of purchase amount 
     for($i=0;$i<$max_row;$i++){
         if($buy_data[$i] != "" && !in_array("$i", $del_history)){
             $price_data[] = $buy_data[$i];
@@ -261,23 +261,23 @@ if($sum_button_flg == true){
 
     $data = Total_Amount($price_data, $tax_div, $coax, $tax_franct, $tax_rate, $client_id, $db_con);
 
-    //初期表示位置変更
+    //初期表示位置変更 change the initial display position
     $height = $max_row * 30;
     $form_potision = "<body bgcolor=\"#D8D0C8\" onLoad=\"form_potision($height);\">";
 
-    //フォームに値セット
+    //フォームに値セット set the value to the form
     $set_data["form_buy_money"]     = number_format($data[0]);
     $set_data["form_tax_money"]     = number_format($data[1]);
     $set_data["form_total_money"]   = number_format($data[2]);
     $set_data["hdn_sum_button_flg"] = "";   
 
 /****************************/
-//仕入変更処理
+//仕入変更処理 purchase edit process 
 /****************************/
 }elseif($update_data_flg == true && $_POST[hdn_ware_select_flg] != 't' && $goods_search_flg == false){
     $get_buy_id = $_GET["buy_id"];
 
-    //仕入ヘッダ
+    //仕入ヘッダpurchase header
     $sql  = "SELECT\n";
     $sql .= "   t_buy_h.buy_id,\n";
     $sql .= "   t_buy_h.buy_no,\n";
@@ -329,56 +329,56 @@ if($sum_button_flg == true){
 
     $order_id = $buy_h_data["ord_id"];
 
-    //発注日時を分割
+    //発注日時を分割 divide the purchase order date and time
     $order_date = explode("-",$buy_h_data["ord_time"]);
 
-    //入荷予定日を分割
+    //入荷予定日を分割 divide the planned delivery date
     $arrival_hope_date = explode("-",$buy_h_data["arrival_hope_day"]);
 
-    //仕入日を分割
+    //仕入日を分割 divide the purchase date
     $buy_date   = explode("-",$buy_h_data["buy_day"]);
 
-    //入荷日を分割
+    //入荷日を分割 divide the arrival date
     $arrival_date   = explode("-", $buy_h_data["arrival_day"]);
 
-    $set_data["hdn_buy_id"]                     = $buy_h_data["buy_id"];        //仕入ID
-    $set_data["form_buy_no"]                    = $buy_h_data["buy_no"];        //仕入番号
-    $set_data["hdn_order_id"]                   = $buy_h_data["ord_id"];        //発注ID
-    $set_data["form_order_no"]                  = $buy_h_data["ord_no"];        //発注番号
-    $set_data["form_order_day"]["y"]            = $order_date[0];               //発注日（年）
-    $set_data["form_order_day"]["m"]            = $order_date[1];               //発注日（月）
-    $set_data["form_order_day"]["d"]            = $order_date[2];               //発注日（日）
-    $set_data["form_arrival_hope_day"]["y"]     = $arrival_hope_date[0];        //入荷予定日（年）
-    $set_data["form_arrival_hope_day"]["m"]     = $arrival_hope_date[1];        //入荷予定日（月）
-    $set_data["form_arrival_hope_day"]["d"]     = $arrival_hope_date[2];        //入荷予定日（日）
-    $set_data["hdn_client_id"]                  = $buy_h_data["client_id"];     //仕入先ID
-    $set_data["form_client"]["cd1"]             = $buy_h_data["client_cd1"];   //仕入先CD
-    $set_data["form_client"]["cd2"]             = $buy_h_data["client_cd2"];   //仕入先CD
-    $set_data["form_client"]["name"]            = $buy_h_data["client_cname"];  //仕入先名
-    $set_data["hdn_coax"]                       = $buy_h_data["coax"];          //丸め区分
-    $set_data["hdn_tax_franct"]                 = $buy_h_data["tax_franct"];    //端数区分
-    $set_data["form_direct"]                    = $buy_h_data["direct_id"];     //直送先
-    $set_data["form_ware"]                      = $buy_h_data["ware_id"];       //倉庫
-    $set_data["form_trade"]                     = $buy_h_data["trade_id"];      //取引区分
-    $set_data["form_buy_staff"]                 = $buy_h_data["c_staff_id"];    //仕入担当者
-    $set_data["form_note"]                      = $buy_h_data["note"];          //備考
-    $set_data["form_arrival_day"]["y"]          = $arrival_date[0];             //入荷予定日（年）
-    $set_data["form_arrival_day"]["m"]          = $arrival_date[1];             //入荷予定日（月）
-    $set_data["form_arrival_day"]["d"]          = $arrival_date[2];             //入荷予定日（日）
-    $set_data["form_buy_day"]["y"]              = $buy_date[0];                 //入荷予定日（年）
-    $set_data["form_buy_day"]["m"]              = $buy_date[1];                 //入荷予定日（月）
-    $set_data["form_buy_day"]["d"]              = $buy_date[2];                 //入荷予定日（日）
-    $set_data["form_order_staff"]               = $buy_h_data["oc_staff_id"];   //発注担当者
-    $set_data["hdn_ord_enter_day"]              = $buy_h_data["ord_enter_day"]; //発注入力日
-    $set_data["hdn_buy_enter_day"]              = $buy_h_data["buy_enter_day"]; //仕入入力日
-    $set_data["hdn_ord_change_day"]             = $buy_h_data["change_day"];    //発注変更日時
+    $set_data["hdn_buy_id"]                     = $buy_h_data["buy_id"];        //仕入ID purchase ID 
+    $set_data["form_buy_no"]                    = $buy_h_data["buy_no"];        //仕入番号 purchase number 
+    $set_data["hdn_order_id"]                   = $buy_h_data["ord_id"];        //発注ID purchase order ID
+    $set_data["form_order_no"]                  = $buy_h_data["ord_no"];        //発注番号 purchase order number
+    $set_data["form_order_day"]["y"]            = $order_date[0];               //発注日（年）purchase order year
+    $set_data["form_order_day"]["m"]            = $order_date[1];               //発注日（月）purchase order month
+    $set_data["form_order_day"]["d"]            = $order_date[2];               //発注日（日）purchase order day
+    $set_data["form_arrival_hope_day"]["y"]     = $arrival_hope_date[0];        //入荷予定日（年） planned delivery date year
+    $set_data["form_arrival_hope_day"]["m"]     = $arrival_hope_date[1];        //入荷予定日（月） planned delivery date month
+    $set_data["form_arrival_hope_day"]["d"]     = $arrival_hope_date[2];        //入荷予定日（日） planned delivery date day
+    $set_data["hdn_client_id"]                  = $buy_h_data["client_id"];     //仕入先ID purchase client ID
+    $set_data["form_client"]["cd1"]             = $buy_h_data["client_cd1"];   //仕入先CD purchase client CD 
+    $set_data["form_client"]["cd2"]             = $buy_h_data["client_cd2"];   //仕入先CD purchase client CD
+    $set_data["form_client"]["name"]            = $buy_h_data["client_cname"];  //仕入先名 purchase client name
+    $set_data["hdn_coax"]                       = $buy_h_data["coax"];          //丸め区分 round up/down
+    $set_data["hdn_tax_franct"]                 = $buy_h_data["tax_franct"];    //端数区分 round up/down
+    $set_data["form_direct"]                    = $buy_h_data["direct_id"];     //直送先 direct destination
+    $set_data["form_ware"]                      = $buy_h_data["ware_id"];       //倉庫 warehouse
+    $set_data["form_trade"]                     = $buy_h_data["trade_id"];      //取引区分 trade classification
+    $set_data["form_buy_staff"]                 = $buy_h_data["c_staff_id"];    //仕入担当者 purchase assigned staff
+    $set_data["form_note"]                      = $buy_h_data["note"];          //備考 remarks
+    $set_data["form_arrival_day"]["y"]          = $arrival_date[0];             //入荷予定日（年） planned delivery date year
+    $set_data["form_arrival_day"]["m"]          = $arrival_date[1];             //入荷予定日（月）planned delivery date month
+    $set_data["form_arrival_day"]["d"]          = $arrival_date[2];             //入荷予定日（日）planned delivery date day
+    $set_data["form_buy_day"]["y"]              = $buy_date[0];                 //入荷予定日（年）planned delivery date year
+    $set_data["form_buy_day"]["m"]              = $buy_date[1];                 //入荷予定日（月）planned delivery date month
+    $set_data["form_buy_day"]["d"]              = $buy_date[2];                 //入荷予定日（日）planned delivery date day
+    $set_data["form_order_staff"]               = $buy_h_data["oc_staff_id"];   //発注担当者 purchase order assigned staff
+    $set_data["hdn_ord_enter_day"]              = $buy_h_data["ord_enter_day"]; //発注入力日 purchase order input date
+    $set_data["hdn_buy_enter_day"]              = $buy_h_data["buy_enter_day"]; //仕入入力日 purchase input date
+    $set_data["hdn_ord_change_day"]             = $buy_h_data["change_day"];    //発注変更日時 purchase order edit date
 
-    //以降の処理で持ちまわる得意先ID
+    //以降の処理で持ちまわる得意先ID customer ID that will be used in the next process
     $client_id  = $buy_h_data["client_id"];
     $tax_franct = $buy_h_data["tax_franct"];
     $coax       = $buy_h_data["coax"];
 
-    //仕入データ
+    //仕入データ purchase data
     $sql  = "SELECT\n";
     $sql .= "   t_buy_d.ord_d_id,\n";
     $sql .= "   t_goods.goods_id,\n";
@@ -446,7 +446,7 @@ if($sum_button_flg == true){
     $result = Db_Query($db_con, $sql);
     $num = pg_num_rows($result);
 
-    //以降の処理で持ちまわるデータ
+    //以降の処理で持ちまわるデータ data that will be used in the next processes
     $goods_id = null;
     $stock_manage = null;
     $name_change = null;
@@ -458,33 +458,33 @@ if($sum_button_flg == true){
         $buy_amount[]   = $buy_d_data[9];
         $tax_div[]      = $buy_d_data[4];
 
-        $set_data["hdn_order_d_id"][$i]         = $buy_d_data["ord_d_id"];                                          //発注データID
-        $set_data["hdn_goods_id"][$i]           = $buy_d_data["goods_id"];                                          //商品ID
-        $set_data["form_goods_cd"][$i]          = $buy_d_data["goods_cd"];                                          //商品CD
-        $set_data["form_goods_name"][$i]        = $buy_d_data["goods_name"];                                        //商品名
-        $set_data["hdn_tax_div"][$i]            = $buy_d_data["tax_div"];                                           //課税区分（hidden用）
-        $set_data["form_stock_num"][$i]         = $buy_d_data["stock_num"];                                         //在庫数
-        $set_data["form_order_num"][$i]         = ($buy_h_data["ord_no"] != null)? $buy_d_data["order_num"] : '-';  //発注数
-        $set_data["form_buy_num"][$i]           = $buy_d_data["buy_num"];                                           //仕入数
-        $set_data["form_buy_price"][$i]["i"]    = $price_data[0];                                                   //仕入単価（整数部）
-        $set_data["form_buy_price"][$i]["d"]    = ($price_data[1] != NULL)? $price_data[1] : "00";                  //仕入単価（少数部）
-        $set_data["form_buy_amount"][$i]        = number_format($buy_d_data[9]);                                    //仕入金額（税抜き）
-        $set_data["form_rorder_num"][$i]        = ($buy_h_data["ord_no"] != null)? $buy_d_data["on_order_num"] : '-';//発注残
-        $set_data["hdn_name_change"][$i]        = $buy_d_data["name_change"];                                       //品名変更
-        $set_data["hdn_stock_manage"][$i]       = $buy_d_data["stock_manage"];                                      //在庫管理
-        $set_data["form_in_num"][$i]            = $buy_d_data["in_num"];                                            //入数
+        $set_data["hdn_order_d_id"][$i]         = $buy_d_data["ord_d_id"];                                          //発注データID purchase order data ID
+        $set_data["hdn_goods_id"][$i]           = $buy_d_data["goods_id"];                                          //商品ID Product ID
+        $set_data["form_goods_cd"][$i]          = $buy_d_data["goods_cd"];                                          //商品CD product CD
+        $set_data["form_goods_name"][$i]        = $buy_d_data["goods_name"];                                        //商品名 product name
+        $set_data["hdn_tax_div"][$i]            = $buy_d_data["tax_div"];                                           //課税区分（hidden用） tax classification (for hidden)
+        $set_data["form_stock_num"][$i]         = $buy_d_data["stock_num"];                                         //在庫数 num of inventories
+        $set_data["form_order_num"][$i]         = ($buy_h_data["ord_no"] != null)? $buy_d_data["order_num"] : '-';  //発注数 number of units ordered
+        $set_data["form_buy_num"][$i]           = $buy_d_data["buy_num"];                                           //仕入数 number of purchases
+        $set_data["form_buy_price"][$i]["i"]    = $price_data[0];                                                   //仕入単価（整数部）purchase cost per unit of product (integer)
+        $set_data["form_buy_price"][$i]["d"]    = ($price_data[1] != NULL)? $price_data[1] : "00";                  //仕入単価（少数部）purchase order per unit of product (decimal)
+        $set_data["form_buy_amount"][$i]        = number_format($buy_d_data[9]);                                    //仕入金額（税抜き）purchase order per unit of product (without tax)
+        $set_data["form_rorder_num"][$i]        = ($buy_h_data["ord_no"] != null)? $buy_d_data["on_order_num"] : '-';//発注残 outstanding order
+        $set_data["hdn_name_change"][$i]        = $buy_d_data["name_change"];                                       //品名変更 change product name
+        $set_data["hdn_stock_manage"][$i]       = $buy_d_data["stock_manage"];                                      //在庫管理 manage inventories
+        $set_data["form_in_num"][$i]            = $buy_d_data["in_num"];                                            //入数 quantity
         //aoyama-n 2009-09-01
-        $set_data["hdn_discount_flg"][$i]       = $buy_d_data["discount_flg"];                                      //値引フラグ
+        $set_data["hdn_discount_flg"][$i]       = $buy_d_data["discount_flg"];                                      //値引フラグ discount flag
 
         if($buy_d_data["buy_num"]%$buy_d_data["in_num"] == 0 && $buy_d_data["in_num"]!=null && $buy_d_data["in_num"] !=0){
             $set_buy_data["form_order_in_num"]  = $buy_d_data["buy_num"]/$buy_d_data["in_num"];
         }
 
-    //以降の処理で持ちまわるデータ
-        $goods_id[$i]                         = $buy_d_data["goods_id"];             //商品ID
-        $stock_manage[$i]                     = $buy_d_data["stock_manage"];         //在庫管理（在庫数表示判定）
-        $name_change[$i]                      = $buy_d_data["name_change"];          //品名変更（品名変更付加判定）
-        $order_d_id[$i]                       = $buy_d_data["ord_d_id"];             //発注データID
+    //以降の処理で持ちまわるデータ data that will be used in the next processes 
+        $goods_id[$i]                         = $buy_d_data["goods_id"];             //商品ID product Id
+        $stock_manage[$i]                     = $buy_d_data["stock_manage"];         //在庫管理（在庫数表示判定） invenotry management (decision if inventory number will be displayed)
+        $name_change[$i]                      = $buy_d_data["name_change"];          //品名変更（品名変更付加判定） change product name (decide if namge edit will be added)
+        $order_d_id[$i]                       = $buy_d_data["ord_d_id"];             //発注データID purchase order data ID 
     }
 
     #2009-12-21 aoyama-n
@@ -493,12 +493,12 @@ if($sum_button_flg == true){
 
     $data = Total_Amount($buy_amount, $tax_div, $coax, $tax_franct, $tax_rate, $client_id, $db_con);
 
-    //フォームに値セット
+    //フォームに値セット set the value to form
     $set_data["form_buy_money"]     = number_format($data[0]);
     $set_data["form_tax_money"]     = number_format($data[1]);
     $set_data["form_total_money"]   = number_format($data[2]);
 
-    //Getで取得した発注IDをhiddenで持ちまわる
+    //Getで取得した発注IDをhiddenで持ちまわる use as hidden the purchase order ID that was acquired with GET 
 //    $set_data["hdn_order_id"] = $get_ord_id;
     if($buy_h_data["ord_id"] != null){
         $order_flg = true;
@@ -510,18 +510,18 @@ if($sum_button_flg == true){
     $update_flg = true;
 
 /****************************/
-//仕入先コード入力
+//仕入先コード入力 input the purchase client code
 /****************************/
 }elseif($client_input_flg == true){
-    $client_cd1 = $_POST["form_client"]["cd1"];         //得意先コード
-    $client_cd2 = $_POST["form_client"]["cd2"];         //得意先コード
+    $client_cd1 = $_POST["form_client"]["cd1"];         //得意先コード customer code
+    $client_cd2 = $_POST["form_client"]["cd2"];         //得意先コード customer code
 
-    //指定された仕入先の情報を抽出
+    //指定された仕入先の情報を抽出 extract the information of the purchase client assigned
     $sql  = "SELECT";
-    $sql .= "   client_id,";                            //仕入先ID
-    $sql .= "   client_cname,";                         //仕入先名
-    $sql .= "   coax,";                                 //丸め区分
-    $sql .= "   tax_franct,";                            //端数区分
+    $sql .= "   client_id,";                            //仕入先ID purchase client ID
+    $sql .= "   client_cname,";                         //仕入先名 purchase client name
+    $sql .= "   coax,";                                 //丸め区分 round up/off
+    $sql .= "   tax_franct,";                            //端数区分 round up/off
     $sql .= "   buy_trade_id ";
     $sql .= " FROM";
     $sql .= "   t_client";
@@ -539,50 +539,50 @@ if($sum_button_flg == true){
     $get_client_data_count = pg_num_rows($result);
     $get_client_data       = pg_fetch_array($result);
 
-    //該当する仕入先があった場合のみ処理開始
+    //該当する仕入先があった場合のみ処理開始 start process only on purchase client that matched
     if($get_client_data_count > 0){
-        //以降の処理で持ちまわる得意先ID
+        //以降の処理で持ちまわる得意先ID customer Id that will be used in the next processes
         $client_id  = $get_client_data["client_id"];
         $tax_franct = $get_client_data["tax_franct"];
         $coax       = $get_client_data["coax"];
 
-        //抽出した仕入先の情報をセット
+        //抽出した仕入先の情報をセット set the purchase client infor that was extracted
         $set_data = NULL;
-        $set_data["hdn_client_id"]                  = $get_client_data["client_id"];        //仕入先ID
-        $set_data["form_client"]["name"]            = $get_client_data["client_cname"];     //仕入先名
-        $set_data["hdn_tax_franct"]                 = $get_client_data["tax_franct"];       //丸め区分
-        $set_data["hdn_coax"]                       = $get_client_data["coax"];             //端数区分
-        $set_data["form_trade"]                     = $get_client_data["buy_trade_id"];     //取引区分
+        $set_data["hdn_client_id"]                  = $get_client_data["client_id"];        //仕入先ID purchase client ID
+        $set_data["form_client"]["name"]            = $get_client_data["client_cname"];     //仕入先名 purchase client name
+        $set_data["hdn_tax_franct"]                 = $get_client_data["tax_franct"];       //丸め区分 round up/down
+        $set_data["hdn_coax"]                       = $get_client_data["coax"];             //端数区分 round up/down
+        $set_data["form_trade"]                     = $get_client_data["buy_trade_id"];     //取引区分 trade classification
 
-        //該当する仕入先があるので、仕入先検索フラグを立てる
-        //警告メッセージを初期化
+        //該当する仕入先があるので、仕入先検索フラグを立てる have a purchase client search flag because there is a purchase client matched
+        //警告メッセージを初期化 initialize the warning message
         $client_search_flg = true;
 
-    //該当するデータがなかった場合は、既に入力済みの商品データを全て初期化
+    //該当するデータがなかった場合は、既に入力済みの商品データを全て初期化 if there is no data that matched then initialize all product data that was already inputted
     }else{
-        $set_data = NULL;       //セットするデータの初期化
-        $set_data["hdn_client_id"]                  = "";       //仕入先ID
-        $set_data["form_client"]["name"]            = "";       //仕入先名
+        $set_data = NULL;       //セットするデータの初期化 initialize the data that will be set
+        $set_data["hdn_client_id"]                  = "";       //仕入先ID purchase client ID
+        $set_data["form_client"]["name"]            = "";       //仕入先名 purchase client name
 
         for($i = 0; $i < $max_row; $i++){
-            $set_data["hdn_goods_id"][$i]           = "";       //商品ID
-            $set_data["form_goods_cd"][$i]          = "";       //商品CD
-            $set_data["form_goods_name"][$i]        = "";       //商品名
-            $set_data["hdn_stock_manage"][$i]       = "";       //在庫管理
-            $set_data["hdn_name_change"][$i]        = "";       //品名変更
-            $set_data["form_stock_num"][$i]         = "";       //現在個数
-            $set_data["form_rstock_num"][$i]        = "";       //発注済数
-            $set_data["form_rorder_num"][$i]        = "";       //出荷可能数
-            $set_data["form_designated_num"][$i]    = "";       //引当数
-            $set_data["form_buy_price"][$i]["i"]    = "";       //仕入単価（整数部）
-            $set_data["form_buy_price"][$i]["d"]    = "";       //仕入単価（少数部）
-            $set_data["hdn_tax_div"][$i]            = "";       //課税区分
-            $set_data["form_in_num"][$i]            = "";       //入数
-            $set_data["form_order_in_num"][$i]      = "";       //入数
-            $set_data["form_buy_amount"][$i]        = "";       //発注金額
-            $set_data["form_buy_num"][$i]           = "";       //発注金額
+            $set_data["hdn_goods_id"][$i]           = "";       //商品ID product Id
+            $set_data["form_goods_cd"][$i]          = "";       //商品CD product Cd
+            $set_data["form_goods_name"][$i]        = "";       //商品名 product name
+            $set_data["hdn_stock_manage"][$i]       = "";       //在庫管理 inventory management
+            $set_data["hdn_name_change"][$i]        = "";       //品名変更 change product name
+            $set_data["form_stock_num"][$i]         = "";       //現在個数 current unit of number
+            $set_data["form_rstock_num"][$i]        = "";       //発注済数 already purchase ordered
+            $set_data["form_rorder_num"][$i]        = "";       //出荷可能数 possible number of units to be delivered
+            $set_data["form_designated_num"][$i]    = "";       //引当数 reserved number of units
+            $set_data["form_buy_price"][$i]["i"]    = "";       //仕入単価（整数部） purchase cost per unit (integer)
+            $set_data["form_buy_price"][$i]["d"]    = "";       //仕入単価（少数部）purchase cost per unit (decimal)
+            $set_data["hdn_tax_div"][$i]            = "";       //課税区分 tax classification
+            $set_data["form_in_num"][$i]            = "";       //入数 quantity
+            $set_data["form_order_in_num"][$i]      = "";       //入数 quantity
+            $set_data["form_buy_amount"][$i]        = "";       //発注金額 purchase order amount
+            $set_data["form_buy_num"][$i]           = "";       //発注金額 purchase order amount
             //aoyama-n 2009-09-01
-            $set_data["hdn_discount_flg"][$i]       = "";       //値引フラグ
+            $set_data["hdn_discount_flg"][$i]       = "";       //値引フラグ discount flag
 
             $goods_id     = null;
             $stock_manage = null;
@@ -590,22 +590,22 @@ if($sum_button_flg == true){
             $client_id    = null;
         }
 
-        //該当する仕入先がないので、仕入先検索フラグにはfalseをセット
+        //該当する仕入先がないので、仕入先検索フラグにはfalseをセット set the purchase client search flag to false because there is no purchase client matched
         $client_search_flg = false;
     }
 
-    //仕入先検索フラグを初期化
+    //仕入先検索フラグを初期化 initialize the purchase client search flag
     $set_data["hdn_client_search_flg"]              = "";
 
 /****************************/
-//仕入倉庫入力
+//仕入倉庫入力 input purchae warehouse
 /****************************/
 //}elseif($ware_select_flg == true){
 }elseif($_POST[hdn_ware_select_flg] == true){
     $ware_id = $_POST["form_ware"];
 
     if($ware_id != NULL){
-        //商品が１つ以上選択されていれば処理開始
+        //商品が１つ以上選択されていれば処理開始 start the process if there is even one product selected
         for($i = 0; $i < $max_row; $i++){
             $goods_id = $_POST["hdn_goods_id"][$i];
 
@@ -629,7 +629,7 @@ if($sum_button_flg == true){
                     $stock_data = pg_fetch_result($result,0,0);
                 }
 
-                $set_data["form_stock_num"][$i] = ($stock_data != NULL)? $stock_data : 0;     //現在個数
+                $set_data["form_stock_num"][$i] = ($stock_data != NULL)? $stock_data : 0;     //現在個数 curent stock number
             }
         }
         $ware_search_flg = true;
@@ -640,11 +640,11 @@ if($sum_button_flg == true){
     $set_data["hdn_ware_select_flg"]    = "";
 
 /****************************/
-//発注IDがある場合
+//発注IDがある場合 if there is a purchase order ID
 /****************************/
-//表示ボタン検索フラグがtrue
+//表示ボタン検索フラグがtrue display button search flag is true
 }elseif($show_button_flg == true || $get_ord_id_flg == true){
-    //表示ボタン押下時
+    //表示ボタン押下時 when display button is pressed 
     if($show_button_flg == true){
        $get_order_id = $_POST["form_order_no"];
     }elseif($get_ord_id_flg == true){
@@ -700,19 +700,19 @@ if($sum_button_flg == true){
         $order_date     = explode("-", $get_ord_h_data["ord_time"]);
         $arrival_date   = explode("-", $get_ord_h_data["arrival_day"]);
 
-        //抽出した仕入先の情報をセット
+        //抽出した仕入先の情報をセット set the purchase client infor that was extracted
         $set_data = NULL;
-        $set_data["hdn_client_id"]              = $get_ord_h_data["client_id"];     //仕入先ID
-        $set_data["form_client"]["cd1"]          = $get_ord_h_data["client_cd1"];    //仕入先CD
-        $set_data["form_client"]["cd2"]          = $get_ord_h_data["client_cd2"];    //仕入先CD
-        $set_data["form_client"]["name"]        = $get_ord_h_data["client_cname"];  //仕入先名
-        $set_data["hdn_tax_franct"]             = $get_ord_h_data["tax_franct"];    //丸め区分
-        $set_data["hdn_coax"]                   = $get_ord_h_data["coax"];          //端数区分
+        $set_data["hdn_client_id"]              = $get_ord_h_data["client_id"];     //仕入先ID purchase client ID
+        $set_data["form_client"]["cd1"]          = $get_ord_h_data["client_cd1"];    //仕入先CD purchase client CD
+        $set_data["form_client"]["cd2"]          = $get_ord_h_data["client_cd2"];    //仕入先CD purchase client CD
+        $set_data["form_client"]["name"]        = $get_ord_h_data["client_cname"];  //仕入先名 purchase client name
+        $set_data["hdn_tax_franct"]             = $get_ord_h_data["tax_franct"];    //丸め区分 round up/down
+        $set_data["hdn_coax"]                   = $get_ord_h_data["coax"];          //端数区分round up/down
 
-        //データをフォームにセット
-        $set_data["hdn_order_id"]               = $get_ord_h_data["ord_id"];        //発注ID（hidden用）
-        $set_data["form_order_no"]              = $get_ord_h_data["ord_id"];        //発注ID
-        $set_data["form_order_day"]["y"]        = $order_date[0];                   //発注日
+        //データをフォームにセット set the data to form
+        $set_data["hdn_order_id"]               = $get_ord_h_data["ord_id"];        //発注ID（hidden用） purchase order ID (for hidden)
+        $set_data["form_order_no"]              = $get_ord_h_data["ord_id"];        //発注ID purchase order ID
+        $set_data["form_order_day"]["y"]        = $order_date[0];                   //発注日 purchase order date 
         $set_data["form_order_day"]["m"]        = $order_date[1];
         $set_data["form_order_day"]["d"]        = $order_date[2];
         $set_data["form_arrival_hope_day"]["y"] = $arrival_date[0];                 //入荷予定日
