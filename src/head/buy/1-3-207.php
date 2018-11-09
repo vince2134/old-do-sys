@@ -1,51 +1,51 @@
 <?php
 /*
- * ÍúÎò¡§
- * ¡¡ÆüÉÕ¡¡¡¡¡¡¡¡BÉ¼No.¡¡¡¡¡¡¡¡Ã´Åö¼Ô¡¡¡¡¡¡ÆâÍÆ¡¡
- * 2007/01/25                  watanabe-k  ¥Ü¥¿¥ó¤Î¿§ÊÑ¹¹  
- * 2007/02/28                  morita-d  ¾¦ÉÊÌ¾¤ÏÀµ¼°Ì¾¾Î¤òÉ½¼¨¤¹¤ë¤è¤¦¤ËÊÑ¹¹ 
- * 2007/03/09    Í×Ë¾9-1       kajioka-h   Æş²ÙÆü¤òÊÑ¹¹¤¹¤ë¤È»ÅÆşÆü¤¬ÊÑ¤ï¤ë¤è¤¦¤ËÊÑ¹¹
- * 2007/03/13                  watanabe-k  ¼è°ú¶èÊ¬¤ËÆÀ°ÕÀè¤Î¾ğÊó¤ò¼èÆÀ¤¹¤ë¤è¤¦¤Ë½¤Àµ
- * 2007/03/13                  watanabe-k  ¾¦ÉÊ¤Î½ÅÊ£¥¨¥é¡¼¤ò¶ñÂÎÅª¤ËÁªÂò¤¹¤ë¤è¤¦¤Ë½¤Àµ
- * 2007/05/18                  watanabe-k  Ä¾Á÷Àè¤Î¥×¥ë¥À¥¦¥ó¤òÊÑ¹¹
- * 2007/06/10                  watanabe-k  È¯Ãí¤«¤éµ¯¤³¤·¤¿»ÅÆş¤ì¤Ç¹ÔÄÉ²Ã¤ò²ÄÇ½¤Ë¤¹¤ë 
- * 2007/06/29                   fukuda      È÷¹Í¤ÎÆşÎÏ¥Õ¥©¡¼¥à¤òÂç¤­¤¯¤¹¤ë
- * 2007-07-12                  fukuda      ¡Ö»ÙÊ§Äù¡×¤ò¡Ö»ÅÆşÄù¡×¤ËÊÑ¹¹
- * 2007-07-13                  watanabe-k  0½ü»»¤Î·Ù¹ğ¤¬É½¼¨¤µ¤ì¤ë¥Ğ¥°¤Î½¤Àµ
- * 2007-08-28                  watanabe-k  »ÅÆş¿ô¤¬È¯Ãí¿ô¤ò¾å²ó¤Ã¤¿¾ì¹ç¤ËÈ¯Ãí»Ä¤ÎÂÇ¾Ã¤·½èÍı¤ò»ÅÆş¿ô¤Ç¹Ô¤Ê¤ï¤º¡¢È¯Ãí¿ô¤Ç¹Ô¤Ê¤¦¡£
- * 2007-12-01                  watanabe-k  Ê£¿ô²ó»ÅÆş¤ì¤ò¹Ô¤¦¾ì¹ç¤ËÈ¯Ãí»Ä¤òÂ¿¤¯ÂÇ¾Ã¤·¤·¤Æ¤·¤Ş¤¦¥Ğ¥°¤Î½¤Àµ
- * 2009-09-01                  aoyama-n    ÃÍ°úµ¡Ç½ÄÉ²Ã 
- * 2009-09-15                  aoyama-n    ¼è°ú¶èÊ¬¤ÎÃÍ°ú¡¦ÊÖÉÊ¤ª¤è¤ÓÃÍ°ú¾¦ÉÊ¤ÏÀÖ»ú¤ÇÉ½¼¨
- * 2009/09/28      ¤Ê¤·        hashimoto-y ¼è°ú¶èÊ¬¤«¤éÃÍ°ú¤­¤òÇÑ»ß
- * 2009/10/13                  hashimoto-y ºß¸Ë´ÉÍı¥Õ¥é¥°¤ò¥·¥ç¥Ã¥×ÊÌ¾¦ÉÊ¾ğÊó¥Æ¡¼¥Ö¥ë¤ËÊÑ¹¹
- * 2009/10/19      ¤Ê¤·        hashimoto-y È¯Ãí»Ä¤«¤éÁ«°Ü¤·¤¿¾ì¹ç¤Ë¡¢»ÅÆşÃ±²Á¤¬ÊÑ¹¹¤Ç¤­¤Ê¤¤¥Ğ¥°½¤Àµ
- * 2009/10/20      ¤Ê¤·        hashimoto-y 10-19¤Î½¤Àµ¤Î¥Ğ¥°¡Ê¾¦ÉÊ¥³¡¼¥É¤¬ÆşÎÏ¤Ç¤­¤ë¡Ë
- * 2009/12/21      ¤Ê¤·        aoyama-n    ÀÇÎ¨¤òTaxRate¥¯¥é¥¹¤«¤é¼èÆÀ 
- *   2016/01/22                amano  Button_Submit ´Ø¿ô¤Ç¥Ü¥¿¥óÌ¾¤¬Á÷¤é¤ì¤Ê¤¤ IE11 ¥Ğ¥°ÂĞ±ş 
+ * å±¥æ­´ï¼š
+ * ã€€æ—¥ä»˜ã€€ã€€ã€€ã€€Bç¥¨No.ã€€ã€€ã€€ã€€æ‹…å½“è€…ã€€ã€€ã€€å†…å®¹ã€€
+ * 2007/01/25                  watanabe-k  ãƒœã‚¿ãƒ³ã®è‰²å¤‰æ›´  
+ * 2007/02/28                  morita-d  å•†å“åã¯æ­£å¼åç§°ã‚’è¡¨ç¤ºã™ã‚‹ã‚ˆã†ã«å¤‰æ›´ 
+ * 2007/03/09    è¦æœ›9-1       kajioka-h   å…¥è·æ—¥ã‚’å¤‰æ›´ã™ã‚‹ã¨ä»•å…¥æ—¥ãŒå¤‰ã‚ã‚‹ã‚ˆã†ã«å¤‰æ›´
+ * 2007/03/13                  watanabe-k  å–å¼•åŒºåˆ†ã«å¾—æ„å…ˆã®æƒ…å ±ã‚’å–å¾—ã™ã‚‹ã‚ˆã†ã«ä¿®æ­£
+ * 2007/03/13                  watanabe-k  å•†å“ã®é‡è¤‡ã‚¨ãƒ©ãƒ¼ã‚’å…·ä½“çš„ã«é¸æŠã™ã‚‹ã‚ˆã†ã«ä¿®æ­£
+ * 2007/05/18                  watanabe-k  ç›´é€å…ˆã®ãƒ—ãƒ«ãƒ€ã‚¦ãƒ³ã‚’å¤‰æ›´
+ * 2007/06/10                  watanabe-k  ç™ºæ³¨ã‹ã‚‰èµ·ã“ã—ãŸä»•å…¥ã‚Œã§è¡Œè¿½åŠ ã‚’å¯èƒ½ã«ã™ã‚‹ 
+ * 2007/06/29                   fukuda      å‚™è€ƒã®å…¥åŠ›ãƒ•ã‚©ãƒ¼ãƒ ã‚’å¤§ããã™ã‚‹
+ * 2007-07-12                  fukuda      ã€Œæ”¯æ‰•ç· ã€ã‚’ã€Œä»•å…¥ç· ã€ã«å¤‰æ›´
+ * 2007-07-13                  watanabe-k  0é™¤ç®—ã®è­¦å‘ŠãŒè¡¨ç¤ºã•ã‚Œã‚‹ãƒã‚°ã®ä¿®æ­£
+ * 2007-08-28                  watanabe-k  ä»•å…¥æ•°ãŒç™ºæ³¨æ•°ã‚’ä¸Šå›ã£ãŸå ´åˆã«ç™ºæ³¨æ®‹ã®æ‰“æ¶ˆã—å‡¦ç†ã‚’ä»•å…¥æ•°ã§è¡Œãªã‚ãšã€ç™ºæ³¨æ•°ã§è¡Œãªã†ã€‚
+ * 2007-12-01                  watanabe-k  è¤‡æ•°å›ä»•å…¥ã‚Œã‚’è¡Œã†å ´åˆã«ç™ºæ³¨æ®‹ã‚’å¤šãæ‰“æ¶ˆã—ã—ã¦ã—ã¾ã†ãƒã‚°ã®ä¿®æ­£
+ * 2009-09-01                  aoyama-n    å€¤å¼•æ©Ÿèƒ½è¿½åŠ  
+ * 2009-09-15                  aoyama-n    å–å¼•åŒºåˆ†ã®å€¤å¼•ãƒ»è¿”å“ãŠã‚ˆã³å€¤å¼•å•†å“ã¯èµ¤å­—ã§è¡¨ç¤º
+ * 2009/09/28      ãªã—        hashimoto-y å–å¼•åŒºåˆ†ã‹ã‚‰å€¤å¼•ãã‚’å»ƒæ­¢
+ * 2009/10/13                  hashimoto-y åœ¨åº«ç®¡ç†ãƒ•ãƒ©ã‚°ã‚’ã‚·ãƒ§ãƒƒãƒ—åˆ¥å•†å“æƒ…å ±ãƒ†ãƒ¼ãƒ–ãƒ«ã«å¤‰æ›´
+ * 2009/10/19      ãªã—        hashimoto-y ç™ºæ³¨æ®‹ã‹ã‚‰é·ç§»ã—ãŸå ´åˆã«ã€ä»•å…¥å˜ä¾¡ãŒå¤‰æ›´ã§ããªã„ãƒã‚°ä¿®æ­£
+ * 2009/10/20      ãªã—        hashimoto-y 10-19ã®ä¿®æ­£ã®ãƒã‚°ï¼ˆå•†å“ã‚³ãƒ¼ãƒ‰ãŒå…¥åŠ›ã§ãã‚‹ï¼‰
+ * 2009/12/21      ãªã—        aoyama-n    ç¨ç‡ã‚’TaxRateã‚¯ãƒ©ã‚¹ã‹ã‚‰å–å¾— 
+ *   2016/01/22                amano  Button_Submit é–¢æ•°ã§ãƒœã‚¿ãƒ³åãŒé€ã‚‰ã‚Œãªã„ IE11 ãƒã‚°å¯¾å¿œ 
  */
 
-$page_title = "»ÅÆşÆşÎÏ";
+$page_title = "ä»•å…¥å…¥åŠ›";
 
-//´Ä¶­ÀßÄê¥Õ¥¡¥¤¥ë environment setting file
+//ç’°å¢ƒè¨­å®šãƒ•ã‚¡ã‚¤ãƒ« environment setting file
 require_once("ENV_local.php");
 require_once(INCLUDE_DIR."function_motocho.inc");
 require_once(INCLUDE_DIR."function_buy.inc");
 //print_array($_POST);
 
-//HTML_QuickForm¤òºîÀ® create
+//HTML_QuickFormã‚’ä½œæˆ create
 $form =& new HTML_QuickForm("dateForm", "POST", "$_SERVER[PHP_SELF]");
 
-//DBÀÜÂ³ connect db
+//DBæ¥ç¶š connect db
 $db_con = Db_Connect();
 
-// ¸¢¸Â¥Á¥§¥Ã¥¯ auth check
+// æ¨©é™ãƒã‚§ãƒƒã‚¯ auth check
 $auth       = Auth_Check($db_con);
-// ¥Ü¥¿¥óDisabled disabled button
+// ãƒœã‚¿ãƒ³Disabled disabled button
 $disabled   = ($auth[0] == "r") ? "disabled" : null;
 
 
 /*****************************/
-//³°ÉôÊÑ¿ô¼èÆÀ acquire external variable
+//å¤–éƒ¨å¤‰æ•°å–å¾— acquire external variable
 /*****************************/
 $shop_id  = $_SESSION["client_id"];
 $rank_cd  = $_SESSION["rank_cd"];
@@ -53,23 +53,23 @@ $staff_id = $_SESSION["staff_id"];
 
 
 /*****************************/
-// ºÆÁ«°ÜÀè¤òSESSION¤Ë¥»¥Ã¥È set the retransition page to SESSION
+// å†é·ç§»å…ˆã‚’SESSIONã«ã‚»ãƒƒãƒˆ set the retransition page to SESSION
 /*****************************/
-// GET¡¢POST¤¬Ìµ¤¤¾ì¹ç if there is not GET_POST
+// GETã€POSTãŒç„¡ã„å ´åˆ if there is not GET_POST
 if ($_GET == null && $_POST["form_buy_button"] == null && $_POST["form_comp_button"] == null){
     Set_Rtn_Page("buy");
 }
 
 
 /*****************************/
-//½é´üÉ½¼¨ÀßÄê set the inital display
+//åˆæœŸè¡¨ç¤ºè¨­å®š set the inital display
 /*****************************/
 
 #2009-12-21 aoyama-n
-//ÀÇÎ¨¥¯¥é¥¹¡¡¥¤¥ó¥¹¥¿¥ó¥¹À¸À® tax class create instance
+//ç¨ç‡ã‚¯ãƒ©ã‚¹ã€€ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ç”Ÿæˆ tax class create instance
 $tax_rate_obj = new TaxRate($shop_id);
 
-//¼«Æ°ºÎÈÖ¤ÎÈ¯ÃíÈÖ¹æ¼èÆÀ acquire the purchase order number of the automatic numbering
+//è‡ªå‹•æ¡ç•ªã®ç™ºæ³¨ç•ªå·å–å¾— acquire the purchase order number of the automatic numbering
 $sql  = "SELECT";
 $sql .= "   MAX(buy_no)";
 $sql .= " FROM";
@@ -85,8 +85,8 @@ $order_no = str_pad($order_no, 8, 0, STR_PAD_LEFT);
 
 $def_data["form_buy_no"] = $order_no;
 
-//ÁÒ¸Ë warehouse
-//ÁÒ¸Ë¤¬ÁªÂò¤µ¤ì¤Æ¤¤¤¿¾ì¹ç¤ÏÁÒ¸ËÁªÂò¥Õ¥é¥°¤òÎ©¤Æ¤ë if the warehouse was selected then have a warehouse selection flag
+//å€‰åº« warehouse
+//å€‰åº«ãŒé¸æŠã•ã‚Œã¦ã„ãŸå ´åˆã¯å€‰åº«é¸æŠãƒ•ãƒ©ã‚°ã‚’ç«‹ã¦ã‚‹ if the warehouse was selected then have a warehouse selection flag
 $ware_search_flg = ($_POST["form_ware"] != null)? true : false;
 
 $sql  = "SELECT";
@@ -105,34 +105,34 @@ if($def_ware_flg != null){
 
 $def_data["form_ware"] = $def_ware_id;
 
-//½Ğ²Ù²ÄÇ½¿ô deliverable number of units
+//å‡ºè·å¯èƒ½æ•° deliverable number of units
 $def_data["form_designated_date"] = 7;
 
-//Ã´Åö¼Ô assigned staff
+//æ‹…å½“è€… assigned staff
 $def_data["form_buy_staff"] = $staff_id;
 
-//¼è°ú¶èÊ¬ trade classification
+//å–å¼•åŒºåˆ† trade classification
 $def_data["form_trade"] = 21;
 
-// Æş²ÙÆü purchase arrival date
+// å…¥è·æ—¥ purchase arrival date
 $def_data["form_arrival_day"]["y"] = date("Y");
 $def_data["form_arrival_day"]["m"] = date("m");
 $def_data["form_arrival_day"]["d"] = date("d");
 
-// »ÅÆşÆü purchase date
+// ä»•å…¥æ—¥ purchase date
 $def_data["form_buy_day"]["y"] = date("Y");
 $def_data["form_buy_day"]["m"] = date("m");
 $def_data["form_buy_day"]["d"] = date("d");
 
 $form->setDefaults($def_data);
 
-//½é´üÉ½¼¨°ÌÃÖÊÑ¹¹ change initial display position 
+//åˆæœŸè¡¨ç¤ºä½ç½®å¤‰æ›´ change initial display position 
 $form_potision = "<body bgcolor=\"#D8D0C8\">";
 
 /*****************************/
-//½é´üÀßÄê¡õ¶¦ÄÌ½èÍı initial setting common process
+//åˆæœŸè¨­å®šï¼†å…±é€šå‡¦ç† initial setting common process
 /*****************************/
-//¼«Ê¬¤Î¾ÃÈñÀÇ¤òÃê½Ğ extract your tax
+//è‡ªåˆ†ã®æ¶ˆè²»ç¨ã‚’æŠ½å‡º extract your tax
 #2009-12-21 aoyama-n
 #$sql  = "SELECT";
 #$sql .= "   tax_rate_n";
@@ -144,110 +144,110 @@ $form_potision = "<body bgcolor=\"#D8D0C8\">";
 
 #$result = Db_Query($db_con, $sql);
 #$tax_rate = pg_fetch_result($result,0,0);
-#$rate  = bcdiv($tax_rate,100,2);        //¾ÃÈñÀÇÎ¨ tax rate
+#$rate  = bcdiv($tax_rate,100,2);        //æ¶ˆè²»ç¨ç‡ tax rate
 
-//¥Ç¡¼¥¿É½¼¨¹Ô¿ô number of data rows to be displayed 
+//ãƒ‡ãƒ¼ã‚¿è¡¨ç¤ºè¡Œæ•° number of data rows to be displayed 
 if($_POST["max_row"] != NULL){
     $max_row = $_POST["max_row"];
-//½é´üÉ½¼¨¤Î¤ß only initial display
+//åˆæœŸè¡¨ç¤ºã®ã¿ only initial display
 }else{
     $max_row = 5;
 }
 
-//»ÅÆşÀèID¤ÎÍ­Ìµ¤Ë¤è¤ê¡¢»ÅÆşÀè¾ğÊó¤ò¼èÆÀ acquire the purchase client info based on whether there is a purchase client ID or not
+//ä»•å…¥å…ˆIDã®æœ‰ç„¡ã«ã‚ˆã‚Šã€ä»•å…¥å…ˆæƒ…å ±ã‚’å–å¾— acquire the purchase client info based on whether there is a purchase client ID or not
 $client_search_flg = ($_POST["hdn_client_id"] != NULL)? true : false;
 
 if($client_search_flg == true){
-    //»ÅÆşÀè¤Î¾ğÊó¤ò¼èÆÀ acquire the purchase client info
-    $client_id  = $_POST["hdn_client_id"];      //»ÅÆşÀèID purchase client id 
-    $coax       = $_POST["hdn_coax"];           //´İ¤á¶èÊ¬ rounding up/down
-    $tax_franct = $_POST["hdn_tax_franct"];     //Ã¼¿ô¶èÊ¬ round up/down
+    //ä»•å…¥å…ˆã®æƒ…å ±ã‚’å–å¾— acquire the purchase client info
+    $client_id  = $_POST["hdn_client_id"];      //ä»•å…¥å…ˆID purchase client id 
+    $coax       = $_POST["hdn_coax"];           //ä¸¸ã‚åŒºåˆ† rounding up/down
+    $tax_franct = $_POST["hdn_tax_franct"];     //ç«¯æ•°åŒºåˆ† round up/down
 }else{
     $client_search_flg = false;
 }
 
-//È¯ÃíID¤¬¤¢¤ì¤Ğ¡¢È¯Ãí¥Õ¥é¥°¤òÎ©¤Æ¤ë if there is a purchase order Id then have a purchase order flag
+//ç™ºæ³¨IDãŒã‚ã‚Œã°ã€ç™ºæ³¨ãƒ•ãƒ©ã‚°ã‚’ç«‹ã¦ã‚‹ if there is a purchase order Id then have a purchase order flag
 $order_flg = ($_POST["hdn_order_id"] != null)? true : false;
 
 if($order_flg == true){
      $order_id = $_POST["hdn_order_id"];
 }
 
-//ºï½ü¹Ô¿ô number of delete rows
+//å‰Šé™¤è¡Œæ•° number of delete rows
 $del_history[] = NULL;
 
-//Submit¤·¤¿¾ì¹ç¤Ë»ı¤Á¤Ş¤ï¤ë¥Ç¡¼¥¿ data that comes along when Submit
+//Submitã—ãŸå ´åˆã«æŒã¡ã¾ã‚ã‚‹ãƒ‡ãƒ¼ã‚¿ data that comes along when Submit
 $goods_id       = $_POST["hdn_goods_id"];
 $stock_manage   = $_POST["hdn_stock_manage"];
 $name_change    = $_POST["hdn_name_change"];
 $order_d_id     = $_POST["hdn_order_d_id"];
 
 /****************************/
-//¹Ôºï½ü½èÍı delete row process
+//è¡Œå‰Šé™¤å‡¦ç† delete row process
 /****************************/
 if($_POST["del_row"] != NULL){
-    $now_form = NULL;    //ºï½ü¥ê¥¹¥È¤ò¼èÆÀ acquire delete list
-    $del_row = $_POST["del_row"];    //ºï½üÍúÎò¤òÇÛÎó¤Ë¤¹¤ë¡£array the delete history
+    $now_form = NULL;    //å‰Šé™¤ãƒªã‚¹ãƒˆã‚’å–å¾— acquire delete list
+    $del_row = $_POST["del_row"];    //å‰Šé™¤å±¥æ­´ã‚’é…åˆ—ã«ã™ã‚‹ã€‚array the delete history
     $del_history = explode(",", $del_row);
 
-    //ºï½ü¤·¤¿¥Ç¡¼¥¿¤Î¾¦ÉÊIDÅù¤ËNULL¤ò¥»¥Ã¥È set the product ID of the data deleted to NULL
+    //å‰Šé™¤ã—ãŸãƒ‡ãƒ¼ã‚¿ã®å•†å“IDç­‰ã«NULLã‚’ã‚»ãƒƒãƒˆ set the product ID of the data deleted to NULL
     for($i = 0; $i < count($del_history); $i++){
         $goods_id[$del_histoty[$i]]     = null;
         $stock_num[$del_history[$i]]    = null;
         $stock_manage[$del_history[$i]] = null;
         $name_change[$del_history[$i]]  = null;
     }
-    //ºï½ü¤·¤¿¹Ô¿ô number of rows deleted
+    //å‰Šé™¤ã—ãŸè¡Œæ•° number of rows deleted
     $del_num     = count($del_history)-1;
 }
 
 /****************************/
-//¹Ô¿ôÄÉ²Ã add number of rows
+//è¡Œæ•°è¿½åŠ  add number of rows
 /****************************/
 if($_POST["add_row_flg"]== 'true'){
-    //ºÇÂç¹Ô¤Ë¡¢¡Ü£µ¤¹¤ë +5 to the max rows
+    //æœ€å¤§è¡Œã«ã€ï¼‹ï¼•ã™ã‚‹ +5 to the max rows
     $max_row = $_POST["max_row"]+5;
 
-    //¹Ô¿ôÄÉ²Ã¥Õ¥é¥°¤ò¥¯¥ê¥¢ clear the number rows added flag
+    //è¡Œæ•°è¿½åŠ ãƒ•ãƒ©ã‚°ã‚’ã‚¯ãƒªã‚¢ clear the number rows added flag
     $add_row_data["add_row_flg"] = "";
     $form->setConstants($add_row_data);
 }
 
 /****************************/
-//³Æ½èÍıÈ½Äê determine each process
+//å„å‡¦ç†åˆ¤å®š determine each process
 /****************************/
-//»ÅÆşÀè¤¬ÆşÎÏ¤µ¤ì¤¿¾ì¹ç¡¢»ÅÆşÀè¸¡º÷¥Õ¥é¥°¤Ëtrue¤ò¥»¥Ã¥È set the purchase search flag to true when purchase client is inputted
-$client_input_flg = ($_POST["hdn_client_search_flg"] == 'true')? true : false;       //»ÅÆşÀèÆşÎÏÈ½Äê¥Õ¥é¥°  decision flag for purchase client input 
+//ä»•å…¥å…ˆãŒå…¥åŠ›ã•ã‚ŒãŸå ´åˆã€ä»•å…¥å…ˆæ¤œç´¢ãƒ•ãƒ©ã‚°ã«trueã‚’ã‚»ãƒƒãƒˆ set the purchase search flag to true when purchase client is inputted
+$client_input_flg = ($_POST["hdn_client_search_flg"] == 'true')? true : false;       //ä»•å…¥å…ˆå…¥åŠ›åˆ¤å®šãƒ•ãƒ©ã‚°  decision flag for purchase client input 
 
-//¾¦ÉÊ¤¬ÁªÂò¤µ¤ì¤¿¾ì¹ç¡¢¾¦ÉÊ¸¡º÷¥Õ¥é¥°¤Ëtrue¤ò¥»¥Ã¥È set the product search flag to true when product is inputted
-$goods_search_flg = ($_POST["hdn_goods_search_flg"] != NULL)? true : false;       //¾¦ÉÊ¸¡º÷¥Õ¥é¥° product search flag
+//å•†å“ãŒé¸æŠã•ã‚ŒãŸå ´åˆã€å•†å“æ¤œç´¢ãƒ•ãƒ©ã‚°ã«trueã‚’ã‚»ãƒƒãƒˆ set the product search flag to true when product is inputted
+$goods_search_flg = ($_POST["hdn_goods_search_flg"] != NULL)? true : false;       //å•†å“æ¤œç´¢ãƒ•ãƒ©ã‚° product search flag
 
-//¹ç·×¥Ü¥¿¥ó¤¬²¡²¼¤µ¤ì¤¿¾ì¹ç when the total button is pressed
-$sum_button_flg = ($_POST["hdn_sum_button_flg"] == 't')? true : false;            //¹ç·×¥Ü¥¿¥ó²¡²¼¥Õ¥é¥° flag for when total button is pressed
+//åˆè¨ˆãƒœã‚¿ãƒ³ãŒæŠ¼ä¸‹ã•ã‚ŒãŸå ´åˆ when the total button is pressed
+$sum_button_flg = ($_POST["hdn_sum_button_flg"] == 't')? true : false;            //åˆè¨ˆãƒœã‚¿ãƒ³æŠ¼ä¸‹ãƒ•ãƒ©ã‚° flag for when total button is pressed
 
-//ÊÑ¹¹¤Î¾ì¹ç¡Êord_id¤¬Get¤ÇÅÏ¤Ã¤Æ¤­¤¿¾ì¹ç¡Ë¡¢ÊÑ¹¹¥Õ¥é¥°¤Ëtrue¤ò¥»¥Ã¥Èif it's and edit (if ord_id was passed with Get) then set the edit flag to true
-$update_data_flg = ($_GET["buy_id"] != NULL)? true : false;                            //È¯ÃíÊÑ¹¹¥Õ¥é¥° purchase order edit flag
+//å¤‰æ›´ã®å ´åˆï¼ˆord_idãŒGetã§æ¸¡ã£ã¦ããŸå ´åˆï¼‰ã€å¤‰æ›´ãƒ•ãƒ©ã‚°ã«trueã‚’ã‚»ãƒƒãƒˆif it's and edit (if ord_id was passed with Get) then set the edit flag to true
+$update_data_flg = ($_GET["buy_id"] != NULL)? true : false;                            //ç™ºæ³¨å¤‰æ›´ãƒ•ãƒ©ã‚° purchase order edit flag
 Get_Id_Check3($_GET["buy_id"]);
 $update_flg = ($_POST["hdn_buy_id"] != null)? true : false;
 $get_buy_id = $_POST["hdn_buy_id"];
 
-//É½¼¨¥Ü¥¿¥ó¤¬²¡²¼¤µ¤ì¤¿¾ì¹ç if the display button is pressed
-$show_button_flg = ($_POST["hdn_show_button_flg"] == "t")? true : false;   //É½¼¨¥Ü¥¿¥ó²¡²¼¥Õ¥é¥° flag for when display button is pressed
+//è¡¨ç¤ºãƒœã‚¿ãƒ³ãŒæŠ¼ä¸‹ã•ã‚ŒãŸå ´åˆ if the display button is pressed
+$show_button_flg = ($_POST["hdn_show_button_flg"] == "t")? true : false;   //è¡¨ç¤ºãƒœã‚¿ãƒ³æŠ¼ä¸‹ãƒ•ãƒ©ã‚° flag for when display button is pressed
 
-//GET¤ÇÈ¯ÃíID¤¬¤¢¤Ã¤¿¾ì¹ç If purchase order ID existed in GET
-$get_ord_id_flg  = ($_GET["ord_id"] != null)? true : false;                     //È¯Ãí»Ä¤«¤é¤ÎÁ«°Ü¥Õ¥é¥° transition flag from outstanding order list
+//GETã§ç™ºæ³¨IDãŒã‚ã£ãŸå ´åˆ If purchase order ID existed in GET
+$get_ord_id_flg  = ($_GET["ord_id"] != null)? true : false;                     //ç™ºæ³¨æ®‹ã‹ã‚‰ã®é·ç§»ãƒ•ãƒ©ã‚° transition flag from outstanding order list
 Get_Id_Check3($_GET["ord_id"]);
 /****************************/
-//¹ç·×½èÍı total process
+//åˆè¨ˆå‡¦ç† total process
 /****************************/
-//¹ç·×¥Ü¥¿¥ó²¡²¼¥Õ¥é¥°¤¬true¤Î¾ì¹ç if the total button pressed flag is true
+//åˆè¨ˆãƒœã‚¿ãƒ³æŠ¼ä¸‹ãƒ•ãƒ©ã‚°ãŒtrueã®å ´åˆ if the total button pressed flag is true
 if($sum_button_flg == true){
 
-    $buy_data   = $_POST["form_buy_amount"];   //»ÅÆş¶â³Û purchase amount 
-    $price_data = NULL;                        //¾¦ÉÊ¤Î»ÅÆş¶â³Û purchase amount of a product
-    $tax_div    = NULL;                        //²İÀÇ¶èÊ¬ tax classification
+    $buy_data   = $_POST["form_buy_amount"];   //ä»•å…¥é‡‘é¡ purchase amount 
+    $price_data = NULL;                        //å•†å“ã®ä»•å…¥é‡‘é¡ purchase amount of a product
+    $tax_div    = NULL;                        //èª²ç¨åŒºåˆ† tax classification
 
-    //»ÅÆş¶â³Û¤Î¹ç·×ÃÍ·×»» total amount calculation of purchase amount 
+    //ä»•å…¥é‡‘é¡ã®åˆè¨ˆå€¤è¨ˆç®— total amount calculation of purchase amount 
     for($i=0;$i<$max_row;$i++){
         if($buy_data[$i] != "" && !in_array("$i", $del_history)){
             $price_data[] = $buy_data[$i];
@@ -261,23 +261,23 @@ if($sum_button_flg == true){
 
     $data = Total_Amount($price_data, $tax_div, $coax, $tax_franct, $tax_rate, $client_id, $db_con);
 
-    //½é´üÉ½¼¨°ÌÃÖÊÑ¹¹ change the initial display position
+    //åˆæœŸè¡¨ç¤ºä½ç½®å¤‰æ›´ change the initial display position
     $height = $max_row * 30;
     $form_potision = "<body bgcolor=\"#D8D0C8\" onLoad=\"form_potision($height);\">";
 
-    //¥Õ¥©¡¼¥à¤ËÃÍ¥»¥Ã¥È set the value to the form
+    //ãƒ•ã‚©ãƒ¼ãƒ ã«å€¤ã‚»ãƒƒãƒˆ set the value to the form
     $set_data["form_buy_money"]     = number_format($data[0]);
     $set_data["form_tax_money"]     = number_format($data[1]);
     $set_data["form_total_money"]   = number_format($data[2]);
     $set_data["hdn_sum_button_flg"] = "";   
 
 /****************************/
-//»ÅÆşÊÑ¹¹½èÍı purchase edit process 
+//ä»•å…¥å¤‰æ›´å‡¦ç† purchase edit process 
 /****************************/
 }elseif($update_data_flg == true && $_POST[hdn_ware_select_flg] != 't' && $goods_search_flg == false){
     $get_buy_id = $_GET["buy_id"];
 
-    //»ÅÆş¥Ø¥Ã¥Àpurchase header
+    //ä»•å…¥ãƒ˜ãƒƒãƒ€purchase header
     $sql  = "SELECT\n";
     $sql .= "   t_buy_h.buy_id,\n";
     $sql .= "   t_buy_h.buy_no,\n";
@@ -329,56 +329,56 @@ if($sum_button_flg == true){
 
     $order_id = $buy_h_data["ord_id"];
 
-    //È¯ÃíÆü»ş¤òÊ¬³ä divide the purchase order date and time
+    //ç™ºæ³¨æ—¥æ™‚ã‚’åˆ†å‰² divide the purchase order date and time
     $order_date = explode("-",$buy_h_data["ord_time"]);
 
-    //Æş²ÙÍ½ÄêÆü¤òÊ¬³ä divide the planned delivery date
+    //å…¥è·äºˆå®šæ—¥ã‚’åˆ†å‰² divide the planned delivery date
     $arrival_hope_date = explode("-",$buy_h_data["arrival_hope_day"]);
 
-    //»ÅÆşÆü¤òÊ¬³ä divide the purchase date
+    //ä»•å…¥æ—¥ã‚’åˆ†å‰² divide the purchase date
     $buy_date   = explode("-",$buy_h_data["buy_day"]);
 
-    //Æş²ÙÆü¤òÊ¬³ä divide the arrival date
+    //å…¥è·æ—¥ã‚’åˆ†å‰² divide the arrival date
     $arrival_date   = explode("-", $buy_h_data["arrival_day"]);
 
-    $set_data["hdn_buy_id"]                     = $buy_h_data["buy_id"];        //»ÅÆşID purchase ID 
-    $set_data["form_buy_no"]                    = $buy_h_data["buy_no"];        //»ÅÆşÈÖ¹æ purchase number 
-    $set_data["hdn_order_id"]                   = $buy_h_data["ord_id"];        //È¯ÃíID purchase order ID
-    $set_data["form_order_no"]                  = $buy_h_data["ord_no"];        //È¯ÃíÈÖ¹æ purchase order number
-    $set_data["form_order_day"]["y"]            = $order_date[0];               //È¯ÃíÆü¡ÊÇ¯¡Ëpurchase order year
-    $set_data["form_order_day"]["m"]            = $order_date[1];               //È¯ÃíÆü¡Ê·î¡Ëpurchase order month
-    $set_data["form_order_day"]["d"]            = $order_date[2];               //È¯ÃíÆü¡ÊÆü¡Ëpurchase order day
-    $set_data["form_arrival_hope_day"]["y"]     = $arrival_hope_date[0];        //Æş²ÙÍ½ÄêÆü¡ÊÇ¯¡Ë planned delivery date year
-    $set_data["form_arrival_hope_day"]["m"]     = $arrival_hope_date[1];        //Æş²ÙÍ½ÄêÆü¡Ê·î¡Ë planned delivery date month
-    $set_data["form_arrival_hope_day"]["d"]     = $arrival_hope_date[2];        //Æş²ÙÍ½ÄêÆü¡ÊÆü¡Ë planned delivery date day
-    $set_data["hdn_client_id"]                  = $buy_h_data["client_id"];     //»ÅÆşÀèID purchase client ID
-    $set_data["form_client"]["cd1"]             = $buy_h_data["client_cd1"];   //»ÅÆşÀèCD purchase client CD 
-    $set_data["form_client"]["cd2"]             = $buy_h_data["client_cd2"];   //»ÅÆşÀèCD purchase client CD
-    $set_data["form_client"]["name"]            = $buy_h_data["client_cname"];  //»ÅÆşÀèÌ¾ purchase client name
-    $set_data["hdn_coax"]                       = $buy_h_data["coax"];          //´İ¤á¶èÊ¬ round up/down
-    $set_data["hdn_tax_franct"]                 = $buy_h_data["tax_franct"];    //Ã¼¿ô¶èÊ¬ round up/down
-    $set_data["form_direct"]                    = $buy_h_data["direct_id"];     //Ä¾Á÷Àè direct destination
-    $set_data["form_ware"]                      = $buy_h_data["ware_id"];       //ÁÒ¸Ë warehouse
-    $set_data["form_trade"]                     = $buy_h_data["trade_id"];      //¼è°ú¶èÊ¬ trade classification
-    $set_data["form_buy_staff"]                 = $buy_h_data["c_staff_id"];    //»ÅÆşÃ´Åö¼Ô purchase assigned staff
-    $set_data["form_note"]                      = $buy_h_data["note"];          //È÷¹Í remarks
-    $set_data["form_arrival_day"]["y"]          = $arrival_date[0];             //Æş²ÙÍ½ÄêÆü¡ÊÇ¯¡Ë planned delivery date year
-    $set_data["form_arrival_day"]["m"]          = $arrival_date[1];             //Æş²ÙÍ½ÄêÆü¡Ê·î¡Ëplanned delivery date month
-    $set_data["form_arrival_day"]["d"]          = $arrival_date[2];             //Æş²ÙÍ½ÄêÆü¡ÊÆü¡Ëplanned delivery date day
-    $set_data["form_buy_day"]["y"]              = $buy_date[0];                 //Æş²ÙÍ½ÄêÆü¡ÊÇ¯¡Ëplanned delivery date year
-    $set_data["form_buy_day"]["m"]              = $buy_date[1];                 //Æş²ÙÍ½ÄêÆü¡Ê·î¡Ëplanned delivery date month
-    $set_data["form_buy_day"]["d"]              = $buy_date[2];                 //Æş²ÙÍ½ÄêÆü¡ÊÆü¡Ëplanned delivery date day
-    $set_data["form_order_staff"]               = $buy_h_data["oc_staff_id"];   //È¯ÃíÃ´Åö¼Ô purchase order assigned staff
-    $set_data["hdn_ord_enter_day"]              = $buy_h_data["ord_enter_day"]; //È¯ÃíÆşÎÏÆü purchase order input date
-    $set_data["hdn_buy_enter_day"]              = $buy_h_data["buy_enter_day"]; //»ÅÆşÆşÎÏÆü purchase input date
-    $set_data["hdn_ord_change_day"]             = $buy_h_data["change_day"];    //È¯ÃíÊÑ¹¹Æü»ş purchase order edit date
+    $set_data["hdn_buy_id"]                     = $buy_h_data["buy_id"];        //ä»•å…¥ID purchase ID 
+    $set_data["form_buy_no"]                    = $buy_h_data["buy_no"];        //ä»•å…¥ç•ªå· purchase number 
+    $set_data["hdn_order_id"]                   = $buy_h_data["ord_id"];        //ç™ºæ³¨ID purchase order ID
+    $set_data["form_order_no"]                  = $buy_h_data["ord_no"];        //ç™ºæ³¨ç•ªå· purchase order number
+    $set_data["form_order_day"]["y"]            = $order_date[0];               //ç™ºæ³¨æ—¥ï¼ˆå¹´ï¼‰purchase order year
+    $set_data["form_order_day"]["m"]            = $order_date[1];               //ç™ºæ³¨æ—¥ï¼ˆæœˆï¼‰purchase order month
+    $set_data["form_order_day"]["d"]            = $order_date[2];               //ç™ºæ³¨æ—¥ï¼ˆæ—¥ï¼‰purchase order day
+    $set_data["form_arrival_hope_day"]["y"]     = $arrival_hope_date[0];        //å…¥è·äºˆå®šæ—¥ï¼ˆå¹´ï¼‰ planned delivery date year
+    $set_data["form_arrival_hope_day"]["m"]     = $arrival_hope_date[1];        //å…¥è·äºˆå®šæ—¥ï¼ˆæœˆï¼‰ planned delivery date month
+    $set_data["form_arrival_hope_day"]["d"]     = $arrival_hope_date[2];        //å…¥è·äºˆå®šæ—¥ï¼ˆæ—¥ï¼‰ planned delivery date day
+    $set_data["hdn_client_id"]                  = $buy_h_data["client_id"];     //ä»•å…¥å…ˆID purchase client ID
+    $set_data["form_client"]["cd1"]             = $buy_h_data["client_cd1"];   //ä»•å…¥å…ˆCD purchase client CD 
+    $set_data["form_client"]["cd2"]             = $buy_h_data["client_cd2"];   //ä»•å…¥å…ˆCD purchase client CD
+    $set_data["form_client"]["name"]            = $buy_h_data["client_cname"];  //ä»•å…¥å…ˆå purchase client name
+    $set_data["hdn_coax"]                       = $buy_h_data["coax"];          //ä¸¸ã‚åŒºåˆ† round up/down
+    $set_data["hdn_tax_franct"]                 = $buy_h_data["tax_franct"];    //ç«¯æ•°åŒºåˆ† round up/down
+    $set_data["form_direct"]                    = $buy_h_data["direct_id"];     //ç›´é€å…ˆ direct destination
+    $set_data["form_ware"]                      = $buy_h_data["ware_id"];       //å€‰åº« warehouse
+    $set_data["form_trade"]                     = $buy_h_data["trade_id"];      //å–å¼•åŒºåˆ† trade classification
+    $set_data["form_buy_staff"]                 = $buy_h_data["c_staff_id"];    //ä»•å…¥æ‹…å½“è€… purchase assigned staff
+    $set_data["form_note"]                      = $buy_h_data["note"];          //å‚™è€ƒ remarks
+    $set_data["form_arrival_day"]["y"]          = $arrival_date[0];             //å…¥è·äºˆå®šæ—¥ï¼ˆå¹´ï¼‰ planned delivery date year
+    $set_data["form_arrival_day"]["m"]          = $arrival_date[1];             //å…¥è·äºˆå®šæ—¥ï¼ˆæœˆï¼‰planned delivery date month
+    $set_data["form_arrival_day"]["d"]          = $arrival_date[2];             //å…¥è·äºˆå®šæ—¥ï¼ˆæ—¥ï¼‰planned delivery date day
+    $set_data["form_buy_day"]["y"]              = $buy_date[0];                 //å…¥è·äºˆå®šæ—¥ï¼ˆå¹´ï¼‰planned delivery date year
+    $set_data["form_buy_day"]["m"]              = $buy_date[1];                 //å…¥è·äºˆå®šæ—¥ï¼ˆæœˆï¼‰planned delivery date month
+    $set_data["form_buy_day"]["d"]              = $buy_date[2];                 //å…¥è·äºˆå®šæ—¥ï¼ˆæ—¥ï¼‰planned delivery date day
+    $set_data["form_order_staff"]               = $buy_h_data["oc_staff_id"];   //ç™ºæ³¨æ‹…å½“è€… purchase order assigned staff
+    $set_data["hdn_ord_enter_day"]              = $buy_h_data["ord_enter_day"]; //ç™ºæ³¨å…¥åŠ›æ—¥ purchase order input date
+    $set_data["hdn_buy_enter_day"]              = $buy_h_data["buy_enter_day"]; //ä»•å…¥å…¥åŠ›æ—¥ purchase input date
+    $set_data["hdn_ord_change_day"]             = $buy_h_data["change_day"];    //ç™ºæ³¨å¤‰æ›´æ—¥æ™‚ purchase order edit date
 
-    //°Ê¹ß¤Î½èÍı¤Ç»ı¤Á¤Ş¤ï¤ëÆÀ°ÕÀèID customer ID that will be used in the next process
+    //ä»¥é™ã®å‡¦ç†ã§æŒã¡ã¾ã‚ã‚‹å¾—æ„å…ˆID customer ID that will be used in the next process
     $client_id  = $buy_h_data["client_id"];
     $tax_franct = $buy_h_data["tax_franct"];
     $coax       = $buy_h_data["coax"];
 
-    //»ÅÆş¥Ç¡¼¥¿ purchase data
+    //ä»•å…¥ãƒ‡ãƒ¼ã‚¿ purchase data
     $sql  = "SELECT\n";
     $sql .= "   t_buy_d.ord_d_id,\n";
     $sql .= "   t_goods.goods_id,\n";
@@ -446,7 +446,7 @@ if($sum_button_flg == true){
     $result = Db_Query($db_con, $sql);
     $num = pg_num_rows($result);
 
-    //°Ê¹ß¤Î½èÍı¤Ç»ı¤Á¤Ş¤ï¤ë¥Ç¡¼¥¿ data that will be used in the next processes
+    //ä»¥é™ã®å‡¦ç†ã§æŒã¡ã¾ã‚ã‚‹ãƒ‡ãƒ¼ã‚¿ data that will be used in the next processes
     $goods_id = null;
     $stock_manage = null;
     $name_change = null;
@@ -458,33 +458,33 @@ if($sum_button_flg == true){
         $buy_amount[]   = $buy_d_data[9];
         $tax_div[]      = $buy_d_data[4];
 
-        $set_data["hdn_order_d_id"][$i]         = $buy_d_data["ord_d_id"];                                          //È¯Ãí¥Ç¡¼¥¿ID purchase order data ID
-        $set_data["hdn_goods_id"][$i]           = $buy_d_data["goods_id"];                                          //¾¦ÉÊID Product ID
-        $set_data["form_goods_cd"][$i]          = $buy_d_data["goods_cd"];                                          //¾¦ÉÊCD product CD
-        $set_data["form_goods_name"][$i]        = $buy_d_data["goods_name"];                                        //¾¦ÉÊÌ¾ product name
-        $set_data["hdn_tax_div"][$i]            = $buy_d_data["tax_div"];                                           //²İÀÇ¶èÊ¬¡ÊhiddenÍÑ¡Ë tax classification (for hidden)
-        $set_data["form_stock_num"][$i]         = $buy_d_data["stock_num"];                                         //ºß¸Ë¿ô num of inventories
-        $set_data["form_order_num"][$i]         = ($buy_h_data["ord_no"] != null)? $buy_d_data["order_num"] : '-';  //È¯Ãí¿ô number of units ordered
-        $set_data["form_buy_num"][$i]           = $buy_d_data["buy_num"];                                           //»ÅÆş¿ô number of purchases
-        $set_data["form_buy_price"][$i]["i"]    = $price_data[0];                                                   //»ÅÆşÃ±²Á¡ÊÀ°¿ôÉô¡Ëpurchase cost per unit of product (integer)
-        $set_data["form_buy_price"][$i]["d"]    = ($price_data[1] != NULL)? $price_data[1] : "00";                  //»ÅÆşÃ±²Á¡Ê¾¯¿ôÉô¡Ëpurchase order per unit of product (decimal)
-        $set_data["form_buy_amount"][$i]        = number_format($buy_d_data[9]);                                    //»ÅÆş¶â³Û¡ÊÀÇÈ´¤­¡Ëpurchase order per unit of product (without tax)
-        $set_data["form_rorder_num"][$i]        = ($buy_h_data["ord_no"] != null)? $buy_d_data["on_order_num"] : '-';//È¯Ãí»Ä outstanding order
-        $set_data["hdn_name_change"][$i]        = $buy_d_data["name_change"];                                       //ÉÊÌ¾ÊÑ¹¹ change product name
-        $set_data["hdn_stock_manage"][$i]       = $buy_d_data["stock_manage"];                                      //ºß¸Ë´ÉÍı manage inventories
-        $set_data["form_in_num"][$i]            = $buy_d_data["in_num"];                                            //Æş¿ô quantity
+        $set_data["hdn_order_d_id"][$i]         = $buy_d_data["ord_d_id"];                                          //ç™ºæ³¨ãƒ‡ãƒ¼ã‚¿ID purchase order data ID
+        $set_data["hdn_goods_id"][$i]           = $buy_d_data["goods_id"];                                          //å•†å“ID Product ID
+        $set_data["form_goods_cd"][$i]          = $buy_d_data["goods_cd"];                                          //å•†å“CD product CD
+        $set_data["form_goods_name"][$i]        = $buy_d_data["goods_name"];                                        //å•†å“å product name
+        $set_data["hdn_tax_div"][$i]            = $buy_d_data["tax_div"];                                           //èª²ç¨åŒºåˆ†ï¼ˆhiddenç”¨ï¼‰ tax classification (for hidden)
+        $set_data["form_stock_num"][$i]         = $buy_d_data["stock_num"];                                         //åœ¨åº«æ•° num of inventories
+        $set_data["form_order_num"][$i]         = ($buy_h_data["ord_no"] != null)? $buy_d_data["order_num"] : '-';  //ç™ºæ³¨æ•° number of units ordered
+        $set_data["form_buy_num"][$i]           = $buy_d_data["buy_num"];                                           //ä»•å…¥æ•° number of purchases
+        $set_data["form_buy_price"][$i]["i"]    = $price_data[0];                                                   //ä»•å…¥å˜ä¾¡ï¼ˆæ•´æ•°éƒ¨ï¼‰purchase cost per unit of product (integer)
+        $set_data["form_buy_price"][$i]["d"]    = ($price_data[1] != NULL)? $price_data[1] : "00";                  //ä»•å…¥å˜ä¾¡ï¼ˆå°‘æ•°éƒ¨ï¼‰purchase order per unit of product (decimal)
+        $set_data["form_buy_amount"][$i]        = number_format($buy_d_data[9]);                                    //ä»•å…¥é‡‘é¡ï¼ˆç¨æŠœãï¼‰purchase order per unit of product (without tax)
+        $set_data["form_rorder_num"][$i]        = ($buy_h_data["ord_no"] != null)? $buy_d_data["on_order_num"] : '-';//ç™ºæ³¨æ®‹ outstanding order
+        $set_data["hdn_name_change"][$i]        = $buy_d_data["name_change"];                                       //å“åå¤‰æ›´ change product name
+        $set_data["hdn_stock_manage"][$i]       = $buy_d_data["stock_manage"];                                      //åœ¨åº«ç®¡ç† manage inventories
+        $set_data["form_in_num"][$i]            = $buy_d_data["in_num"];                                            //å…¥æ•° quantity
         //aoyama-n 2009-09-01
-        $set_data["hdn_discount_flg"][$i]       = $buy_d_data["discount_flg"];                                      //ÃÍ°ú¥Õ¥é¥° discount flag
+        $set_data["hdn_discount_flg"][$i]       = $buy_d_data["discount_flg"];                                      //å€¤å¼•ãƒ•ãƒ©ã‚° discount flag
 
         if($buy_d_data["buy_num"]%$buy_d_data["in_num"] == 0 && $buy_d_data["in_num"]!=null && $buy_d_data["in_num"] !=0){
             $set_buy_data["form_order_in_num"]  = $buy_d_data["buy_num"]/$buy_d_data["in_num"];
         }
 
-    //°Ê¹ß¤Î½èÍı¤Ç»ı¤Á¤Ş¤ï¤ë¥Ç¡¼¥¿ data that will be used in the next processes 
-        $goods_id[$i]                         = $buy_d_data["goods_id"];             //¾¦ÉÊID product Id
-        $stock_manage[$i]                     = $buy_d_data["stock_manage"];         //ºß¸Ë´ÉÍı¡Êºß¸Ë¿ôÉ½¼¨È½Äê¡Ë invenotry management (decision if inventory number will be displayed)
-        $name_change[$i]                      = $buy_d_data["name_change"];          //ÉÊÌ¾ÊÑ¹¹¡ÊÉÊÌ¾ÊÑ¹¹ÉÕ²ÃÈ½Äê¡Ë change product name (decide if namge edit will be added)
-        $order_d_id[$i]                       = $buy_d_data["ord_d_id"];             //È¯Ãí¥Ç¡¼¥¿ID purchase order data ID 
+    //ä»¥é™ã®å‡¦ç†ã§æŒã¡ã¾ã‚ã‚‹ãƒ‡ãƒ¼ã‚¿ data that will be used in the next processes 
+        $goods_id[$i]                         = $buy_d_data["goods_id"];             //å•†å“ID product Id
+        $stock_manage[$i]                     = $buy_d_data["stock_manage"];         //åœ¨åº«ç®¡ç†ï¼ˆåœ¨åº«æ•°è¡¨ç¤ºåˆ¤å®šï¼‰ invenotry management (decision if inventory number will be displayed)
+        $name_change[$i]                      = $buy_d_data["name_change"];          //å“åå¤‰æ›´ï¼ˆå“åå¤‰æ›´ä»˜åŠ åˆ¤å®šï¼‰ change product name (decide if namge edit will be added)
+        $order_d_id[$i]                       = $buy_d_data["ord_d_id"];             //ç™ºæ³¨ãƒ‡ãƒ¼ã‚¿ID purchase order data ID 
     }
 
     #2009-12-21 aoyama-n
@@ -493,12 +493,12 @@ if($sum_button_flg == true){
 
     $data = Total_Amount($buy_amount, $tax_div, $coax, $tax_franct, $tax_rate, $client_id, $db_con);
 
-    //¥Õ¥©¡¼¥à¤ËÃÍ¥»¥Ã¥È set the value to form
+    //ãƒ•ã‚©ãƒ¼ãƒ ã«å€¤ã‚»ãƒƒãƒˆ set the value to form
     $set_data["form_buy_money"]     = number_format($data[0]);
     $set_data["form_tax_money"]     = number_format($data[1]);
     $set_data["form_total_money"]   = number_format($data[2]);
 
-    //Get¤Ç¼èÆÀ¤·¤¿È¯ÃíID¤òhidden¤Ç»ı¤Á¤Ş¤ï¤ë use as hidden the purchase order ID that was acquired with GET 
+    //Getã§å–å¾—ã—ãŸç™ºæ³¨IDã‚’hiddenã§æŒã¡ã¾ã‚ã‚‹ use as hidden the purchase order ID that was acquired with GET 
 //    $set_data["hdn_order_id"] = $get_ord_id;
     if($buy_h_data["ord_id"] != null){
         $order_flg = true;
@@ -510,18 +510,18 @@ if($sum_button_flg == true){
     $update_flg = true;
 
 /****************************/
-//»ÅÆşÀè¥³¡¼¥ÉÆşÎÏ input the purchase client code
+//ä»•å…¥å…ˆã‚³ãƒ¼ãƒ‰å…¥åŠ› input the purchase client code
 /****************************/
 }elseif($client_input_flg == true){
-    $client_cd1 = $_POST["form_client"]["cd1"];         //ÆÀ°ÕÀè¥³¡¼¥É customer code
-    $client_cd2 = $_POST["form_client"]["cd2"];         //ÆÀ°ÕÀè¥³¡¼¥É customer code
+    $client_cd1 = $_POST["form_client"]["cd1"];         //å¾—æ„å…ˆã‚³ãƒ¼ãƒ‰ customer code
+    $client_cd2 = $_POST["form_client"]["cd2"];         //å¾—æ„å…ˆã‚³ãƒ¼ãƒ‰ customer code
 
-    //»ØÄê¤µ¤ì¤¿»ÅÆşÀè¤Î¾ğÊó¤òÃê½Ğ extract the information of the purchase client assigned
+    //æŒ‡å®šã•ã‚ŒãŸä»•å…¥å…ˆã®æƒ…å ±ã‚’æŠ½å‡º extract the information of the purchase client assigned
     $sql  = "SELECT";
-    $sql .= "   client_id,";                            //»ÅÆşÀèID purchase client ID
-    $sql .= "   client_cname,";                         //»ÅÆşÀèÌ¾ purchase client name
-    $sql .= "   coax,";                                 //´İ¤á¶èÊ¬ round up/off
-    $sql .= "   tax_franct,";                            //Ã¼¿ô¶èÊ¬ round up/off
+    $sql .= "   client_id,";                            //ä»•å…¥å…ˆID purchase client ID
+    $sql .= "   client_cname,";                         //ä»•å…¥å…ˆå purchase client name
+    $sql .= "   coax,";                                 //ä¸¸ã‚åŒºåˆ† round up/off
+    $sql .= "   tax_franct,";                            //ç«¯æ•°åŒºåˆ† round up/off
     $sql .= "   buy_trade_id ";
     $sql .= " FROM";
     $sql .= "   t_client";
@@ -539,50 +539,50 @@ if($sum_button_flg == true){
     $get_client_data_count = pg_num_rows($result);
     $get_client_data       = pg_fetch_array($result);
 
-    //³ºÅö¤¹¤ë»ÅÆşÀè¤¬¤¢¤Ã¤¿¾ì¹ç¤Î¤ß½èÍı³«»Ï start process only on purchase client that matched
+    //è©²å½“ã™ã‚‹ä»•å…¥å…ˆãŒã‚ã£ãŸå ´åˆã®ã¿å‡¦ç†é–‹å§‹ start process only on purchase client that matched
     if($get_client_data_count > 0){
-        //°Ê¹ß¤Î½èÍı¤Ç»ı¤Á¤Ş¤ï¤ëÆÀ°ÕÀèID customer Id that will be used in the next processes
+        //ä»¥é™ã®å‡¦ç†ã§æŒã¡ã¾ã‚ã‚‹å¾—æ„å…ˆID customer Id that will be used in the next processes
         $client_id  = $get_client_data["client_id"];
         $tax_franct = $get_client_data["tax_franct"];
         $coax       = $get_client_data["coax"];
 
-        //Ãê½Ğ¤·¤¿»ÅÆşÀè¤Î¾ğÊó¤ò¥»¥Ã¥È set the purchase client infor that was extracted
+        //æŠ½å‡ºã—ãŸä»•å…¥å…ˆã®æƒ…å ±ã‚’ã‚»ãƒƒãƒˆ set the purchase client infor that was extracted
         $set_data = NULL;
-        $set_data["hdn_client_id"]                  = $get_client_data["client_id"];        //»ÅÆşÀèID purchase client ID
-        $set_data["form_client"]["name"]            = $get_client_data["client_cname"];     //»ÅÆşÀèÌ¾ purchase client name
-        $set_data["hdn_tax_franct"]                 = $get_client_data["tax_franct"];       //´İ¤á¶èÊ¬ round up/down
-        $set_data["hdn_coax"]                       = $get_client_data["coax"];             //Ã¼¿ô¶èÊ¬ round up/down
-        $set_data["form_trade"]                     = $get_client_data["buy_trade_id"];     //¼è°ú¶èÊ¬ trade classification
+        $set_data["hdn_client_id"]                  = $get_client_data["client_id"];        //ä»•å…¥å…ˆID purchase client ID
+        $set_data["form_client"]["name"]            = $get_client_data["client_cname"];     //ä»•å…¥å…ˆå purchase client name
+        $set_data["hdn_tax_franct"]                 = $get_client_data["tax_franct"];       //ä¸¸ã‚åŒºåˆ† round up/down
+        $set_data["hdn_coax"]                       = $get_client_data["coax"];             //ç«¯æ•°åŒºåˆ† round up/down
+        $set_data["form_trade"]                     = $get_client_data["buy_trade_id"];     //å–å¼•åŒºåˆ† trade classification
 
-        //³ºÅö¤¹¤ë»ÅÆşÀè¤¬¤¢¤ë¤Î¤Ç¡¢»ÅÆşÀè¸¡º÷¥Õ¥é¥°¤òÎ©¤Æ¤ë have a purchase client search flag because there is a purchase client matched
-        //·Ù¹ğ¥á¥Ã¥»¡¼¥¸¤ò½é´ü²½ initialize the warning message
+        //è©²å½“ã™ã‚‹ä»•å…¥å…ˆãŒã‚ã‚‹ã®ã§ã€ä»•å…¥å…ˆæ¤œç´¢ãƒ•ãƒ©ã‚°ã‚’ç«‹ã¦ã‚‹ have a purchase client search flag because there is a purchase client matched
+        //è­¦å‘Šãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ã‚’åˆæœŸåŒ– initialize the warning message
         $client_search_flg = true;
 
-    //³ºÅö¤¹¤ë¥Ç¡¼¥¿¤¬¤Ê¤«¤Ã¤¿¾ì¹ç¤Ï¡¢´û¤ËÆşÎÏºÑ¤ß¤Î¾¦ÉÊ¥Ç¡¼¥¿¤òÁ´¤Æ½é´ü²½ if there is no data that matched then initialize all product data that was already inputted
+    //è©²å½“ã™ã‚‹ãƒ‡ãƒ¼ã‚¿ãŒãªã‹ã£ãŸå ´åˆã¯ã€æ—¢ã«å…¥åŠ›æ¸ˆã¿ã®å•†å“ãƒ‡ãƒ¼ã‚¿ã‚’å…¨ã¦åˆæœŸåŒ– if there is no data that matched then initialize all product data that was already inputted
     }else{
-        $set_data = NULL;       //¥»¥Ã¥È¤¹¤ë¥Ç¡¼¥¿¤Î½é´ü²½ initialize the data that will be set
-        $set_data["hdn_client_id"]                  = "";       //»ÅÆşÀèID purchase client ID
-        $set_data["form_client"]["name"]            = "";       //»ÅÆşÀèÌ¾ purchase client name
+        $set_data = NULL;       //ã‚»ãƒƒãƒˆã™ã‚‹ãƒ‡ãƒ¼ã‚¿ã®åˆæœŸåŒ– initialize the data that will be set
+        $set_data["hdn_client_id"]                  = "";       //ä»•å…¥å…ˆID purchase client ID
+        $set_data["form_client"]["name"]            = "";       //ä»•å…¥å…ˆå purchase client name
 
         for($i = 0; $i < $max_row; $i++){
-            $set_data["hdn_goods_id"][$i]           = "";       //¾¦ÉÊID product Id
-            $set_data["form_goods_cd"][$i]          = "";       //¾¦ÉÊCD product Cd
-            $set_data["form_goods_name"][$i]        = "";       //¾¦ÉÊÌ¾ product name
-            $set_data["hdn_stock_manage"][$i]       = "";       //ºß¸Ë´ÉÍı inventory management
-            $set_data["hdn_name_change"][$i]        = "";       //ÉÊÌ¾ÊÑ¹¹ change product name
-            $set_data["form_stock_num"][$i]         = "";       //¸½ºß¸Ä¿ô current unit of number
-            $set_data["form_rstock_num"][$i]        = "";       //È¯ÃíºÑ¿ô already purchase ordered
-            $set_data["form_rorder_num"][$i]        = "";       //½Ğ²Ù²ÄÇ½¿ô possible number of units to be delivered
-            $set_data["form_designated_num"][$i]    = "";       //°úÅö¿ô reserved number of units
-            $set_data["form_buy_price"][$i]["i"]    = "";       //»ÅÆşÃ±²Á¡ÊÀ°¿ôÉô¡Ë purchase cost per unit (integer)
-            $set_data["form_buy_price"][$i]["d"]    = "";       //»ÅÆşÃ±²Á¡Ê¾¯¿ôÉô¡Ëpurchase cost per unit (decimal)
-            $set_data["hdn_tax_div"][$i]            = "";       //²İÀÇ¶èÊ¬ tax classification
-            $set_data["form_in_num"][$i]            = "";       //Æş¿ô quantity
-            $set_data["form_order_in_num"][$i]      = "";       //Æş¿ô quantity
-            $set_data["form_buy_amount"][$i]        = "";       //È¯Ãí¶â³Û purchase order amount
-            $set_data["form_buy_num"][$i]           = "";       //È¯Ãí¶â³Û purchase order amount
+            $set_data["hdn_goods_id"][$i]           = "";       //å•†å“ID product Id
+            $set_data["form_goods_cd"][$i]          = "";       //å•†å“CD product Cd
+            $set_data["form_goods_name"][$i]        = "";       //å•†å“å product name
+            $set_data["hdn_stock_manage"][$i]       = "";       //åœ¨åº«ç®¡ç† inventory management
+            $set_data["hdn_name_change"][$i]        = "";       //å“åå¤‰æ›´ change product name
+            $set_data["form_stock_num"][$i]         = "";       //ç¾åœ¨å€‹æ•° current unit of number
+            $set_data["form_rstock_num"][$i]        = "";       //ç™ºæ³¨æ¸ˆæ•° already purchase ordered
+            $set_data["form_rorder_num"][$i]        = "";       //å‡ºè·å¯èƒ½æ•° possible number of units to be delivered
+            $set_data["form_designated_num"][$i]    = "";       //å¼•å½“æ•° reserved number of units
+            $set_data["form_buy_price"][$i]["i"]    = "";       //ä»•å…¥å˜ä¾¡ï¼ˆæ•´æ•°éƒ¨ï¼‰ purchase cost per unit (integer)
+            $set_data["form_buy_price"][$i]["d"]    = "";       //ä»•å…¥å˜ä¾¡ï¼ˆå°‘æ•°éƒ¨ï¼‰purchase cost per unit (decimal)
+            $set_data["hdn_tax_div"][$i]            = "";       //èª²ç¨åŒºåˆ† tax classification
+            $set_data["form_in_num"][$i]            = "";       //å…¥æ•° quantity
+            $set_data["form_order_in_num"][$i]      = "";       //å…¥æ•° quantity
+            $set_data["form_buy_amount"][$i]        = "";       //ç™ºæ³¨é‡‘é¡ purchase order amount
+            $set_data["form_buy_num"][$i]           = "";       //ç™ºæ³¨é‡‘é¡ purchase order amount
             //aoyama-n 2009-09-01
-            $set_data["hdn_discount_flg"][$i]       = "";       //ÃÍ°ú¥Õ¥é¥° discount flag
+            $set_data["hdn_discount_flg"][$i]       = "";       //å€¤å¼•ãƒ•ãƒ©ã‚° discount flag
 
             $goods_id     = null;
             $stock_manage = null;
@@ -590,22 +590,22 @@ if($sum_button_flg == true){
             $client_id    = null;
         }
 
-        //³ºÅö¤¹¤ë»ÅÆşÀè¤¬¤Ê¤¤¤Î¤Ç¡¢»ÅÆşÀè¸¡º÷¥Õ¥é¥°¤Ë¤Ïfalse¤ò¥»¥Ã¥È set the purchase client search flag to false because there is no purchase client matched
+        //è©²å½“ã™ã‚‹ä»•å…¥å…ˆãŒãªã„ã®ã§ã€ä»•å…¥å…ˆæ¤œç´¢ãƒ•ãƒ©ã‚°ã«ã¯falseã‚’ã‚»ãƒƒãƒˆ set the purchase client search flag to false because there is no purchase client matched
         $client_search_flg = false;
     }
 
-    //»ÅÆşÀè¸¡º÷¥Õ¥é¥°¤ò½é´ü²½ initialize the purchase client search flag
+    //ä»•å…¥å…ˆæ¤œç´¢ãƒ•ãƒ©ã‚°ã‚’åˆæœŸåŒ– initialize the purchase client search flag
     $set_data["hdn_client_search_flg"]              = "";
 
 /****************************/
-//»ÅÆşÁÒ¸ËÆşÎÏ input purchae warehouse
+//ä»•å…¥å€‰åº«å…¥åŠ› input purchae warehouse
 /****************************/
 //}elseif($ware_select_flg == true){
 }elseif($_POST[hdn_ware_select_flg] == true){
     $ware_id = $_POST["form_ware"];
 
     if($ware_id != NULL){
-        //¾¦ÉÊ¤¬£±¤Ä°Ê¾åÁªÂò¤µ¤ì¤Æ¤¤¤ì¤Ğ½èÍı³«»Ï start the process if there is even one product selected
+        //å•†å“ãŒï¼‘ã¤ä»¥ä¸Šé¸æŠã•ã‚Œã¦ã„ã‚Œã°å‡¦ç†é–‹å§‹ start the process if there is even one product selected
         for($i = 0; $i < $max_row; $i++){
             $goods_id = $_POST["hdn_goods_id"][$i];
 
@@ -629,7 +629,7 @@ if($sum_button_flg == true){
                     $stock_data = pg_fetch_result($result,0,0);
                 }
 
-                $set_data["form_stock_num"][$i] = ($stock_data != NULL)? $stock_data : 0;     //¸½ºß¸Ä¿ô curent stock number
+                $set_data["form_stock_num"][$i] = ($stock_data != NULL)? $stock_data : 0;     //ç¾åœ¨å€‹æ•° curent stock number
             }
         }
         $ware_search_flg = true;
@@ -640,11 +640,11 @@ if($sum_button_flg == true){
     $set_data["hdn_ware_select_flg"]    = "";
 
 /****************************/
-//È¯ÃíID¤¬¤¢¤ë¾ì¹ç if there is a purchase order ID
+//ç™ºæ³¨IDãŒã‚ã‚‹å ´åˆ if there is a purchase order ID
 /****************************/
-//É½¼¨¥Ü¥¿¥ó¸¡º÷¥Õ¥é¥°¤¬true display button search flag is true
+//è¡¨ç¤ºãƒœã‚¿ãƒ³æ¤œç´¢ãƒ•ãƒ©ã‚°ãŒtrue display button search flag is true
 }elseif($show_button_flg == true || $get_ord_id_flg == true){
-    //É½¼¨¥Ü¥¿¥ó²¡²¼»ş when display button is pressed 
+    //è¡¨ç¤ºãƒœã‚¿ãƒ³æŠ¼ä¸‹æ™‚ when display button is pressed 
     if($show_button_flg == true){
        $get_order_id = $_POST["form_order_no"];
     }elseif($get_ord_id_flg == true){
@@ -696,65 +696,65 @@ if($sum_button_flg == true){
         $get_ord_h_data = pg_fetch_array($result, $sql);
         $get_ord_h_num  = pg_num_rows($result);
 
-        //Ãê½Ğ¤·¤¿¥Ç¡¼¥¿¤òÉ½¼¨¤¹¤ë·Á¼°¤ËÊÑ¹¹
+        //æŠ½å‡ºã—ãŸãƒ‡ãƒ¼ã‚¿ã‚’è¡¨ç¤ºã™ã‚‹å½¢å¼ã«å¤‰æ›´
         $order_date     = explode("-", $get_ord_h_data["ord_time"]);
         $arrival_date   = explode("-", $get_ord_h_data["arrival_day"]);
 
-        //Ãê½Ğ¤·¤¿»ÅÆşÀè¤Î¾ğÊó¤ò¥»¥Ã¥È set the purchase client infor that was extracted
+        //æŠ½å‡ºã—ãŸä»•å…¥å…ˆã®æƒ…å ±ã‚’ã‚»ãƒƒãƒˆ set the purchase client infor that was extracted
         $set_data = NULL;
-        $set_data["hdn_client_id"]              = $get_ord_h_data["client_id"];     //»ÅÆşÀèID purchase client ID
-        $set_data["form_client"]["cd1"]          = $get_ord_h_data["client_cd1"];    //»ÅÆşÀèCD purchase client CD
-        $set_data["form_client"]["cd2"]          = $get_ord_h_data["client_cd2"];    //»ÅÆşÀèCD purchase client CD
-        $set_data["form_client"]["name"]        = $get_ord_h_data["client_cname"];  //»ÅÆşÀèÌ¾ purchase client name
-        $set_data["hdn_tax_franct"]             = $get_ord_h_data["tax_franct"];    //´İ¤á¶èÊ¬ round up/down
-        $set_data["hdn_coax"]                   = $get_ord_h_data["coax"];          //Ã¼¿ô¶èÊ¬round up/down
+        $set_data["hdn_client_id"]              = $get_ord_h_data["client_id"];     //ä»•å…¥å…ˆID purchase client ID
+        $set_data["form_client"]["cd1"]          = $get_ord_h_data["client_cd1"];    //ä»•å…¥å…ˆCD purchase client CD
+        $set_data["form_client"]["cd2"]          = $get_ord_h_data["client_cd2"];    //ä»•å…¥å…ˆCD purchase client CD
+        $set_data["form_client"]["name"]        = $get_ord_h_data["client_cname"];  //ä»•å…¥å…ˆå purchase client name
+        $set_data["hdn_tax_franct"]             = $get_ord_h_data["tax_franct"];    //ä¸¸ã‚åŒºåˆ† round up/down
+        $set_data["hdn_coax"]                   = $get_ord_h_data["coax"];          //ç«¯æ•°åŒºåˆ†round up/down
 
-        //¥Ç¡¼¥¿¤ò¥Õ¥©¡¼¥à¤Ë¥»¥Ã¥È set the data to form
-        $set_data["hdn_order_id"]               = $get_ord_h_data["ord_id"];        //È¯ÃíID¡ÊhiddenÍÑ¡Ë purchase order ID (for hidden)
-        $set_data["form_order_no"]              = $get_ord_h_data["ord_id"];        //È¯ÃíID purchase order ID
-        $set_data["form_order_day"]["y"]        = $order_date[0];                   //È¯ÃíÆü purchase order date 
+        //ãƒ‡ãƒ¼ã‚¿ã‚’ãƒ•ã‚©ãƒ¼ãƒ ã«ã‚»ãƒƒãƒˆ set the data to form
+        $set_data["hdn_order_id"]               = $get_ord_h_data["ord_id"];        //ç™ºæ³¨IDï¼ˆhiddenç”¨ï¼‰ purchase order ID (for hidden)
+        $set_data["form_order_no"]              = $get_ord_h_data["ord_id"];        //ç™ºæ³¨ID purchase order ID
+        $set_data["form_order_day"]["y"]        = $order_date[0];                   //ç™ºæ³¨æ—¥ purchase order date 
         $set_data["form_order_day"]["m"]        = $order_date[1];
         $set_data["form_order_day"]["d"]        = $order_date[2];
-        $set_data["form_arrival_hope_day"]["y"] = $arrival_date[0];                 //Æş²ÙÍ½ÄêÆü
+        $set_data["form_arrival_hope_day"]["y"] = $arrival_date[0];                 //å…¥è·äºˆå®šæ—¥ planned delivery date
         $set_data["form_arrival_hope_day"]["m"] = $arrival_date[1];
         $set_data["form_arrival_hope_day"]["d"] = $arrival_date[2];
-        $set_data["form_direct"]                = $get_ord_h_data["direct_id"];     //Ä¾Á÷Àè
-        $set_data["form_ware"]                  = $get_ord_h_data["ware_id"];       //ÁÒ¸ËID
-        $set_data["form_trade"]                 = $get_ord_h_data["trade_id"];      //¼è°ú¶èÊ¬
-        $set_data["form_order_staff"]           = $get_ord_h_data["ord_staff_id"];  //È¯ÃíÃ´Åö¼Ô
-        $set_data["form_buy_staff"]             = $get_ord_h_data["c_staff_id"];    //Ã´Åö¼ÔID
-        $set_data["hdn_ord_enter_day"]          = $get_ord_h_data["enter_day"];     //È¯ÃíÅĞÏ¿Æü
-        $set_data["hdn_ord_change_day"]         = $get_ord_h_data["change_day"];    //È¯ÃíÊÑ¹¹Æü
+        $set_data["form_direct"]                = $get_ord_h_data["direct_id"];     //ç›´é€å…ˆ direct destination
+        $set_data["form_ware"]                  = $get_ord_h_data["ware_id"];       //å€‰åº«ID warehouse ID
+        $set_data["form_trade"]                 = $get_ord_h_data["trade_id"];      //å–å¼•åŒºåˆ† trade classification
+        $set_data["form_order_staff"]           = $get_ord_h_data["ord_staff_id"];  //ç™ºæ³¨æ‹…å½“è€… purchase order assigned staff
+        $set_data["form_buy_staff"]             = $get_ord_h_data["c_staff_id"];    //æ‹…å½“è€…ID assigned staff ID
+        $set_data["hdn_ord_enter_day"]          = $get_ord_h_data["enter_day"];     //ç™ºæ³¨ç™»éŒ²æ—¥ purchase order register date
+        $set_data["hdn_ord_change_day"]         = $get_ord_h_data["change_day"];    //ç™ºæ³¨å¤‰æ›´æ—¥ purchase order edit date
 
-        //°Ê¹ß¤Î½èÍı¤Ç»ı¤Á¤Ş¤ï¤ëÃÍ
-        $client_search_flg = true;                                                  //»ÅÆşÀè¸¡º÷¥Õ¥é¥°
-        $ware_search_flg   = true;                                                  //ÁÒ¸Ë¸¡º÷¥Õ¥é¥°
-        $client_id         = $get_ord_h_data["client_id"];                          //»ÅÆşÀèID
-        $coax              = $get_ord_h_data["coax"];                               //´İ¤á¶èÊ¬
+        //ä»¥é™ã®å‡¦ç†ã§æŒã¡ã¾ã‚ã‚‹å€¤ value that will be used in the next processes
+        $client_search_flg = true;                                                  //ä»•å…¥å…ˆæ¤œç´¢ãƒ•ãƒ©ã‚° purchase client search flag
+        $ware_search_flg   = true;                                                  //å€‰åº«æ¤œç´¢ãƒ•ãƒ©ã‚° warehouse search flag
+        $client_id         = $get_ord_h_data["client_id"];                          //ä»•å…¥å…ˆID purchase client ID
+        $coax              = $get_ord_h_data["coax"];                               //ä¸¸ã‚åŒºåˆ† round up/down
         $tax_franct        = $get_ord_h_data["tax_franct"];
 
-        //È¯Ãí¥Ç¡¼¥¿¤òÃê½Ğ
+        //ç™ºæ³¨ãƒ‡ãƒ¼ã‚¿ã‚’æŠ½å‡º extract purchae order data 
         $sql  = "SELECT\n";
-        $sql .= "   t_order_d.ord_d_id,\n";                                         //È¯Ãí¥Ç¡¼¥¿ID
-        $sql .= "   t_goods.goods_id,\n";                                           //¾¦ÉÊID
-        $sql .= "   t_order_d.goods_cd,\n";                                         //¾¦ÉÊ¥³¡¼¥É
-        $sql .= "   t_order_d.goods_name,\n";                                       //¾¦ÉÊÌ¾
+        $sql .= "   t_order_d.ord_d_id,\n";                                         //ç™ºæ³¨ãƒ‡ãƒ¼ã‚¿ID purchase order data ID
+        $sql .= "   t_goods.goods_id,\n";                                           //å•†å“ID product Id
+        $sql .= "   t_order_d.goods_cd,\n";                                         //å•†å“ã‚³ãƒ¼ãƒ‰ product code
+        $sql .= "   t_order_d.goods_name,\n";                                       //å•†å“å product name
         #2009-10-13 hashimoto-y
-        #$sql .= "   CASE t_goods.stock_manage\n";                                   //ºß¸Ë´ÉÍı
-        $sql .= "   CASE t_goods_info.stock_manage\n";                                   //ºß¸Ë´ÉÍı
+        #$sql .= "   CASE t_goods.stock_manage\n";                                   //åœ¨åº«ç®¡ç† inventory management
+        $sql .= "   CASE t_goods_info.stock_manage\n";                                   //åœ¨åº«ç®¡ç† inventory management
 
         $sql .= "        WHEN 1 THEN COALESCE(t_stock.stock_num,0)\n";
         $sql .= "   END AS stock_num,\n";
-        $sql .= "   t_order_d.num AS order_num,\n";                                 //È¯Ãí¿ô
-        $sql .= "   COALESCE(t_buy.buy_num,0) AS buy_num,\n";                       //»ÅÆş¿ô
-        $sql .= "   t_order_d.buy_price,\n";                                        //»ÅÆşÃ±²Á
-        $sql .= "   t_order_d.tax_div,\n";                                          //²İÀÇ¶èÊ¬
-        $sql .= "   t_order_d.buy_amount,\n";                                       //»ÅÆş¶â³Û
-        $sql .= "   t_goods.name_change,\n";                                        //ÉÊÌ¾ÊÑ¹¹
+        $sql .= "   t_order_d.num AS order_num,\n";                                 //ç™ºæ³¨æ•° number of units ordered 
+        $sql .= "   COALESCE(t_buy.buy_num,0) AS buy_num,\n";                       //ä»•å…¥æ•° number of purchase
+        $sql .= "   t_order_d.buy_price,\n";                                        //ä»•å…¥å˜ä¾¡  purchae price per unit 
+        $sql .= "   t_order_d.tax_div,\n";                                          //èª²ç¨åŒºåˆ† tax classification
+        $sql .= "   t_order_d.buy_amount,\n";                                       //ä»•å…¥é‡‘é¡ purchase amount
+        $sql .= "   t_goods.name_change,\n";                                        //å“åå¤‰æ›´ edit product name
         //aoyama-n 2009-09-01
-        #$sql .= "   t_goods.in_num\n";                                              //Æş¿ô
-        $sql .= "   t_goods.in_num,\n";                                             //Æş¿ô
-        $sql .= "   t_goods.discount_flg\n";                                        //ÃÍ°ú¥Õ¥é¥°
+        #$sql .= "   t_goods.in_num\n";                                              //å…¥æ•° quantity
+        $sql .= "   t_goods.in_num,\n";                                             //å…¥æ•° quantity
+        $sql .= "   t_goods.discount_flg\n";                                        //å€¤å¼•ãƒ•ãƒ©ã‚° discount flag
         $sql .= " FROM\n";
         $sql .= "   t_order_h\n";
         $sql .= "       INNER JOIN\n";
@@ -802,65 +802,65 @@ if($sum_button_flg == true){
         $result = Db_Query($db_con, $sql);
         $get_ord_d_num = pg_num_rows($result);
 
-        //ÊÑ¿ô½é´ü²½
+        //å¤‰æ•°åˆæœŸåŒ– initialize variable
         $goods_id = null;
         $stock_manage = null;
         $name_change = null;
         $order_d_id = null;
 
-        //È¯Ãí¤·¤¿¾¦ÉÊÊ¬¥ë¡¼¥×
+        //ç™ºæ³¨ã—ãŸå•†å“åˆ†ãƒ«ãƒ¼ãƒ— loop through the products that was ordered
         for($i = 0; $i < $get_ord_d_num; $i++){
-            //°ì¹Ô¤º¤Ä¥Ç¡¼¥¿¤òÃê½Ğ
+            //ä¸€è¡Œãšã¤ãƒ‡ãƒ¼ã‚¿ã‚’æŠ½å‡º extract data per row
             $get_ord_d_data = pg_fetch_array($result, $i);
 
-            //È¯Ãí»Ä
+            //ç™ºæ³¨æ®‹ oustanding order 
             $rorder_num = $get_ord_d_data["order_num"] - $get_ord_d_data["buy_num"]; 
 
-            //¹ç·×¶â³Û¤ò»»½Ğ
+            //åˆè¨ˆé‡‘é¡ã‚’ç®—å‡º compute the total amount
             $price      = $get_ord_d_data["buy_price"];
     
             $buy_amount_data = bcmul($price, $rorder_num,2);
             $buy_amount[$i] = Coax_Col($coax, $buy_amount_data);
-            //»ÅÆşÃ±²Á¤òÊ¬³ä
+            //ä»•å…¥å˜ä¾¡ã‚’åˆ†å‰² divide the purchase price per unit
             $price_data = explode(".",$price);
 
-            //¾¦ÉÊ¥Ç¡¼¥¿Ãê½Ğ¤·¤¿¾¦ÉÊ¤Î¥Ç¡¼¥¿¤ò¥»¥Ã¥È
-            $set_data["hdn_goods_id"][$i]         = $get_ord_d_data["goods_id"];        //¾¦ÉÊID
-            $set_data["hdn_name_change"][$i]      = $get_ord_d_data["name_change"];     //ÉÊÌ¾ÊÑ¹¹
-            $set_data["hdn_stock_manage"][$i]     = $get_ord_d_data["stock_manage"];    //ºß¸Ë´ÉÍı
-            $set_data["form_goods_cd"][$i]        = $get_ord_d_data["goods_cd"];        //¾¦ÉÊ¥³¡¼¥É
-            $set_data["form_goods_name"][$i]      = $get_ord_d_data["goods_name"];      //¾¦ÉÊÌ¾
-            $set_data["form_stock_num"][$i]       = $get_ord_d_data["stock_num"];       //¸½ºß¸Ä¿ô
-            $set_data["hdn_stock_num"][$i]        = $get_ord_d_data["stock_num"];       //¸½ºß¸Ä¿ô(hiddnÍÑ)
-            $set_data["form_buy_price"][$i]["i"]  = $price_data[0];                     //»ÅÆşÃ±²Á¡ÊÀ°¿ôÉô¡Ë
-            $set_data["form_buy_price"][$i]["d"]  = $price_data[1];                     //»ÅÆşÃ±²Á¡Ê¾®¿ôÉô¡Ë
-            $set_data["form_buy_amount"][$i]      = number_format($buy_amount[$i]);     //»ÅÆş¶â³Û¡ÊÀÇÈ´¤­¡Ë
-            $set_data["form_order_num"][$i]       = $get_ord_d_data["order_num"];       //È¯Ãí¿ô
-            $set_data["form_rorder_num"][$i]      = $rorder_num;                        //È¯ÃíºÑ¿ô
-            $set_data["form_rbuy_num"][$i]        = $get_ord_d_data["buy_num"];         //»ÅÆşºÑ¿ô
-            $set_data["form_buy_num"][$i]         = $rorder_num;                        //»ÅÆş¿ô
-            $set_data["form_order_in_num"][$i]    = "";                                 //»ÅÆşÆş¿ô
-            $set_data["hdn_tax_div"][$i]          = $get_ord_d_data["tax_div"];         //²İÀÇ¶èÊ¬
-            $set_data["form_in_num"][$i]          = $get_ord_d_data["in_num"];          //Æş¿ô
-            $set_data["hdn_order_d_id"][$i]       = $get_ord_d_data["ord_d_id"];        //È¯Ãí¥Ç¡¼¥¿ID
+            //å•†å“ãƒ‡ãƒ¼ã‚¿æŠ½å‡ºã—ãŸå•†å“ã®ãƒ‡ãƒ¼ã‚¿ã‚’ã‚»ãƒƒãƒˆ set the data of the product that was extracted
+            $set_data["hdn_goods_id"][$i]         = $get_ord_d_data["goods_id"];        //å•†å“ID product ID
+            $set_data["hdn_name_change"][$i]      = $get_ord_d_data["name_change"];     //å“åå¤‰æ›´ edit product name
+            $set_data["hdn_stock_manage"][$i]     = $get_ord_d_data["stock_manage"];    //åœ¨åº«ç®¡ç† inventory management
+            $set_data["form_goods_cd"][$i]        = $get_ord_d_data["goods_cd"];        //å•†å“ã‚³ãƒ¼ãƒ‰ product code
+            $set_data["form_goods_name"][$i]      = $get_ord_d_data["goods_name"];      //å•†å“å product name
+            $set_data["form_stock_num"][$i]       = $get_ord_d_data["stock_num"];       //ç¾åœ¨å€‹æ•° current number of units
+            $set_data["hdn_stock_num"][$i]        = $get_ord_d_data["stock_num"];       //ç¾åœ¨å€‹æ•°(hiddnç”¨) current number of units (hidden)
+            $set_data["form_buy_price"][$i]["i"]  = $price_data[0];                     //ä»•å…¥å˜ä¾¡ï¼ˆæ•´æ•°éƒ¨ï¼‰ purchase price per unit (integer)
+            $set_data["form_buy_price"][$i]["d"]  = $price_data[1];                     //ä»•å…¥å˜ä¾¡ï¼ˆå°æ•°éƒ¨ï¼‰purchase price per unit (decimal)
+            $set_data["form_buy_amount"][$i]      = number_format($buy_amount[$i]);     //ä»•å…¥é‡‘é¡ï¼ˆç¨æŠœãï¼‰ purchase amount (no tax)
+            $set_data["form_order_num"][$i]       = $get_ord_d_data["order_num"];       //ç™ºæ³¨æ•° outstanding order
+            $set_data["form_rorder_num"][$i]      = $rorder_num;                        //ç™ºæ³¨æ¸ˆæ•° number of units already ordered 
+            $set_data["form_rbuy_num"][$i]        = $get_ord_d_data["buy_num"];         //ä»•å…¥æ¸ˆæ•° purchased number 
+            $set_data["form_buy_num"][$i]         = $rorder_num;                        //ä»•å…¥æ•° purchase number
+            $set_data["form_order_in_num"][$i]    = "";                                 //ä»•å…¥å…¥æ•° purchase quantity
+            $set_data["hdn_tax_div"][$i]          = $get_ord_d_data["tax_div"];         //èª²ç¨åŒºåˆ† tax classification
+            $set_data["form_in_num"][$i]          = $get_ord_d_data["in_num"];          //å…¥æ•° quantity
+            $set_data["hdn_order_d_id"][$i]       = $get_ord_d_data["ord_d_id"];        //ç™ºæ³¨ãƒ‡ãƒ¼ã‚¿ID purchase order ID
             //aoyama-n 2009-09-01
-            $set_data["hdn_discount_flg"][$i]     = $get_ord_d_data["discount_flg"];    //ÃÍ°ú¥Õ¥é¥°
+            $set_data["hdn_discount_flg"][$i]     = $get_ord_d_data["discount_flg"];    //å€¤å¼•ãƒ•ãƒ©ã‚° discount flag
 
-            //°Ê¹ß¤Î½èÍı¤Ç»ı¤Á¤Ş¤ï¤ë¥Ç¡¼¥¿
-            $goods_id[$i]                         = $get_ord_d_data["goods_id"];        //¾¦ÉÊID
-            $stock_manage[$i]                     = $get_ord_d_data["stock_manage"];    //ºß¸Ë´ÉÍı¡Êºß¸Ë¿ôÉ½¼¨È½Äê¡Ë
-            $name_change[$i]                      = $get_ord_d_data["name_change"];     //ÉÊÌ¾ÊÑ¹¹¡ÊÉÊÌ¾ÊÑ¹¹ÉÕ²ÃÈ½Äê¡Ë
-            $order_d_id[$i]                       = $get_ord_d_data["ord_d_id"];        //È¯Ãí¥Ç¡¼¥¿ID
+            //ä»¥é™ã®å‡¦ç†ã§æŒã¡ã¾ã‚ã‚‹ãƒ‡ãƒ¼ã‚¿ data that will be used in the next process
+            $goods_id[$i]                         = $get_ord_d_data["goods_id"];        //å•†å“ID product ID
+            $stock_manage[$i]                     = $get_ord_d_data["stock_manage"];    //åœ¨åº«ç®¡ç†ï¼ˆåœ¨åº«æ•°è¡¨ç¤ºåˆ¤å®šï¼‰ inventory management (decision on inventory number display)
+            $name_change[$i]                      = $get_ord_d_data["name_change"];     //å“åå¤‰æ›´ï¼ˆå“åå¤‰æ›´ä»˜åŠ åˆ¤å®šï¼‰edit product name (decision on product name changed )
+            $order_d_id[$i]                       = $get_ord_d_data["ord_d_id"];        //ç™ºæ³¨ãƒ‡ãƒ¼ã‚¿ID purchase order data ID
         }
 
-        $buy_data   = $_POST["form_buy_amount"];   //»ÅÆş¶â³Û
-        $price_data = NULL;                        //¾¦ÉÊ¤Î»ÅÆş¶â³Û
-        $tax_div    = NULL;                        //²İÀÇ¶èÊ¬
+        $buy_data   = $_POST["form_buy_amount"];   //ä»•å…¥é‡‘é¡ purchae amount
+        $price_data = NULL;                        //å•†å“ã®ä»•å…¥é‡‘é¡ purchase amount of the product
+        $tax_div    = NULL;                        //èª²ç¨åŒºåˆ† tax classification
 
-        //»ÅÆş¥Ç¡¼¥¿¤Î·ï¿ô¤òÉ½¼¨¤¹¤ë·ï¿ô¤È¤¹¤ë¡£
+        //ä»•å…¥ãƒ‡ãƒ¼ã‚¿ã®ä»¶æ•°ã‚’è¡¨ç¤ºã™ã‚‹ä»¶æ•°ã¨ã™ã‚‹ã€‚ number of items of purchase data that will be displayed 
         $max_row = $get_ord_d_num; 
 
-        //»ÅÆş¶â³Û¤Î¹ç·×ÃÍ·×»»
+        //ä»•å…¥é‡‘é¡ã®åˆè¨ˆå€¤è¨ˆç®— total value of the purchase amount
         for($i=0;$i<$max_row;$i++){
             $price_data[] = $buy_amount[$i];
             $tax_div[]    = $set_data["hdn_tax_div"][$i];
@@ -872,16 +872,16 @@ if($sum_button_flg == true){
 
         $data = Total_Amount($price_data, $tax_div, $coax, $tax_franct, $tax_rate, $client_id, $db_con);
 
-        //¥Õ¥©¡¼¥à¤ËÃÍ¥»¥Ã¥È
+        //ãƒ•ã‚©ãƒ¼ãƒ ã«å€¤ã‚»ãƒƒãƒˆ set the value to form
         $set_data["form_buy_money"]   = number_format($data[0]);
         $set_data["form_tax_money"]   = number_format($data[1]);
         $set_data["form_total_money"] = number_format($data[2]);
 
-        //È¯Ãí¥Õ¥é¥°¤òtrue¤Ë¥»¥Ã¥È
+        //ç™ºæ³¨ãƒ•ãƒ©ã‚°ã‚’trueã«ã‚»ãƒƒãƒˆ set purchase order flag to true
         $order_flg = true;
 
 
-    //¶õÇò¤¬ÁªÂò¤µ¤ì¤¿¾ì¹ç
+    //ç©ºç™½ãŒé¸æŠã•ã‚ŒãŸå ´åˆ if the blank is selected 
     }else{
         header("Location:./1-3-207.php");
         exit;
@@ -889,14 +889,14 @@ if($sum_button_flg == true){
     $set_data["hdn_show_button_flg"] = "";
 
 /****************************/
-//¾¦ÉÊ¥³¡¼¥ÉÆşÎÏ
+//å•†å“ã‚³ãƒ¼ãƒ‰å…¥åŠ› input product code
 /****************************/
-//¾¦ÉÊ¸¡º÷¥Õ¥é¥°¤¬true¤Î¾ì¹ç
+//å•†å“æ¤œç´¢ãƒ•ãƒ©ã‚°ãŒtrueã®å ´åˆ if the product search flag is true
 }elseif($goods_search_flg === true){
 
-    $search_row = $_POST["hdn_goods_search_flg"];           //¾¦ÉÊ¸¡º÷¹Ô
-    $goods_cd   = $_POST["form_goods_cd"]["$search_row"];   //¾¦ÉÊ¥³¡¼¥É
-    $ware_id    = $_POST["form_ware"];                      //ÁÒ¸ËID
+    $search_row = $_POST["hdn_goods_search_flg"];           //å•†å“æ¤œç´¢è¡Œ product search row
+    $goods_cd   = $_POST["form_goods_cd"]["$search_row"];   //å•†å“ã‚³ãƒ¼ãƒ‰ product code
+    $ware_id    = $_POST["form_ware"];                      //å€‰åº«ID warehouse ID
 
     $sql  = "SELECT\n ";
     $sql .= "   t_goods.goods_id,\n";
@@ -907,7 +907,7 @@ if($sum_button_flg == true){
 
     $sql .= "   t_goods.goods_cd,\n";
     //$sql .= "   t_goods.goods_name,\n";dd
-    $sql .= "   (t_g_product.g_product_name || ' ' || t_goods.goods_name) AS goods_name, \n";    //Àµ¼°Ì¾
+    $sql .= "   (t_g_product.g_product_name || ' ' || t_goods.goods_name) AS goods_name, \n";    //æ­£å¼å official name
     $sql .= "   t_goods.tax_div,\n";
     #2009-10-13 hashimoto-y
     #$sql .= "   CASE t_goods.stock_manage\n";
@@ -963,82 +963,82 @@ if($sum_button_flg == true){
     $goods_data_num = pg_num_rows($result);
     $goods_data = pg_fetch_array($result);
 
-    //¾åµ­¤ÎSQL¤Ç³ºÅö¤¹¤ë¥ì¥³¡¼¥É¤¬¤¢¤Ã¤¿¾ì¹ç(ÀµÅö¤Ê¾¦ÉÊ¥³¡¼¥É¤¬ÆşÎÏ¤µ¤ì¤¿¾ì¹ç)
+    //ä¸Šè¨˜ã®SQLã§è©²å½“ã™ã‚‹ãƒ¬ã‚³ãƒ¼ãƒ‰ãŒã‚ã£ãŸå ´åˆ(æ­£å½“ãªå•†å“ã‚³ãƒ¼ãƒ‰ãŒå…¥åŠ›ã•ã‚ŒãŸå ´åˆ) if there is a matched record in the SQL above (meaning if there is a valid product code)
     if($goods_data_num > 0){
 
-        //Ãê½Ğ¤·¤¿Ã±²Á¥Ç¡¼¥¿¤ò¥»¥Ã¥È¤¹¤ë·Á¼°¤ËÊÑ¹¹
-        //Ãê½Ğ¤·¤¿Ã±²Á¤òÊÑ¿ô¤Ë¥»¥Ã¥È
+        //æŠ½å‡ºã—ãŸå˜ä¾¡ãƒ‡ãƒ¼ã‚¿ã‚’ã‚»ãƒƒãƒˆã™ã‚‹å½¢å¼ã«å¤‰æ›´ change the format of the price per unit data that was extracted to the one that will be set 
+        //æŠ½å‡ºã—ãŸå˜ä¾¡ã‚’å¤‰æ•°ã«ã‚»ãƒƒãƒˆ set the price per unit that was extracted to a variable
         $price = $goods_data["r_price"];
 
-        //¤¹¤Ç¤ËÈ¯Ãí¿ô¤¬ÆşÎÏ¤µ¤ì¤Æ¤¤¤¿¾ì¹ç¡¢¶â³Û¤òºÆ·×»»¤¹¤ë
-        //È¯Ãí¿ôÆşÎÏÈ½Äê
+        //ã™ã§ã«ç™ºæ³¨æ•°ãŒå…¥åŠ›ã•ã‚Œã¦ã„ãŸå ´åˆã€é‡‘é¡ã‚’å†è¨ˆç®—ã™ã‚‹ if the purchase order number is inputted, recompute the amount
+        //ç™ºæ³¨æ•°å…¥åŠ›åˆ¤å®š decide on the number of purchase order inputted 
         if($_POST["form_buy_num"][$search_row] != null){
             $buy_amount = bcmul($price, $_POST["form_buy_num"][$search_row],2);
             $buy_amount = Coax_Col($coax, $buy_amount);
         }
 
-        //»ÅÆşÃ±²Á¤òÊ¬³ä
+        //ä»•å…¥å˜ä¾¡ã‚’åˆ†å‰² divide purchase price per unit  
         $price_data = explode(".",$price);
 
-        //¾¦ÉÊ¥Ç¡¼¥¿Ãê½Ğ¤·¤¿¾¦ÉÊ¤Î¥Ç¡¼¥¿¤ò¥»¥Ã¥È
-        $set_data["hdn_goods_id"][$search_row]         = $goods_data["goods_id"];         //¾¦ÉÊID
-        $set_data["hdn_name_change"][$search_row]      = $goods_data["name_change"];      //ÉÊÌ¾ÊÑ¹¹
-        $set_data["hdn_stock_manage"][$search_row]     = $goods_data["stock_manage"];     //ºß¸Ë´ÉÍı
-        $set_data["form_goods_name"][$search_row]      = $goods_data["goods_name"];       //¾¦ÉÊÌ¾
-        $set_data["form_stock_num"][$search_row]       = $goods_data["stock_num"];        //¸½ºß¸Ä¿ô
-        $set_data["hdn_stock_num"][$search_row]        = $goods_data["stock_num"];        //¸½ºß¸Ä¿ô(hiddnÍÑ)
-        $set_data["form_buy_price"][$search_row]["i"]  = $price_data[0];                  //»ÅÆşÃ±²Á¡ÊÀ°¿ôÉô¡Ë
-        $set_data["form_buy_price"][$search_row]["d"]  = $price_data[1];                  //»ÅÆşÃ±²Á¡Ê¾®¿ôÉô¡Ë
-        $set_data["form_buy_amount"][$search_row]      = number_format($buy_amount);      //»ÅÆş¶â³Û¡ÊÀÇÈ´¤­¡Ë
+        //å•†å“ãƒ‡ãƒ¼ã‚¿æŠ½å‡ºã—ãŸå•†å“ã®ãƒ‡ãƒ¼ã‚¿ã‚’ã‚»ãƒƒãƒˆ set the data of the product that was extracted 
+        $set_data["hdn_goods_id"][$search_row]         = $goods_data["goods_id"];         //å•†å“ID product ID 
+        $set_data["hdn_name_change"][$search_row]      = $goods_data["name_change"];      //å“åå¤‰æ›´ edit product name
+        $set_data["hdn_stock_manage"][$search_row]     = $goods_data["stock_manage"];     //åœ¨åº«ç®¡ç† inventory management
+        $set_data["form_goods_name"][$search_row]      = $goods_data["goods_name"];       //å•†å“å prodcut name 
+        $set_data["form_stock_num"][$search_row]       = $goods_data["stock_num"];        //ç¾åœ¨å€‹æ•° current inventory
+        $set_data["hdn_stock_num"][$search_row]        = $goods_data["stock_num"];        //ç¾åœ¨å€‹æ•°(hiddnç”¨) current inventory (for hidden)
+        $set_data["form_buy_price"][$search_row]["i"]  = $price_data[0];                  //ä»•å…¥å˜ä¾¡ï¼ˆæ•´æ•°éƒ¨ï¼‰purchase price per unit (integer)
+        $set_data["form_buy_price"][$search_row]["d"]  = $price_data[1];                  //ä»•å…¥å˜ä¾¡ï¼ˆå°æ•°éƒ¨ï¼‰purchase price per unit (decimal)
+        $set_data["form_buy_amount"][$search_row]      = number_format($buy_amount);      //ä»•å…¥é‡‘é¡ï¼ˆç¨æŠœãï¼‰purchase amount (no tax)
         $set_data["form_order_num"][$search_row]       = "-";
         $set_data["form_rorder_num"][$search_row]      = "-";
         $set_data["form_rbuy_num"][$search_row]        = "-";
-        $set_data["hdn_tax_div"][$search_row]          = $goods_data["tax_div"];          //²İÀÇ¶èÊ¬
-        $set_data["form_in_num"][$search_row]          = $goods_data["in_num"];           //Æş¿ô
+        $set_data["hdn_tax_div"][$search_row]          = $goods_data["tax_div"];          //èª²ç¨åŒºåˆ† tax classification
+        $set_data["form_in_num"][$search_row]          = $goods_data["in_num"];           //å…¥æ•° quantity
         //aoyama-n 2009-09-01
-        $set_data["hdn_discount_flg"][$search_row]     = $goods_data["discount_flg"];     //ÃÍ°ú¥Õ¥é¥°
+        $set_data["hdn_discount_flg"][$search_row]     = $goods_data["discount_flg"];     //å€¤å¼•ãƒ•ãƒ©ã‚° discount flag
 
-        //°Ê¹ß¤Î½èÍı¤Ç»ı¤Á¤Ş¤ï¤ë¥Ç¡¼¥¿
-        $goods_id[$search_row]                         = $goods_data["goods_id"];         //¾¦ÉÊID
-        $stock_manage[$search_row]                     = $goods_data["stock_manage"];     //ºß¸Ë´ÉÍı¡Êºß¸Ë¿ôÉ½¼¨È½Äê¡Ë
-        $name_change[$search_row]                      = $goods_data["name_change"];      //ÉÊÌ¾ÊÑ¹¹¡ÊÉÊÌ¾ÊÑ¹¹ÉÕ²ÃÈ½Äê¡Ë
+        //ä»¥é™ã®å‡¦ç†ã§æŒã¡ã¾ã‚ã‚‹ãƒ‡ãƒ¼ã‚¿ data that will be used in the next processes
+        $goods_id[$search_row]                         = $goods_data["goods_id"];         //å•†å“ID product ID
+        $stock_manage[$search_row]                     = $goods_data["stock_manage"];     //åœ¨åº«ç®¡ç†ï¼ˆåœ¨åº«æ•°è¡¨ç¤ºåˆ¤å®šï¼‰ inventory mangement (inventory number display decision)
+        $name_change[$search_row]                      = $goods_data["name_change"];      //å“åå¤‰æ›´ï¼ˆå“åå¤‰æ›´ä»˜åŠ åˆ¤å®šï¼‰edit product name (adding decision on edit product name)
       
 
-    //ÉÔÀµ¤ÊÃÍ¤¬ÆşÎÏ¤µ¤ì¤¿¾ì¹ç
+    //ä¸æ­£ãªå€¤ãŒå…¥åŠ›ã•ã‚ŒãŸå ´åˆ if an invalid value has been inputted
     }else{
-        $set_data["hdn_goods_id"][$search_row]         = "";                              //¾¦ÉÊID
-        $set_data["hdn_name_change"][$search_row]      = "";                              //ÉÊÌ¾ÊÑ¹¹
-        $set_data["hdn_stock_manage"][$search_row]     = "";                              //ºß¸Ë´ÉÍı
-        $set_data["form_goods_name"][$search_row]      = "";                              //¾¦ÉÊÌ¾
-        $set_data["form_stock_num"][$search_row]       = "";                              //¸½ºß¸Ä¿ô
-        $set_data["hdn_stock_num"][$search_row]        = "";                              //¸½ºß¸Ä¿ô¡ÊhiddenÍÑ¡Ë
-        $set_data["form_buy_price"][$search_row]["i"]  = "";                              //»ÅÆşÃ±²Á¡ÊÀ°¿ôÉô¡Ë
-        $set_data["form_buy_price"][$search_row]["d"]  = "";                              //»ÅÆşÃ±²Á¡Ê¾®¿ôÉô¡Ë
-        $set_data["form_buy_amount"][$search_row]      = "";                              //»ÅÆş¶â³Û¡ÊÀÇÈ´¤­¡Ë
-        $set_data["form_order_num"][$search_row]       = "";                              //È¯Ãí¿ô
-        $set_data["form_rorder_num"][$search_row]      = "";                              //È¯ÃíºÑ¿ô
-        $set_data["form_rbuy_num"][$search_row]        = "";                              //»ÅÆşºÑ¿ô
-        $set_data["hdn_tax_div"][$search_row]          = "";                              //²İÀÇ¶èÊ¬
-        $set_data["form_in_num"][$search_row]          = "";                              //Æş¿ô
+        $set_data["hdn_goods_id"][$search_row]         = "";                              //å•†å“ID Product ID
+        $set_data["hdn_name_change"][$search_row]      = "";                              //å“åå¤‰æ›´ edit product name
+        $set_data["hdn_stock_manage"][$search_row]     = "";                              //åœ¨åº«ç®¡ç† invenotry management
+        $set_data["form_goods_name"][$search_row]      = "";                              //å•†å“å product name
+        $set_data["form_stock_num"][$search_row]       = "";                              //ç¾åœ¨å€‹æ•° current inventory 
+        $set_data["hdn_stock_num"][$search_row]        = "";                              //ç¾åœ¨å€‹æ•°ï¼ˆhiddenç”¨ï¼‰current inventory (for hidden)
+        $set_data["form_buy_price"][$search_row]["i"]  = "";                              //ä»•å…¥å˜ä¾¡ï¼ˆæ•´æ•°éƒ¨ï¼‰purchase price per unit (integer)
+        $set_data["form_buy_price"][$search_row]["d"]  = "";                              //ä»•å…¥å˜ä¾¡ï¼ˆå°æ•°éƒ¨ï¼‰purchase price per unit (decimal)
+        $set_data["form_buy_amount"][$search_row]      = "";                              //ä»•å…¥é‡‘é¡ï¼ˆç¨æŠœãï¼‰purchase price per unit (no tax)
+        $set_data["form_order_num"][$search_row]       = "";                              //ç™ºæ³¨æ•° number of units of purchase order
+        $set_data["form_rorder_num"][$search_row]      = "";                              //ç™ºæ³¨æ¸ˆæ•° number of units of purchase order ordered 
+        $set_data["form_rbuy_num"][$search_row]        = "";                              //ä»•å…¥æ¸ˆæ•° number of units purchased
+        $set_data["hdn_tax_div"][$search_row]          = "";                              //èª²ç¨åŒºåˆ† tax classification
+        $set_data["form_in_num"][$search_row]          = "";                              //å…¥æ•° quantity
         //aoyama-n 2009-09-01
-        $set_data["hdn_discount_flg"][$search_row]     = "";                              //ÃÍ°ú¥Õ¥é¥°
-        $goods_id[$search_row]                         = null;                            //¾¦ÉÊID
-        $stock_num[$search_row]                        = null;                            //¸½ºß¸Ä¿ô(¥ê¥ó¥¯ÍÑ)
-        $stock_manage[$search_row]                     = null;                            //ºß¸Ë´ÉÍı¡Êºß¸Ë¿ôÉ½¼¨È½Äê¡Ë
-        $name_change[$search_row]                      = null;                            //ÉÊÌ¾ÊÑ¹¹¡ÊÉÊÌ¾ÊÑ¹¹ÉÕ²ÃÈ½Äê¡Ë
+        $set_data["hdn_discount_flg"][$search_row]     = "";                              //å€¤å¼•ãƒ•ãƒ©ã‚° dicount flag
+        $goods_id[$search_row]                         = null;                            //å•†å“ID product ID
+        $stock_num[$search_row]                        = null;                            //ç¾åœ¨å€‹æ•°(ãƒªãƒ³ã‚¯ç”¨) current inventory number (for link)
+        $stock_manage[$search_row]                     = null;                            //åœ¨åº«ç®¡ç†ï¼ˆåœ¨åº«æ•°è¡¨ç¤ºåˆ¤å®šï¼‰ inventory mangement (inventory number display decision)
+        $name_change[$search_row]                      = null;                            //å“åå¤‰æ›´ï¼ˆå“åå¤‰æ›´ä»˜åŠ åˆ¤å®šï¼‰edit product name (adding decision on edit product name)
     }
 
-    //¾¦ÉÊÆşÎÏ¥Õ¥é¥°¤ò½é´ü²½
+    //å•†å“å…¥åŠ›ãƒ•ãƒ©ã‚°ã‚’åˆæœŸåŒ– initialize the product input flag
     $set_data["hdn_goods_search_flg"]                = "";
 }
 
 /****************************/
-//»ÅÆşÀè¤¬ÁªÂò¤µ¤ì¤Æ¤¤¤ë¾ì¹ç¤ÏÇã³İ»Ä¹â¤ò·×»»
+//ä»•å…¥å…ˆãŒé¸æŠã•ã‚Œã¦ã„ã‚‹å ´åˆã¯è²·æ›æ®‹é«˜ã‚’è¨ˆç®— if the purchase client is being selected then comput the payable amount
 /****************************/
 if($client_search_flg == true){
 
 /*
-    //ÄùÆü¤òÃê½Ğ
+    //ç· æ—¥ã‚’æŠ½å‡º
     $sql  = "SELECT\n";
     $sql .= "   close_day\n";
     $sql .= " FROM\n";
@@ -1050,7 +1050,7 @@ if($client_search_flg == true){
     $result = Db_Query($db_con,$sql);
     $close_day = pg_fetch_result($result, 0, 0);
 
-    //ÆüÉÕÀ¸À®
+    //æ—¥ä»˜ç”Ÿæˆ
     $yy = date('Y');
     $mm = date('m');
     if($close_day < 29){
@@ -1059,7 +1059,7 @@ if($client_search_flg == true){
         $last_close_day = date('Ymd', mktime(0,0,0,$mm+1,-1,$yy));
     }
 
-    //Á°²óÄù¤áÆü¤«¤é¤ÎÇã¾å³Û¤òÃê½Ğ
+    //å‰å›ç· ã‚æ—¥ã‹ã‚‰ã®è²·ä¸Šé¡ã‚’æŠ½å‡º
     $sql  = "SELECT\n";
     $sql .= "    (COALESCE(t_plus.net_amount,0) - COALESCE(t_minus.net_amount,0)) AS ap_balance\n";
     $sql .= " FROM\n";
@@ -1122,15 +1122,15 @@ if($client_search_flg == true){
 */
 
     /****************************/
-    // Çã³İ¥Ç¡¼¥¿¼èÆÀ¡Ê»Ä¹â¤Î¤ß¡Ë
+    // è²·æ›ãƒ‡ãƒ¼ã‚¿å–å¾—ï¼ˆæ®‹é«˜ã®ã¿ï¼‰
     /****************************/
-    // ÅÁÉ¼ÌÀºÙ¥Ç¡¼¥¿¼èÆÀ¡Ê¥Ç¡¼¥¿¤¬Ìµ¤¤¾ì¹ç¤Ï¶õÇÛÎóºîÀ®¡Ë
+    // ä¼ç¥¨æ˜ç´°ãƒ‡ãƒ¼ã‚¿å–å¾—ï¼ˆãƒ‡ãƒ¼ã‚¿ãŒç„¡ã„å ´åˆã¯ç©ºé…åˆ—ä½œæˆï¼‰
     $sql = Ap_Particular_Sql(START_DAY, date("Y-m-d"), $client_id);
     $res = Db_Query($db_con, $sql);
     $num = pg_num_rows($res);
     $ary_ap_particular_data = ($num > 0) ? Get_Data($res, 2, "ASSOC") : array(null);
 
-    // Çã³İ»Ä¹â»»½Ğ
+    // è²·æ›æ®‹é«˜ç®—å‡º
     foreach ($ary_ap_particular_data as $key => $value){
         $ap_balance += ($value["buy_amount"] - $value["payout_amount"]);
     }
@@ -1139,29 +1139,29 @@ if($client_search_flg == true){
 
 }
 
-//ºÇÂç¹Ô¿ô¤òhidden¤Ë¥»¥Ã¥È
+//æœ€å¤§è¡Œæ•°ã‚’hiddenã«ã‚»ãƒƒãƒˆ
 $set_data["max_row"] = $max_row;
 
-//¾åµ­½èÍı¤Ë¤è¤êÀ¸À®¤·¤¿ÃÍ¤ò¥Õ¥©¡¼¥à¤Ë¥»¥Ã¥È
+//ä¸Šè¨˜å‡¦ç†ã«ã‚ˆã‚Šç”Ÿæˆã—ãŸå€¤ã‚’ãƒ•ã‚©ãƒ¼ãƒ ã«ã‚»ãƒƒãƒˆ
 $form->setConstants($set_data);
 
-//»ÅÆşÀèORÁÒ¸Ë¤¬ÁªÂò¤µ¤ì¤Æ¤¤¤Ê¤¤¾ì¹ç
+//ä»•å…¥å…ˆORå€‰åº«ãŒé¸æŠã•ã‚Œã¦ã„ãªã„å ´åˆ
 if($client_search_flg == true && $ware_search_flg == true){
-    //²èÌÌ¤ËÉ½¼¨¤¹¤ë·Ù¹ğ¥á¥Ã¥»¡¼¥¸
-    $warning = "¾¦ÉÊ¤òÁªÂò¤·¤Æ²¼¤µ¤¤¡£"; 
-    //ÆşÎÏ¤òÀ©¸Â¤¹¤ë¥Õ¥é¥°
+    //ç”»é¢ã«è¡¨ç¤ºã™ã‚‹è­¦å‘Šãƒ¡ãƒƒã‚»ãƒ¼ã‚¸
+    $warning = "å•†å“ã‚’é¸æŠã—ã¦ä¸‹ã•ã„ã€‚"; 
+    //å…¥åŠ›ã‚’åˆ¶é™ã™ã‚‹ãƒ•ãƒ©ã‚°
     $select_flg = true;
 }else{
-    //²èÌÌ¤ËÉ½¼¨¤¹¤ë·Ù¹ğ¥á¥Ã¥»¡¼¥¸
-    $warning = "»ÅÆşÀè¤ÈÁÒ¸Ë¤òÁªÂò¤·¤Æ²¼¤µ¤¤¡£";
-    //ÆşÎÏ¤òÀ©¸Â¤¹¤ë¥Õ¥é¥°
+    //ç”»é¢ã«è¡¨ç¤ºã™ã‚‹è­¦å‘Šãƒ¡ãƒƒã‚»ãƒ¼ã‚¸
+    $warning = "ä»•å…¥å…ˆã¨å€‰åº«ã‚’é¸æŠã—ã¦ä¸‹ã•ã„ã€‚";
+    //å…¥åŠ›ã‚’åˆ¶é™ã™ã‚‹ãƒ•ãƒ©ã‚°
     $select_flg = false;  
 }    
 
 /****************************/
-//¥Õ¥©¡¼¥àºîÀ®
+//ãƒ•ã‚©ãƒ¼ãƒ ä½œæˆ
 /****************************/
-//ÅÁÉ¼ÈÖ¹æ
+//ä¼ç¥¨ç•ªå·
 $form->addElement(
     "text","form_buy_no","",
     "style=\"color : #525552; 
@@ -1170,7 +1170,7 @@ $form->addElement(
     text-align: left\" readonly'"
 );
 
-//È¯Ãí»Ä
+//ç™ºæ³¨æ®‹
 //if($update_data_flg == true || $_POST[hdn_buy_id] != null){
 if($update_data_flg == true || $update_flg == true){
     $form->addElement(
@@ -1216,7 +1216,7 @@ if($update_data_flg == true || $update_flg == true){
     $form->addElement("select","form_order_no","",$select_value, $g_form_option_select);
 }
 
-//È¯ÃíÆü
+//ç™ºæ³¨æ—¥
 $form_order_day[] = $form->createElement(
     "text","y","",
     "size=\"4\" maxLength=\"4\"
@@ -1244,7 +1244,7 @@ $form_order_day[] = $form->createElement(
 );
 $form->addGroup( $form_order_day,"form_order_day","");
 
-//Æş²ÙÍ½ÄêÆü
+//å…¥è·äºˆå®šæ—¥
 $form_arrival_hope_day[] = $form->createElement(
     "text","y","",
     "size=\"4\" maxLength=\"4\"
@@ -1272,7 +1272,7 @@ $form_arrival_hope_day[] = $form->createElement(
 );
 $form->addGroup( $form_arrival_hope_day,"form_arrival_hope_day","");
 
-//Æş²ÙÆü
+//å…¥è·æ—¥
 $form_arrival_day[] = $form->createElement(
     "text","y","",
     "size=\"4\" maxLength=\"4\" 
@@ -1305,7 +1305,7 @@ $form_arrival_day[] = $form->createElement(
 );
 $form->addGroup( $form_arrival_day,"form_arrival_day","");
 
-//»ÅÆşÆü
+//ä»•å…¥æ—¥
 $form_buy_day[] = $form->createElement(
     "text","y","",
     "size=\"4\" maxLength=\"4\" 
@@ -1332,8 +1332,8 @@ $form_buy_day[] = $form->createElement(
 );
 $form->addGroup( $form_buy_day,"form_buy_day","");
 
-//»ÅÆşÀè
-//»ÅÆşÀè
+//ä»•å…¥å…ˆ
+//ä»•å…¥å…ˆ
 $freeze_form = $form_client[] = $form->createElement(
     "text","cd1","",
     "size=\"7\" maxLength=\"6\"
@@ -1342,7 +1342,7 @@ $freeze_form = $form_client[] = $form->createElement(
     onkeyup=\"changeText(this.form,'form_client[cd1]','form_client[cd2]',6)\"
     $g_form_option"
 );
-//»ÅÆşÊÑ¹¹¡¡OR¡¡È¯Ãí¤«¤é¤Î»ÅÆş»ş¤Ë¤Ï»ÅÆşÀè¤ÏÊÑ¹¹ÉÔ²Ä
+//ä»•å…¥å¤‰æ›´ã€€ORã€€ç™ºæ³¨ã‹ã‚‰ã®ä»•å…¥æ™‚ã«ã¯ä»•å…¥å…ˆã¯å¤‰æ›´ä¸å¯
 if($update_data_flg == true || $_POST[hdn_buy_id] != null || $order_flg == true){
     $freeze_form->freeze();
 }
@@ -1355,7 +1355,7 @@ $freeze_form = $form_client[] = $form->createElement(
     $g_form_option"
 );
 
-//»ÅÆşÊÑ¹¹¡¡OR¡¡È¯Ãí¤«¤é¤Î»ÅÆş»ş¤Ë¤Ï»ÅÆşÀè¤ÏÊÑ¹¹ÉÔ²Ä
+//ä»•å…¥å¤‰æ›´ã€€ORã€€ç™ºæ³¨ã‹ã‚‰ã®ä»•å…¥æ™‚ã«ã¯ä»•å…¥å…ˆã¯å¤‰æ›´ä¸å¯
 if($update_data_flg == true || $_POST[hdn_buy_id] != null || $order_flg == true){
     $freeze_form->freeze();
 }
@@ -1365,11 +1365,11 @@ $form_client[] = $form->createElement(
 );
 $form->addGroup($form_client, "form_client", "");
 
-//Ä¾Á÷Àè
+//ç›´é€å…ˆ
 $select_value = Select_Get($db_con,'direct');
 $update_form[0] = $form->addElement('select', 'form_direct', "", $select_value,"class=\"Tohaba\"".$g_form_option_select);
 
-//»ÅÆşÁÒ¸Ë
+//ä»•å…¥å€‰åº«
 $where  = " WHERE";
 $where .= "  shop_id = $_SESSION[client_id]";
 $where .= "  AND";
@@ -1380,9 +1380,9 @@ $update_form[1] = $form->addElement(
         onChange=\"javascript:Button_Submit('hdn_ware_select_flg','#','t', this)\""
 );
 
-//¼è°ú¶èÊ¬
+//å–å¼•åŒºåˆ†
 $select_value = null;
-//È¯ÃíID¤¬¤¢¤ë¾ì¹ç
+//ç™ºæ³¨IDãŒã‚ã‚‹å ´åˆ
 if($order_flg == true){
     $select_value = select_Get($db_con, 'trade_buy_ord');
 }else{
@@ -1390,7 +1390,7 @@ if($order_flg == true){
 }
 $select_value = Select_Get($db_con, 'trade_buy');
 $update_form[2] = $form->addElement('select', 'form_trade', null, null,$g_form_option_select);
-//ÊÖÉÊ¡¢ÃÍ°ú¤­¤Î¿§¤òÊÑ¹¹
+//è¿”å“ã€å€¤å¼•ãã®è‰²ã‚’å¤‰æ›´
 $select_value_key = array_keys($select_value);
 for($i = 0; $i < count($select_value); $i++){
     if($select_value_key[$i] == 23 || $select_value_key[$i] == 24 || $select_value_key[$i] == 73 || $select_value_key[$i] == 74){
@@ -1399,15 +1399,15 @@ for($i = 0; $i < count($select_value); $i++){
           $color="";
     }
     #2009-09-28 hashimoto-y
-    #¼è°ú¶èÊ¬¤«¤éÃÍ°ú¤­¤òÉ½¼¨¤·¤Ê¤¤¡£ÀÚ¤êÌá¤·¤Î¾ì¹ç¤Ë¤Ï¤³¤³¤ÎifÊ¸¤ò³°¤¹¡£
+    #å–å¼•åŒºåˆ†ã‹ã‚‰å€¤å¼•ãã‚’è¡¨ç¤ºã—ãªã„ã€‚åˆ‡ã‚Šæˆ»ã—ã®å ´åˆã«ã¯ã“ã“ã®ifæ–‡ã‚’å¤–ã™ã€‚
     if($select_value_key[$i] != 24 && $select_value_key[$i] != 74){
         $update_form[2]->addOption($select_value[$select_value_key[$i]], $select_value_key[$i],$color);
     }
 }
 
-//È¯ÃíID¤¬¤¢¤ë¾ì¹ç
+//ç™ºæ³¨IDãŒã‚ã‚‹å ´åˆ
 if($order_flg == true){
-    //È¯ÃíÃ´Åö¼Ô
+    //ç™ºæ³¨æ‹…å½“è€…
     $select_value = Select_Get($db_con,'staff');
     $order_form[] = $form->addElement('select', 'form_order_staff', '', $select_value,$g_form_option_select);
     $count = count($order_form);
@@ -1417,10 +1417,10 @@ if($order_flg == true){
 }
 
 $select_value = Select_Get($db_con,'staff','true');
-//»ÅÆşÃ´Åö¼Ô
+//ä»•å…¥æ‹…å½“è€…
 $update_form[3] = $form->addElement('select', 'form_buy_staff', '', $select_value,$g_form_option_select);
 
-//»ÅÆşÆşÎÏÊÑ¹¹¤Îºİ¤Ï»ØÄê¤·¤¿¥Õ¥©¡¼¥à¤ò¥Õ¥ê¡¼¥º¤¹¤ë
+//ä»•å…¥å…¥åŠ›å¤‰æ›´ã®éš›ã¯æŒ‡å®šã—ãŸãƒ•ã‚©ãƒ¼ãƒ ã‚’ãƒ•ãƒªãƒ¼ã‚ºã™ã‚‹
 //if($update_flg == true && $order_flg == true){
 if($update_flg == true && $order_flg == true){
     for($i = 0; $i < count($update_form); $i++){
@@ -1428,11 +1428,11 @@ if($update_flg == true && $order_flg == true){
     }
 }
 
-//È÷¹Í
+//å‚™è€ƒ
 //$form->addElement("text","form_note","","size=\"50\" maxLength=\"20\" $g_form_option");
 $form->addElement("textarea","form_note",""," rows=\"2\" cols=\"75\" $g_form_option_area");
 
-//»ÅÆş¶â³Û(¹ç·×)
+//ä»•å…¥é‡‘é¡(åˆè¨ˆ)
 $form->addElement(
         "text","form_buy_money","",
         "size=\"25\" maxLength=\"18\"
@@ -1443,7 +1443,7 @@ $form->addElement(
          readonly"
 );
 
-//¾ÃÈñÀÇ³Û(¹ç·×)
+//æ¶ˆè²»ç¨é¡(åˆè¨ˆ)
 $form->addElement(
         "text","form_tax_money","",
         "size=\"25\" maxLength=\"18\"
@@ -1454,7 +1454,7 @@ $form->addElement(
          readonly"
 );
 
-//»ÅÆş¶â³Û¡ÊÀÇ¹ş¹ç·×)
+//ä»•å…¥é‡‘é¡ï¼ˆç¨è¾¼åˆè¨ˆ)
 $form->addElement(
         "text","form_total_money","",
         "size=\"25\" maxLength=\"18\"
@@ -1465,48 +1465,48 @@ $form->addElement(
          readonly"
 );
 
-//ÄÉ²Ã¥ê¥ó¥¯
-$form->addElement("link","add_row_link","","#","ÄÉ²Ã","
+//è¿½åŠ ãƒªãƒ³ã‚¯
+$form->addElement("link","add_row_link","","#","è¿½åŠ ","
     onClick=\"javascript:Button_Submit_1('add_row_flg', '#', 'true', this);\""
 );
 
-//ÆşÎÏ¡¦ÊÑ¹¹
-$form->addElement("button","new_button","Æş¡¡ÎÏ",$g_button_color."onClick=\"location.href='$_SERVER[PHP_SELF]'\"");
-//¾È²ñ
-$form->addElement("button","change_button","¾È²ñ¡¦ÊÑ¹¹","onClick=\"javascript:Referer('1-3-202.php')\"");
+//å…¥åŠ›ãƒ»å¤‰æ›´
+$form->addElement("button","new_button","å…¥ã€€åŠ›",$g_button_color."onClick=\"location.href='$_SERVER[PHP_SELF]'\"");
+//ç…§ä¼š
+$form->addElement("button","change_button","ç…§ä¼šãƒ»å¤‰æ›´","onClick=\"javascript:Referer('1-3-202.php')\"");
 
 /*
 if($update_flg === false || $update_data_flg === false){
-    //»ÅÆşÀèÂĞ¾İ
-    $form->addElement("button","form_client_button","»ÅÆşÀè","onClick=\"javascript:location.href='./1-3-201.php'\"");
-    //FC ÂĞ¾İ
-    $form->addElement("button","form_fc_button","£Æ¡¡£Ã",$g_button_color."onClick=\"javascript:location.href='./1-3-207.php';\"");
+    //ä»•å…¥å…ˆå¯¾è±¡
+    $form->addElement("button","form_client_button","ä»•å…¥å…ˆ","onClick=\"javascript:location.href='./1-3-201.php'\"");
+    //FC å¯¾è±¡
+    $form->addElement("button","form_fc_button","ï¼¦ã€€ï¼£",$g_button_color."onClick=\"javascript:location.href='./1-3-207.php';\"");
 }
 */
 
 //hidden
-//³ÆÆşÎÏ¥Õ¥é¥°
-$form->addElement("hidden", "hdn_client_search_flg");       //»ÅÆşÀè¥³¡¼¥ÉÆşÎÏ¥Õ¥é¥°
-$form->addElement("hidden", "hdn_goods_search_flg");        //¾¦ÉÊ¥³¡¼¥ÉÆşÎÏ¥Õ¥é¥°
-$form->addElement("hidden", "hdn_ware_select_flg");         //ÁÒ¸ËÁªÂò¥Õ¥é¥°
-$form->addElement("hidden", "hdn_sum_button_flg");          //¹ç·×¥Ü¥¿¥ó²¡²¼¥Õ¥é¥°
-$form->addElement("hidden", "add_row_flg");                 //¹ÔÄÉ²Ã¥Ü¥¿¥ó²¡²¼¥Õ¥é¥°
-$form->addElement("hidden", "hdn_show_button_flg");         //É½¼¨¥Ü¥¿¥ó²¡²¼¥Õ¥é¥°
-//»ı¤Á¤Ş¤ï¤ë»ÅÆşÀè¤Î¾ğÊó
-$form->addElement("hidden", "hdn_coax");                    //´İ¤á¶èÊ¬
-$form->addElement("hidden", "hdn_tax_franct");              //Ã¼¿ô¶èÊ¬
-$form->addElement("hidden", "hdn_client_id");               //ÆÀ°ÕÀèID
-$form->addElement("hidden", "hdn_order_id");                //ÊÑ¹¹»ş¡ÊÈ¯ÃíID¡Ë
+//å„å…¥åŠ›ãƒ•ãƒ©ã‚°
+$form->addElement("hidden", "hdn_client_search_flg");       //ä»•å…¥å…ˆã‚³ãƒ¼ãƒ‰å…¥åŠ›ãƒ•ãƒ©ã‚°
+$form->addElement("hidden", "hdn_goods_search_flg");        //å•†å“ã‚³ãƒ¼ãƒ‰å…¥åŠ›ãƒ•ãƒ©ã‚°
+$form->addElement("hidden", "hdn_ware_select_flg");         //å€‰åº«é¸æŠãƒ•ãƒ©ã‚°
+$form->addElement("hidden", "hdn_sum_button_flg");          //åˆè¨ˆãƒœã‚¿ãƒ³æŠ¼ä¸‹ãƒ•ãƒ©ã‚°
+$form->addElement("hidden", "add_row_flg");                 //è¡Œè¿½åŠ ãƒœã‚¿ãƒ³æŠ¼ä¸‹ãƒ•ãƒ©ã‚°
+$form->addElement("hidden", "hdn_show_button_flg");         //è¡¨ç¤ºãƒœã‚¿ãƒ³æŠ¼ä¸‹ãƒ•ãƒ©ã‚°
+//æŒã¡ã¾ã‚ã‚‹ä»•å…¥å…ˆã®æƒ…å ±
+$form->addElement("hidden", "hdn_coax");                    //ä¸¸ã‚åŒºåˆ†
+$form->addElement("hidden", "hdn_tax_franct");              //ç«¯æ•°åŒºåˆ†
+$form->addElement("hidden", "hdn_client_id");               //å¾—æ„å…ˆID
+$form->addElement("hidden", "hdn_order_id");                //å¤‰æ›´æ™‚ï¼ˆç™ºæ³¨IDï¼‰
 $form->addElement("hidden", "hdn_buy_id");
-$form->addElement("hidden", "hdn_buy_enter_day");           //»ÅÆşÅĞÏ¿Æü
-$form->addElement("hidden", "hdn_ord_enter_day");           //È¯ÃíÅĞÏ¿Æü
-$form->addElement("hidden", "hdn_ord_change_day");          //È¯ÃíÊÑ¹¹Æü
+$form->addElement("hidden", "hdn_buy_enter_day");           //ä»•å…¥ç™»éŒ²æ—¥
+$form->addElement("hidden", "hdn_ord_enter_day");           //ç™ºæ³¨ç™»éŒ²æ—¥
+$form->addElement("hidden", "hdn_ord_change_day");          //ç™ºæ³¨å¤‰æ›´æ—¥
 
-//É½¼¨¹Ô¿ô¤Ë´Ø·¸¤¹¤ë¾ğÊó
-$form->addElement("hidden", "del_row");                     //ºï½ü¹Ô
-$form->addElement("hidden", "max_row");                     //ºÇÂç¹Ô¿ô
+//è¡¨ç¤ºè¡Œæ•°ã«é–¢ä¿‚ã™ã‚‹æƒ…å ±
+$form->addElement("hidden", "del_row");                     //å‰Šé™¤è¡Œ
+$form->addElement("hidden", "max_row");                     //æœ€å¤§è¡Œæ•°
 
-//¹¹¿·¥Õ¥é¥°
+//æ›´æ–°ãƒ•ãƒ©ã‚°
 $form->addElement("hidden", "renew_flg", "1");
 
 //aoyama-n 2009-09-15
@@ -1518,126 +1518,126 @@ for($i = 0; $i < $max_row; $i++){
 }
 
 /****************************/
-//¥Ü¥¿¥ó²¡²¼½èÍıÈ½Äê
+//ãƒœã‚¿ãƒ³æŠ¼ä¸‹å‡¦ç†åˆ¤å®š
 /****************************/
-$buy_button_flg = ($_POST["form_buy_button"] == "»ÅÆş³ÎÇ§²èÌÌ¤Ø")? true : false;
+$buy_button_flg = ($_POST["form_buy_button"] == "ä»•å…¥ç¢ºèªç”»é¢ã¸")? true : false;
 
-$buy_comp_flg   = ($_POST["form_comp_button"] == "»ÅÆş´°Î»")?¡¡true : false;
+$buy_comp_flg   = ($_POST["form_comp_button"] == "ä»•å…¥å®Œäº†")?ã€€true : false;
 
 /****************************/
-//»ÅÆş³ÎÇ§¥Ü¥¿¥ó²¡²¼½èÍı
+//ä»•å…¥ç¢ºèªãƒœã‚¿ãƒ³æŠ¼ä¸‹å‡¦ç†
 /****************************/
 if($buy_button_flg == true || $buy_comp_flg == true){
 
     /******************************/
-    //¥ë¡¼¥ëºîÀ®¡ÊQuickForm¡Ë
+    //ãƒ«ãƒ¼ãƒ«ä½œæˆï¼ˆQuickFormï¼‰
     /******************************/
-    //Æş²ÙÆü
-    //¡üÉ¬¿Ü¥Á¥§¥Ã¥¯
+    //å…¥è·æ—¥
+    //â—å¿…é ˆãƒã‚§ãƒƒã‚¯
     $form->addGroupRule('form_arrival_day', array(
             'y' => array(
-                    array('Æş²ÙÆü¤ÎÆüÉÕ¤ÏÂÅÅö¤Ç¤Ï¤¢¤ê¤Ş¤»¤ó¡£', 'required')
+                    array('å…¥è·æ—¥ã®æ—¥ä»˜ã¯å¦¥å½“ã§ã¯ã‚ã‚Šã¾ã›ã‚“ã€‚', 'required')
             ),
             'm' => array(
-                    array('Æş²ÙÆü¤ÎÆüÉÕ¤ÏÂÅÅö¤Ç¤Ï¤¢¤ê¤Ş¤»¤ó¡£','required')
+                    array('å…¥è·æ—¥ã®æ—¥ä»˜ã¯å¦¥å½“ã§ã¯ã‚ã‚Šã¾ã›ã‚“ã€‚','required')
             ),
             'd' => array(
-                    array('Æş²ÙÆü¤ÎÆüÉÕ¤ÏÂÅÅö¤Ç¤Ï¤¢¤ê¤Ş¤»¤ó¡£','required')
+                    array('å…¥è·æ—¥ã®æ—¥ä»˜ã¯å¦¥å½“ã§ã¯ã‚ã‚Šã¾ã›ã‚“ã€‚','required')
             )               
     ));
     $form->addGroupRule('form_arrival_day', array(
             'y' => array(
-                    array('Æş²ÙÆü¤ÎÆüÉÕ¤ÏÂÅÅö¤Ç¤Ï¤¢¤ê¤Ş¤»¤ó¡£', 'numeric')
+                    array('å…¥è·æ—¥ã®æ—¥ä»˜ã¯å¦¥å½“ã§ã¯ã‚ã‚Šã¾ã›ã‚“ã€‚', 'numeric')
             ),              
             'm' => array(
-                    array('Æş²ÙÆü¤ÎÆüÉÕ¤ÏÂÅÅö¤Ç¤Ï¤¢¤ê¤Ş¤»¤ó¡£','numeric')
+                    array('å…¥è·æ—¥ã®æ—¥ä»˜ã¯å¦¥å½“ã§ã¯ã‚ã‚Šã¾ã›ã‚“ã€‚','numeric')
             ),              
             'd' => array(
-                    array('Æş²ÙÆü¤ÎÆüÉÕ¤ÏÂÅÅö¤Ç¤Ï¤¢¤ê¤Ş¤»¤ó¡£','numeric')
+                    array('å…¥è·æ—¥ã®æ—¥ä»˜ã¯å¦¥å½“ã§ã¯ã‚ã‚Šã¾ã›ã‚“ã€‚','numeric')
             )               
     ));
     
-    //»ÅÆşÆü
-    //¡üÉ¬¿Ü¥Á¥§¥Ã¥¯
+    //ä»•å…¥æ—¥
+    //â—å¿…é ˆãƒã‚§ãƒƒã‚¯
     $form->addGroupRule('form_buy_day', array(
             'y' => array(
-                    array('»ÅÆşÆü¤ÎÆüÉÕ¤ÏÂÅÅö¤Ç¤Ï¤¢¤ê¤Ş¤»¤ó¡£','required')
+                    array('ä»•å…¥æ—¥ã®æ—¥ä»˜ã¯å¦¥å½“ã§ã¯ã‚ã‚Šã¾ã›ã‚“ã€‚','required')
             ),              
             'm' => array(
-                    array('»ÅÆşÆü¤ÎÆüÉÕ¤ÏÂÅÅö¤Ç¤Ï¤¢¤ê¤Ş¤»¤ó¡£','required')
+                    array('ä»•å…¥æ—¥ã®æ—¥ä»˜ã¯å¦¥å½“ã§ã¯ã‚ã‚Šã¾ã›ã‚“ã€‚','required')
             ),              
             'd' => array(
-                    array('»ÅÆşÆü¤ÎÆüÉÕ¤ÏÂÅÅö¤Ç¤Ï¤¢¤ê¤Ş¤»¤ó¡£','required')
+                    array('ä»•å…¥æ—¥ã®æ—¥ä»˜ã¯å¦¥å½“ã§ã¯ã‚ã‚Šã¾ã›ã‚“ã€‚','required')
             )               
     ));
     $form->addGroupRule('form_buy_day', array(
             'y' => array(
-                    array('»ÅÆşÆü¤ÎÆüÉÕ¤ÏÂÅÅö¤Ç¤Ï¤¢¤ê¤Ş¤»¤ó¡£','numeric')
+                    array('ä»•å…¥æ—¥ã®æ—¥ä»˜ã¯å¦¥å½“ã§ã¯ã‚ã‚Šã¾ã›ã‚“ã€‚','numeric')
             ),              
             'm' => array(
-                    array('»ÅÆşÆü¤ÎÆüÉÕ¤ÏÂÅÅö¤Ç¤Ï¤¢¤ê¤Ş¤»¤ó¡£','numeric')
+                    array('ä»•å…¥æ—¥ã®æ—¥ä»˜ã¯å¦¥å½“ã§ã¯ã‚ã‚Šã¾ã›ã‚“ã€‚','numeric')
             ),
             'd' => array(
-                    array('»ÅÆşÆü¤ÎÆüÉÕ¤ÏÂÅÅö¤Ç¤Ï¤¢¤ê¤Ş¤»¤ó¡£','numeric')
+                    array('ä»•å…¥æ—¥ã®æ—¥ä»˜ã¯å¦¥å½“ã§ã¯ã‚ã‚Šã¾ã›ã‚“ã€‚','numeric')
             )
     ));
 
-    //»ÅÆşÀèCD
-    //¡üÉ¬¿Ü¥Á¥§¥Ã¥¯
+    //ä»•å…¥å…ˆCD
+    //â—å¿…é ˆãƒã‚§ãƒƒã‚¯
     $form->addGroupRule('form_client', array(
             'cd1' => array(
-                    array('Àµ¤·¤¤»ÅÆşÀè¥³¡¼¥É¤òÆşÎÏ¤·¤Æ¤¯¤À¤µ¤¤¡£','required')
+                    array('æ­£ã—ã„ä»•å…¥å…ˆã‚³ãƒ¼ãƒ‰ã‚’å…¥åŠ›ã—ã¦ãã ã•ã„ã€‚','required')
             ),
             'cd2' => array(
-                    array('Àµ¤·¤¤»ÅÆşÀè¥³¡¼¥É¤òÆşÎÏ¤·¤Æ¤¯¤À¤µ¤¤¡£','required')
+                    array('æ­£ã—ã„ä»•å…¥å…ˆã‚³ãƒ¼ãƒ‰ã‚’å…¥åŠ›ã—ã¦ãã ã•ã„ã€‚','required')
             ),
             'name' => array(
-                    array('Àµ¤·¤¤»ÅÆşÀè¥³¡¼¥É¤òÆşÎÏ¤·¤Æ¤¯¤À¤µ¤¤¡£','required')
+                    array('æ­£ã—ã„ä»•å…¥å…ˆã‚³ãƒ¼ãƒ‰ã‚’å…¥åŠ›ã—ã¦ãã ã•ã„ã€‚','required')
             )
     ));
 
-    //»ÅÆşÁÒ¸Ë
-    //¡üÉ¬¿Ü¥Á¥§¥Ã¥¯
-    $form->addRule('form_ware','»ÅÆşÁÒ¸Ë¤òÁªÂò¤·¤Æ¤¯¤À¤µ¤¤¡£','required');
+    //ä»•å…¥å€‰åº«
+    //â—å¿…é ˆãƒã‚§ãƒƒã‚¯
+    $form->addRule('form_ware','ä»•å…¥å€‰åº«ã‚’é¸æŠã—ã¦ãã ã•ã„ã€‚','required');
 
-    //¼è°ú¶èÊ¬
-    //¡üÉ¬¿Ü¥Á¥§¥Ã¥¯
-    $form->addRule('form_trade','¼è°ú¶èÊ¬¤òÁªÂò¤·¤Æ¤¯¤À¤µ¤¤¡£','required');
+    //å–å¼•åŒºåˆ†
+    //â—å¿…é ˆãƒã‚§ãƒƒã‚¯
+    $form->addRule('form_trade','å–å¼•åŒºåˆ†ã‚’é¸æŠã—ã¦ãã ã•ã„ã€‚','required');
 
-    //»ÅÆşÃ´Åö¼Ô
-    //¡üÉ¬¿Ü¥Á¥§¥Ã¥¯
-    $form->addRule('form_buy_staff','»ÅÆşÃ´Åö¼Ô¤òÁªÂò¤·¤Æ¤¯¤À¤µ¤¤¡£','required');
+    //ä»•å…¥æ‹…å½“è€…
+    //â—å¿…é ˆãƒã‚§ãƒƒã‚¯
+    $form->addRule('form_buy_staff','ä»•å…¥æ‹…å½“è€…ã‚’é¸æŠã—ã¦ãã ã•ã„ã€‚','required');
 
-    // ¢£È÷¹Í
-    // Ê¸»ú¿ô¥Á¥§¥Ã¥¯
+    // â– å‚™è€ƒ
+    // æ–‡å­—æ•°ãƒã‚§ãƒƒã‚¯
     $form->registerRule("mb_maxlength", "function", "Mb_Maxlength");
-    $form->addRule("form_note", "È÷¹Í¤Ï100Ê¸»ú°ÊÆâ¤Ç¤¹¡£","mb_maxlength", "100");
+    $form->addRule("form_note", "å‚™è€ƒã¯100æ–‡å­—ä»¥å†…ã§ã™ã€‚","mb_maxlength", "100");
 
     /******************************/
-    //POST¼èÆÀ
+    //POSTå–å¾—
     /******************************/
-    $client_id                  = $_POST["hdn_client_id"];                  //»ÅÆşID
-    $client_cd1                 = $_POST["form_client"]["cd1"];             //»ÅÆşÀèCD
-    $client_cd2                 = $_POST["form_client"]["cd2"];             //»ÅÆşÀèCD
-    $buy_no                     = $_POST["form_buy_no"];                    //»ÅÆşÈÖ¹æ
-    $order_no                   = $_POST["form_order_no"];                  //È¯ÃíÈÖ¹æ
-    $order_date                 = $_POST["form_order_day"]["y"];            //È¯ÃíÆü¡ÊÇ¯¡Ë
-    $order_date                 = $_POST["form_order_day"]["m"];            //È¯ÃíÆü¡Ê·î¡Ë
-    $order_date                 = $_POST["form_order_day"]["d"];            //È¯ÃíÆü¡ÊÆü¡Ë
-    $arrival_day["y"]           = $_POST["form_arrival_day"]["y"];          //Æş²ÙÆü¡ÊÇ¯¡Ë
-    $arrival_day["m"]           = $_POST["form_arrival_day"]["m"];          //Æş²ÙÆü¡Ê·î¡Ë
-    $arrival_day["d"]           = $_POST["form_arrival_day"]["d"];          //Æş²ÙÆü¡ÊÆü¡Ë
-    $buy_day["y"]               = $_POST["form_buy_day"]["y"];              //»ÅÆşÆü¡ÊÇ¯¡Ë
-    $buy_day["m"]               = $_POST["form_buy_day"]["m"];              //»ÅÆşÆü¡Ê·î¡Ë
-    $buy_day["d"]               = $_POST["form_buy_day"]["d"];              //»ÅÆşÆü¡ÊÆü¡Ë
-    $direct                     = ($_POST["form_direct"] != NULL)? $_POST["form_direct"] : NULL;  //Ä¾Á÷Àè
-    $ware                       = $_POST["form_ware"];                      //»ÅÆşÁÒ¸Ë
-    $trade                      = $_POST["form_trade"];                     //¼è°ú¶èÊ¬
-    $buy_staff                  = $_POST["form_buy_staff"];                 //»ÅÆşÃ´Åö¼Ô
-    $order_staff                = ($_POST["form_order_staff"] != null)? $_POST["form_order_staff"] : null; //»ÅÆşÃ´Åö¼Ô
-    $note                       = $_POST["form_note"];                      //È÷¹Í
+    $client_id                  = $_POST["hdn_client_id"];                  //ä»•å…¥ID
+    $client_cd1                 = $_POST["form_client"]["cd1"];             //ä»•å…¥å…ˆCD
+    $client_cd2                 = $_POST["form_client"]["cd2"];             //ä»•å…¥å…ˆCD
+    $buy_no                     = $_POST["form_buy_no"];                    //ä»•å…¥ç•ªå·
+    $order_no                   = $_POST["form_order_no"];                  //ç™ºæ³¨ç•ªå·
+    $order_date                 = $_POST["form_order_day"]["y"];            //ç™ºæ³¨æ—¥ï¼ˆå¹´ï¼‰
+    $order_date                 = $_POST["form_order_day"]["m"];            //ç™ºæ³¨æ—¥ï¼ˆæœˆï¼‰
+    $order_date                 = $_POST["form_order_day"]["d"];            //ç™ºæ³¨æ—¥ï¼ˆæ—¥ï¼‰
+    $arrival_day["y"]           = $_POST["form_arrival_day"]["y"];          //å…¥è·æ—¥ï¼ˆå¹´ï¼‰
+    $arrival_day["m"]           = $_POST["form_arrival_day"]["m"];          //å…¥è·æ—¥ï¼ˆæœˆï¼‰
+    $arrival_day["d"]           = $_POST["form_arrival_day"]["d"];          //å…¥è·æ—¥ï¼ˆæ—¥ï¼‰
+    $buy_day["y"]               = $_POST["form_buy_day"]["y"];              //ä»•å…¥æ—¥ï¼ˆå¹´ï¼‰
+    $buy_day["m"]               = $_POST["form_buy_day"]["m"];              //ä»•å…¥æ—¥ï¼ˆæœˆï¼‰
+    $buy_day["d"]               = $_POST["form_buy_day"]["d"];              //ä»•å…¥æ—¥ï¼ˆæ—¥ï¼‰
+    $direct                     = ($_POST["form_direct"] != NULL)? $_POST["form_direct"] : NULL;  //ç›´é€å…ˆ
+    $ware                       = $_POST["form_ware"];                      //ä»•å…¥å€‰åº«
+    $trade                      = $_POST["form_trade"];                     //å–å¼•åŒºåˆ†
+    $buy_staff                  = $_POST["form_buy_staff"];                 //ä»•å…¥æ‹…å½“è€…
+    $order_staff                = ($_POST["form_order_staff"] != null)? $_POST["form_order_staff"] : null; //ä»•å…¥æ‹…å½“è€…
+    $note                       = $_POST["form_note"];                      //å‚™è€ƒ
 
-    //È¯Ãí¥¹¥Æ¡¼¥¿¥¹¥Á¥§¥Ã¥¯
+    //ç™ºæ³¨ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ãƒã‚§ãƒƒã‚¯
     if($order_id != null && $buy_get_flg == false){
         $sql  = "SELECT \n";
         $sql .= "   t_order_h.ps_stat \n";
@@ -1653,13 +1653,13 @@ if($buy_button_flg == true || $buy_comp_flg == true){
             $ps_stat = pg_fetch_result($result, 0,0);
         }
 
-        //È¯Ãí¤Î½èÍı¾õ¶·¤¬´°Î»¤Î¾ì¹ç
+        //ç™ºæ³¨ã®å‡¦ç†çŠ¶æ³ãŒå®Œäº†ã®å ´åˆ
         if($ps_stat == '3'){
             header("Location:./1-3-205.php?buy_id=0&input_flg=true&ps_stat=true");
         }
     }
 
-    //»ÅÆşÀè¥Á¥§¥Ã¥¯
+    //ä»•å…¥å…ˆãƒã‚§ãƒƒã‚¯
     $sql  = "SELECT";
     $sql .= "   COUNT(client_id) ";
     $sql .= "FROM";
@@ -1675,46 +1675,46 @@ if($buy_button_flg == true || $buy_comp_flg == true){
     $result = Db_Query($db_con, $sql);
     $client_num = pg_fetch_result($result, 0, 0);
 
-    //»ÅÆşÀè¥³¡¼¥É¤¬ÉÔÀµ¤Ê¾ì¹ç
+    //ä»•å…¥å…ˆã‚³ãƒ¼ãƒ‰ãŒä¸æ­£ãªå ´åˆ
     if($client_num != 1){
-        $form->setElementError("form_client", "»ÅÆşÀè¾ğÊó¼èÆÀÁ°¤Ë È¯Ãí³ÎÇ§²èÌÌ¤Ø¥Ü¥¿¥ó <br>¤¬²¡¤µ¤ì¤Ş¤·¤¿¡£Áàºî¤ò¤ä¤êÄ¾¤·¤Æ¤¯¤À¤µ¤¤¡£");
+        $form->setElementError("form_client", "ä»•å…¥å…ˆæƒ…å ±å–å¾—å‰ã« ç™ºæ³¨ç¢ºèªç”»é¢ã¸ãƒœã‚¿ãƒ³ <br>ãŒæŠ¼ã•ã‚Œã¾ã—ãŸã€‚æ“ä½œã‚’ã‚„ã‚Šç›´ã—ã¦ãã ã•ã„ã€‚");
 
-    //»ÅÆşÀè¥³¡¼¥É¤¬ÀµÅö¤Ê¾ì¹ç
+    //ä»•å…¥å…ˆã‚³ãƒ¼ãƒ‰ãŒæ­£å½“ãªå ´åˆ
     }elseif($client_cd1 != null && $client_cd2 != null){
  
         //aoyama-n 2009-09-01
-        //ÃÍ°ú¾¦ÉÊÁªÂò»ş¤Î¼è°ú¶èÊ¬¥Á¥§¥Ã¥¯¡ÊÃÍ°ú¡¦ÊÖÉÊ¤Ï»ÈÍÑÉÔ²Ä¡Ë
+        //å€¤å¼•å•†å“é¸æŠæ™‚ã®å–å¼•åŒºåˆ†ãƒã‚§ãƒƒã‚¯ï¼ˆå€¤å¼•ãƒ»è¿”å“ã¯ä½¿ç”¨ä¸å¯ï¼‰
         if(($trade == '23' || $trade == '24' || $trade == '73' || $trade == '74') && (in_array('t', $_POST[hdn_discount_flg]))){
-            $form->setElementError("form_trade", "ÃÍ°ú¾¦ÉÊ¤òÁªÂò¤·¤¿¾ì¹ç¡¢»ÈÍÑ¤Ç¤­¤ë¼è°ú¶èÊ¬¤Ï¡Ö³İ»ÅÆş¡¢³äÉê»ÅÆş¡¢¸½¶â»ÅÆş¡×¤Î¤ß¤Ç¤¹¡£");
+            $form->setElementError("form_trade", "å€¤å¼•å•†å“ã‚’é¸æŠã—ãŸå ´åˆã€ä½¿ç”¨ã§ãã‚‹å–å¼•åŒºåˆ†ã¯ã€Œæ›ä»•å…¥ã€å‰²è³¦ä»•å…¥ã€ç¾é‡‘ä»•å…¥ã€ã®ã¿ã§ã™ã€‚");
             #2009-09-15 hashimoto-y
             $trade_err = true;
         }
 
-        //¥Ç¡¼¥¿¥Á¥§¥Ã¥¯¤ËÅÏ¤¹°ú¿ôÀ¸À®
+        //ãƒ‡ãƒ¼ã‚¿ãƒã‚§ãƒƒã‚¯ã«æ¸¡ã™å¼•æ•°ç”Ÿæˆ
         $check_ary = array($db_con, $order_id, $_POST["hdn_ord_enter_day"], $get_buy_id);
 
-        //¥Ç¡¼¥¿¥Á¥§¥Ã¥¯
+        //ãƒ‡ãƒ¼ã‚¿ãƒã‚§ãƒƒã‚¯
         $check_data = Row_Data_Check(
-                                $_POST[hdn_goods_id],       //¾¦ÉÊID
-                                $_POST[form_goods_cd],      //¾¦ÉÊ¥³¡¼¥É
-                                $_POST[form_goods_name],    //¾¦ÉÊÌ¾
-                                $_POST[form_buy_num],       //»ÅÆş¿ô
-                                $_POST[form_buy_price],     //»ÅÆşÃ±²Á
-                                $_POST[form_buy_amount],    //»ÅÆş¶â³Û
-                                $_POST[hdn_tax_div],        //²İÀÇ¶èÊ¬
-                                $del_history,               //ºï½üÍúÎò
-                                $max_row,                   //ºÇÂç¹Ô¿ô
-                                "buy",                      //¶èÊ¬
+                                $_POST[hdn_goods_id],       //å•†å“ID
+                                $_POST[form_goods_cd],      //å•†å“ã‚³ãƒ¼ãƒ‰
+                                $_POST[form_goods_name],    //å•†å“å
+                                $_POST[form_buy_num],       //ä»•å…¥æ•°
+                                $_POST[form_buy_price],     //ä»•å…¥å˜ä¾¡
+                                $_POST[form_buy_amount],    //ä»•å…¥é‡‘é¡
+                                $_POST[hdn_tax_div],        //èª²ç¨åŒºåˆ†
+                                $del_history,               //å‰Šé™¤å±¥æ­´
+                                $max_row,                   //æœ€å¤§è¡Œæ•°
+                                "buy",                      //åŒºåˆ†
                                 $db_con,
-                                $_POST[form_order_num],     //È¯Ãí¿ô
-                                $_POST[hdn_royalty],        //¥í¥¤¥ä¥ê¥Æ¥£
-                                $_POST[hdn_order_d_id],     //È¯Ãí¥Ç¡¼¥¿ID
+                                $_POST[form_order_num],     //ç™ºæ³¨æ•°
+                                $_POST[hdn_royalty],        //ãƒ­ã‚¤ãƒ¤ãƒªãƒ†ã‚£
+                                $_POST[hdn_order_d_id],     //ç™ºæ³¨ãƒ‡ãƒ¼ã‚¿ID
                                 //aoyama-n 2009-09-01
                                 #$check_ary
                                 $check_ary,
-                                $_POST[hdn_discount_flg]    //ÃÍ°ú¥Õ¥é¥°
+                                $_POST[hdn_discount_flg]    //å€¤å¼•ãƒ•ãƒ©ã‚°
                                 );
-        //ÊÑ¿ô½é´ü²½
+        //å¤‰æ•°åˆæœŸåŒ–
         $goods_id   = null;
         $goods_cd   = null;
         $goods_name = null;
@@ -1726,24 +1726,24 @@ if($buy_button_flg == true || $buy_comp_flg == true){
         $royalty    = null;
         $order_d_id = null;
 
-        //¥¨¥é¡¼¤¬¤¢¤Ã¤¿¾ì¹ç
+        //ã‚¨ãƒ©ãƒ¼ãŒã‚ã£ãŸå ´åˆ
         if($check_data[0] === true){
-            //¾¦ÉÊ¤¬°ì¤Ä¤âÁªÂò¤µ¤ì¤Æ¤¤¤Ê¤¤¾ì¹ç
+            //å•†å“ãŒä¸€ã¤ã‚‚é¸æŠã•ã‚Œã¦ã„ãªã„å ´åˆ
             $form->setElementError("form_buy_no",$check_data[1]);
     
-            //Àµ¤·¤¤¾¦ÉÊ¥³¡¼¥É¤¬ÆşÎÏ¤µ¤ì¤Æ¤¤¤Ê¤¤¾ì¹ç
+            //æ­£ã—ã„å•†å“ã‚³ãƒ¼ãƒ‰ãŒå…¥åŠ›ã•ã‚Œã¦ã„ãªã„å ´åˆ
             $goods_err = $check_data[2];
 
-            //È¯Ãí¿ô¤È»ÅÆşÃ±²Á¤ËÆşÎÏ¤¬¤¢¤ë¤«
+            //ç™ºæ³¨æ•°ã¨ä»•å…¥å˜ä¾¡ã«å…¥åŠ›ãŒã‚ã‚‹ã‹
             $price_num_err = $check_data[3];
 
-            //È¯Ãí¿ôÈ¾³Ñ¿ô»ú¥Á¥§¥Ã¥¯
+            //ç™ºæ³¨æ•°åŠè§’æ•°å­—ãƒã‚§ãƒƒã‚¯
             $num_err = $check_data[4];
 
-            //Ã±²ÁÈ¾³Ñ¥Á¥§¥Ã¥¯
+            //å˜ä¾¡åŠè§’ãƒã‚§ãƒƒã‚¯
             $price_err = $check_data[5];
 
-            //È¯Ãí¿ô¤ò»ÅÆş¿ô¤¬Ä¶¤¨¤¿¾ì¹ç
+            //ç™ºæ³¨æ•°ã‚’ä»•å…¥æ•°ãŒè¶…ãˆãŸå ´åˆ
             $ord_num_err = $check_data[6];
 
             if($check_data[1] != null || $goods_err != null || $price_num_err != null || $num_err != null || $price_err != null){
@@ -1754,12 +1754,12 @@ if($buy_button_flg == true || $buy_comp_flg == true){
 
         #2009-09-15 hashimoto-y
         }elseif($trade_err === true){
-        //¼è°ú¶èÊ¬¤¬¥¨¥é¡¼¤Î¾ì¹ç  ²¿¤â¤·¤Ê¤¤
+        //å–å¼•åŒºåˆ†ãŒã‚¨ãƒ©ãƒ¼ã®å ´åˆ  ä½•ã‚‚ã—ãªã„
 
         }else{
-        //¥¨¥é¡¼¤¬¤Ê¤«¤Ã¤¿¾ì¹ç
+        //ã‚¨ãƒ©ãƒ¼ãŒãªã‹ã£ãŸå ´åˆ
 
-            //ÅĞÏ¿ÂĞ¾İ¥Ç¡¼¥¿¤òÊÑ¿ô¤Ë¥»¥Ã¥È
+            //ç™»éŒ²å¯¾è±¡ãƒ‡ãƒ¼ã‚¿ã‚’å¤‰æ•°ã«ã‚»ãƒƒãƒˆ
             $goods_id   = $check_data[1][goods_id];
             $goods_cd   = $check_data[1][goods_cd];
             $goods_name = $check_data[1][goods_name];
@@ -1773,7 +1773,7 @@ if($buy_button_flg == true || $buy_comp_flg == true){
             $def_line   = $check_data[1][def_line];
 
 
-            //È¯Ãí¿ô¤ò»ÅÆş¿ô¤¬Ä¶¤¨¤¿¾ì¹ç
+            //ç™ºæ³¨æ•°ã‚’ä»•å…¥æ•°ãŒè¶…ãˆãŸå ´åˆ
             $ord_num_err = $check_data[2];
         }
     }
@@ -1784,55 +1784,55 @@ if($buy_button_flg == true || $buy_comp_flg == true){
 
     $data = Total_Amount($buy_amount, $tax_div, $coax, $tax_franct, $tax_rate, $client_id, $db_con);
 
-    //¥Õ¥©¡¼¥à¤ËÃÍ¥»¥Ã¥È
+    //ãƒ•ã‚©ãƒ¼ãƒ ã«å€¤ã‚»ãƒƒãƒˆ
     $set_data["form_buy_money"]     = number_format($data[0]);
     $set_data["form_tax_money"]     = number_format($data[1]);
     $set_data["form_total_money"]   = number_format($data[2]);
     $form->setConstants($set_data);
 
     /******************************/
-    //¥ë¡¼¥ëºîÀ®
+    //ãƒ«ãƒ¼ãƒ«ä½œæˆ
     /******************************/
-    //Æş²ÙÆü
-    //¡üÆüÉÕÂÅÅöÀ­¥Á¥§¥Ã¥¯
+    //å…¥è·æ—¥
+    //â—æ—¥ä»˜å¦¥å½“æ€§ãƒã‚§ãƒƒã‚¯
     if(!checkdate((int)$arrival_day["m"], (int)$arrival_day["d"], (int)$arrival_day["y"])){
-        $form->setElementError("form_arrival_day", "Æş²ÙÆü¤ÎÆüÉÕ¤ÏÂÅÅö¤Ç¤Ï¤¢¤ê¤Ş¤»¤ó¡£");
+        $form->setElementError("form_arrival_day", "å…¥è·æ—¥ã®æ—¥ä»˜ã¯å¦¥å½“ã§ã¯ã‚ã‚Šã¾ã›ã‚“ã€‚");
     }else{
-        //·î¼¡¹¹¿·
+        //æœˆæ¬¡æ›´æ–°
         if(Check_Monthly_Renew($db_con, $client_id, '2', $arrival_day["y"], $arrival_day["m"], $arrival_day["d"]) === false){
-            $form->setElementError("form_arrival_day", "Æş²ÙÆü¤Ë·î¼¡¹¹¿·Æü°ÊÁ°¤ÎÆüÉÕ¤ÏÅĞÏ¿¤Ç¤­¤Ş¤»¤ó¡£");
+            $form->setElementError("form_arrival_day", "å…¥è·æ—¥ã«æœˆæ¬¡æ›´æ–°æ—¥ä»¥å‰ã®æ—¥ä»˜ã¯ç™»éŒ²ã§ãã¾ã›ã‚“ã€‚");
         }
 
-        //¥·¥¹¥Æ¥à³«»ÏÆü¥Á¥§¥Ã¥¯
-        $arrival_day_err   = Sys_Start_Date_Chk($arrival_day["y"], $arrival_day["m"], $arrival_day["d"], "Æş²ÙÆü");
+        //ã‚·ã‚¹ãƒ†ãƒ é–‹å§‹æ—¥ãƒã‚§ãƒƒã‚¯
+        $arrival_day_err   = Sys_Start_Date_Chk($arrival_day["y"], $arrival_day["m"], $arrival_day["d"], "å…¥è·æ—¥");
         if($arrival_day_err != Null){
             $form->setElementError("form_arrival_day", $arrival_day_err);
         }       
     }
 
-    //»ÅÆşÆü
-    //¡üÆüÉÕÂÅÅöÀ­¥Á¥§¥Ã¥¯
+    //ä»•å…¥æ—¥
+    //â—æ—¥ä»˜å¦¥å½“æ€§ãƒã‚§ãƒƒã‚¯
     if(!checkdate((int)$buy_day["m"], (int)$buy_day["d"], (int)$buy_day["y"])){
-        $form->setElementError("form_buy_day", "»ÅÆşÆü¤ÎÆüÉÕ¤ÏÂÅÅö¤Ç¤Ï¤¢¤ê¤Ş¤»¤ó¡£");
+        $form->setElementError("form_buy_day", "ä»•å…¥æ—¥ã®æ—¥ä»˜ã¯å¦¥å½“ã§ã¯ã‚ã‚Šã¾ã›ã‚“ã€‚");
     }else{
-        //·î¼¡¹¹¿·
+        //æœˆæ¬¡æ›´æ–°
         if(Check_Monthly_Renew($db_con, $client_id, '2', $buy_day["y"], $buy_day["m"], $buy_day["d"]) === false){
-            $form->setElementError("form_buy_day", "»ÅÆşÆü¤Ë·î¼¡¹¹¿·Æü°ÊÁ°¤ÎÆüÉÕ¤ÏÅĞÏ¿¤Ç¤­¤Ş¤»¤ó¡£");
+            $form->setElementError("form_buy_day", "ä»•å…¥æ—¥ã«æœˆæ¬¡æ›´æ–°æ—¥ä»¥å‰ã®æ—¥ä»˜ã¯ç™»éŒ²ã§ãã¾ã›ã‚“ã€‚");
         }
 
-        //»ÅÆşÄùÆü¥Á¥§¥Ã¥¯
+        //ä»•å…¥ç· æ—¥ãƒã‚§ãƒƒã‚¯
         if(Check_Payment_Close_Day($db_con, $client_id, $buy_day["y"], $buy_day["m"], $buy_day["d"]) === false){
-            $form->setElementError("form_buy_day", "»ÅÆşÆü¤Ë»ÅÆşÄùÆü°ÊÁ°¤ÎÆüÉÕ¤ÏÅĞÏ¿¤Ç¤­¤Ş¤»¤ó¡£");
+            $form->setElementError("form_buy_day", "ä»•å…¥æ—¥ã«ä»•å…¥ç· æ—¥ä»¥å‰ã®æ—¥ä»˜ã¯ç™»éŒ²ã§ãã¾ã›ã‚“ã€‚");
         }
 
-        //¥·¥¹¥Æ¥à³«»ÏÆü¥Á¥§¥Ã¥¯
-        $buy_day_err   = Sys_Start_Date_Chk($buy_day["y"], $buy_day["m"], $buy_day["d"], "»ÅÆşÆü");
+        //ã‚·ã‚¹ãƒ†ãƒ é–‹å§‹æ—¥ãƒã‚§ãƒƒã‚¯
+        $buy_day_err   = Sys_Start_Date_Chk($buy_day["y"], $buy_day["m"], $buy_day["d"], "ä»•å…¥æ—¥");
         if($buy_day_err != Null){
             $form->setElementError("form_buy_day", $buy_day_err);
         }       
     }
 
-    //¹¹¿·½èÍı¼Â»ÜÆü¥Á¥§¥Ã¥¯
+    //æ›´æ–°å‡¦ç†å®Ÿæ–½æ—¥ãƒã‚§ãƒƒã‚¯
     $buy_day["m"] = str_pad($buy_day["m"], 2, 0, STR_PAD_LEFT);
     $buy_day["d"] = str_pad($buy_day["d"], 2, 0, STR_PAD_LEFT);
 
@@ -1840,40 +1840,40 @@ if($buy_button_flg == true || $buy_comp_flg == true){
 
 /*
     for($i = 0; $i < count($goods_id); $i++){
-        //¾¦ÉÊ¥Á¥§¥Ã¥¯
-        //¾¦ÉÊ½ÅÊ£¥Á¥§¥Ã¥¯
+        //å•†å“ãƒã‚§ãƒƒã‚¯
+        //å•†å“é‡è¤‡ãƒã‚§ãƒƒã‚¯
         for($j = 0; $j < count($goods_id); $j++){
             if($goods_id[$i] != null && $goods_id[$j] != null && $i != $j && $goods_id[$i] == $goods_id[$j]){
-                //$form->setElementError("form_buy_no", "Æ±¤¸¾¦ÉÊ¤¬£²ÅÙÁªÂò¤µ¤ì¤Æ¤¤¤Ş¤¹¡£");
-                $goods_twice =  "Æ±¤¸¾¦ÉÊ¤¬Ê£¿ôÁªÂò¤µ¤ì¤Æ¤¤¤Ş¤¹¡£";
+                //$form->setElementError("form_buy_no", "åŒã˜å•†å“ãŒï¼’åº¦é¸æŠã•ã‚Œã¦ã„ã¾ã™ã€‚");
+                $goods_twice =  "åŒã˜å•†å“ãŒè¤‡æ•°é¸æŠã•ã‚Œã¦ã„ã¾ã™ã€‚";
             }
         }
     }
 */
-    //¾¦ÉÊ¥Á¥§¥Ã¥¯
-    //¾¦ÉÊ½ÅÊ£¥Á¥§¥Ã¥¯
+    //å•†å“ãƒã‚§ãƒƒã‚¯
+    //å•†å“é‡è¤‡ãƒã‚§ãƒƒã‚¯
     $goods_count = count($goods_id);
     for($i = 0; $i < $goods_count; $i++){
 
-        //´û¤Ë¥Á¥§¥Ã¥¯ºÑ¤ß¤Î¾¦ÉÊ¤Î¾ì¹ç¤Ï½·¯Ìß
+        //æ—¢ã«ãƒã‚§ãƒƒã‚¯æ¸ˆã¿ã®å•†å“ã®å ´åˆã¯ï½½ï½·ï½¯ï¾Œï¾Ÿ
         if(@in_array($goods_id[$i], $checked_goods_id)){
             continue;
         }
 
-        //¥Á¥§¥Ã¥¯ÂĞ¾İ¤È¤Ê¤ë¾¦ÉÊ
+        //ãƒã‚§ãƒƒã‚¯å¯¾è±¡ã¨ãªã‚‹å•†å“
         $err_goods_cd = $goods_cd[$i];
         $mst_line = $def_line[$i];
 
         for($j = $i+1; $j < $goods_count; $j++){
-            //¾¦ÉÊ¤¬Æ±¤¸¾ì¹ç
+            //å•†å“ãŒåŒã˜å ´åˆ
             if($goods_id[$i] == $goods_id[$j]) {
                 $duplicate_line .= ", ".($def_line[$j]);
             }
         }
-        $checked_goods_id[] = $goods_id[$i];    //¥Á¥§¥Ã¥¯ºÑ¤ß¾¦ÉÊ
+        $checked_goods_id[] = $goods_id[$i];    //ãƒã‚§ãƒƒã‚¯æ¸ˆã¿å•†å“
 
         if($duplicate_line != null){
-            $duplicate_goods_err[] =  "¾¦ÉÊ¥³¡¼¥É¡§".$err_goods_cd."¤Î¾¦ÉÊ¤¬Ê£¿ôÁªÂò¤µ¤ì¤Æ¤¤¤Ş¤¹¡£(".$mst_line.$duplicate_line."¹ÔÌÜ)";
+            $duplicate_goods_err[] =  "å•†å“ã‚³ãƒ¼ãƒ‰ï¼š".$err_goods_cd."ã®å•†å“ãŒè¤‡æ•°é¸æŠã•ã‚Œã¦ã„ã¾ã™ã€‚(".$mst_line.$duplicate_line."è¡Œç›®)";
         }
 
         $err_goods_cd   = null;
@@ -1882,42 +1882,42 @@ if($buy_button_flg == true || $buy_comp_flg == true){
     }
 
     /*****************************/
-    //ÃÍ¸¡¾Ú
+    //å€¤æ¤œè¨¼
     /*****************************/
     if($form->validate()){
 
         /*******************************/
-        //ÅĞÏ¿½èÍı
+        //ç™»éŒ²å‡¦ç†
         /*******************************/
-        //»ÅÆş´°Î»¥Ü¥¿¥ó¥Õ¥é¥°¤¬true¤Î¾ì¹ç
+        //ä»•å…¥å®Œäº†ãƒœã‚¿ãƒ³ãƒ•ãƒ©ã‚°ãŒtrueã®å ´åˆ
         if($buy_comp_flg == true){
 
             $total_amount_data = Total_Amount($buy_amount, $tax_div, $coax, $tax_franct, $tax_rate, $client_id, $db_con);
 
-            //ÆüÉÕ¤ò·ë¹ç
-            $arrival_date   = $arrival_day["y"]."-".$arrival_day["m"]."-".$arrival_day["d"];  //Æş²ÙÆü
+            //æ—¥ä»˜ã‚’çµåˆ
+            $arrival_date   = $arrival_day["y"]."-".$arrival_day["m"]."-".$arrival_day["d"];  //å…¥è·æ—¥
 
             Db_Query($db_con, "BEGIN");
 
-            //»ÅÆşÊÑ¹¹ÆşÎÏ¤Î¾ì¹ç
+            //ä»•å…¥å¤‰æ›´å…¥åŠ›ã®å ´åˆ
             if($update_flg == true){
 
-                //»ÅÆş¤¬ºï½ü¤µ¤ì¤Æ¤¤¤Ê¤¤¤«³ÎÇ§
+                //ä»•å…¥ãŒå‰Šé™¤ã•ã‚Œã¦ã„ãªã„ã‹ç¢ºèª
                 $update_check_flg = Update_Check($db_con, "t_buy_h", "buy_id", $get_buy_id, $_POST["hdn_buy_enter_day"]);
-                //´û¤Ëºï½ü¤µ¤ì¤Æ¤¤¤¿¾ì¹ç
+                //æ—¢ã«å‰Šé™¤ã•ã‚Œã¦ã„ãŸå ´åˆ
                 if($update_check_flg === false){
                     header("Location:./1-3-205.php?buy_id=$get_buy_id&input_flg=true&del_buy_flg=true");
                     exit;
                 }
                 if($order_id != null){
-                    //È¯Ãí¤¬ÊÑ¹¹¤µ¤ì¤Æ¤¤¤Ê¤¤¤«³ÎÇ§
+                    //ç™ºæ³¨ãŒå¤‰æ›´ã•ã‚Œã¦ã„ãªã„ã‹ç¢ºèª
                     $update_data_check_flg = Update_Data_Check($db_con, "t_order_h", "ord_id", $order_id, $_POST["hdn_ord_change_day"]);
                     if($update_data_check_flg === false){
                         header("Location:./1-3-205.php?buy_id=0&input_flg=true&change_ord_flg=true");
                         exit;
                     }
                 }
-                //»ÙÊ§¥Ø¥Ã¥À¤ò¤È¤ê¤¢¤¨¤ººï½ü
+                //æ”¯æ‰•ãƒ˜ãƒƒãƒ€ã‚’ã¨ã‚Šã‚ãˆãšå‰Šé™¤
                 $sql  = "DELETE FROM t_payout_h WHERE buy_id = $get_buy_id";
 
                 $result = Db_Query($db_con, $sql);
@@ -1926,7 +1926,7 @@ if($buy_button_flg == true || $buy_comp_flg == true){
                     exit;
                 }
 
-                //¡Ö»ÅÆş¥Ø¥Ã¥À¥Æ¡¼¥Ö¥ë¡×¤Î²¼µ­¤Î¾ğÊó¤ò¹¹¿·
+                //ã€Œä»•å…¥ãƒ˜ãƒƒãƒ€ãƒ†ãƒ¼ãƒ–ãƒ«ã€ã®ä¸‹è¨˜ã®æƒ…å ±ã‚’æ›´æ–°
                 $sql  = "UPDATE\n";
                 $sql .= "    t_buy_h\n";
                 $sql .= " SET\n";
@@ -1962,13 +1962,13 @@ if($buy_button_flg == true || $buy_comp_flg == true){
 
                 $result = Db_Query($db_con, $sql);
 
-                //¼ºÇÔ¤·¤¿¾ì¹ç¤Ï¥í¡¼¥ë¥Ğ¥Ã¥¯
+                //å¤±æ•—ã—ãŸå ´åˆã¯ãƒ­ãƒ¼ãƒ«ãƒãƒƒã‚¯
                 if($result === false){
                     Db_Query($db_con, "ROLLBACK");
                     exit;
                 }
 
-                //¡Ö»ÅÆş¥Ç¡¼¥¿¥Æ¡¼¥Ö¥ë¡×¤«¤éGET¤Ç¼èÆÀ¤·¤¿»ÅÆşID¤È¥Ş¥Ã¥Á¤¹¤ë¥Ç¡¼¥¿¤òºï½ü
+                //ã€Œä»•å…¥ãƒ‡ãƒ¼ã‚¿ãƒ†ãƒ¼ãƒ–ãƒ«ã€ã‹ã‚‰GETã§å–å¾—ã—ãŸä»•å…¥IDã¨ãƒãƒƒãƒã™ã‚‹ãƒ‡ãƒ¼ã‚¿ã‚’å‰Šé™¤
                 $sql  = "DELETE FROM";
                 $sql .= "    t_buy_d";
                 $sql .= " WHERE";
@@ -1976,13 +1976,13 @@ if($buy_button_flg == true || $buy_comp_flg == true){
                 $sql .= ";";
                
                 $result = Db_Query($db_con, $sql);
-                //¼ºÇÔ¤·¤¿¾ì¹ç¤Ï¥í¡¼¥ë¥Ğ¥Ã¥¯
+                //å¤±æ•—ã—ãŸå ´åˆã¯ãƒ­ãƒ¼ãƒ«ãƒãƒƒã‚¯
                 if($result === false){
                     Db_Query($db_con, "ROLLBACK");
                     exit;
                 }
 
-                //Ê¬³ä¥Æ¡¼¥Ö¥ë¤ËÅĞÏ¿¤µ¤ì¤Æ¤¤¤ë¥Ç¡¼¥¿¤òºï½ü
+                //åˆ†å‰²ãƒ†ãƒ¼ãƒ–ãƒ«ã«ç™»éŒ²ã•ã‚Œã¦ã„ã‚‹ãƒ‡ãƒ¼ã‚¿ã‚’å‰Šé™¤
                 $sql  = "DELETE FROM\n";
                 $sql .= "   t_amortization\n";
                 $sql .= " WHERE\n";
@@ -1990,13 +1990,13 @@ if($buy_button_flg == true || $buy_comp_flg == true){
                 $sql .= ";";
 
                 $result = Db_Query($db_con, $sql);
-                //¼ºÇÔ¤·¤¿¾ì¹ç¤Ï¥í¡¼¥ë¥Ğ¥Ã¥¯
+                //å¤±æ•—ã—ãŸå ´åˆã¯ãƒ­ãƒ¼ãƒ«ãƒãƒƒã‚¯
                 if($result === false){
                     Db_Query($db_con, $sql);
                     exit;
                 }
 
-                //È¯Ãí¤«¤éµ¯¤³¤·¤Æ¤¤¤ë¾ì¹ç¤Ë¤Ï°ìÅÙ¶¯À©´°Î»¤·¤Æ¤¤¤Ê¤¤È¯Ãí¤ËÂĞ¤·¤ÆÈ¯Ãí»Ä¥Õ¥é¥°¤òtrue¤Ë¤¹¤ë
+                //ç™ºæ³¨ã‹ã‚‰èµ·ã“ã—ã¦ã„ã‚‹å ´åˆã«ã¯ä¸€åº¦å¼·åˆ¶å®Œäº†ã—ã¦ã„ãªã„ç™ºæ³¨ã«å¯¾ã—ã¦ç™ºæ³¨æ®‹ãƒ•ãƒ©ã‚°ã‚’trueã«ã™ã‚‹
                 if($order_flg == true){
                     $sql  = "UPDATE";
                     $sql .= "   t_order_d \n";
@@ -2015,19 +2015,19 @@ if($buy_button_flg == true || $buy_comp_flg == true){
                     }
                 }
 
-            //¿·µ¬»ÅÆşÆşÎÏ¤Î¾ì¹ç
+            //æ–°è¦ä»•å…¥å…¥åŠ›ã®å ´åˆ
             }else{
                 if($order_flg == true){
-                    //È¯Ãí¤¬ºï½ü¤µ¤ì¤Æ¤¤¤Ê¤¤¤«¤ò³ÎÇ§
+                    //ç™ºæ³¨ãŒå‰Šé™¤ã•ã‚Œã¦ã„ãªã„ã‹ã‚’ç¢ºèª
                     $update_check_flg = Update_Check($db_con, "t_order_h", "ord_id", $order_id, $_POST["hdn_ord_enter_day"]);
 
-                    //´û¤Ëºï½ü¤µ¤ì¤Æ¤¤¤¿¾ì¹ç
+                    //æ—¢ã«å‰Šé™¤ã•ã‚Œã¦ã„ãŸå ´åˆ
                     if($update_check_flg === false){
                         header("Location:./1-3-205.php?buy_id=0&input_flg=true&del_ord_flg=true");
                         exit;
                     }
 
-                    //È¯Ãí¤¬ÊÑ¹¹¤µ¤ì¤Æ¤¤¤Ê¤¤¤«³ÎÇ§
+                    //ç™ºæ³¨ãŒå¤‰æ›´ã•ã‚Œã¦ã„ãªã„ã‹ç¢ºèª
                     $update_data_check_flg = Update_Data_Check($db_con, "t_order_h", "ord_id", $order_id, $_POST["hdn_ord_change_day"]);
                     if($update_data_check_flg === false){
                         header("Location:./1-3-205.php?buy_id=0&input_flg=true&change_ord_flg=true");
@@ -2035,88 +2035,88 @@ if($buy_button_flg == true || $buy_comp_flg == true){
                     }
                 }
                 $sql  = "INSERT INTO t_buy_h (\n";
-                $sql .= "    buy_id,\n";                                                            //»ÅÆşÀèID
-                $sql .= "    buy_no,\n";                                                            //»ÅÆşÈÖ¹æ
+                $sql .= "    buy_id,\n";                                                            //ä»•å…¥å…ˆID
+                $sql .= "    buy_no,\n";                                                            //ä»•å…¥ç•ªå·
                 if($order_flg == true){
-                    $sql .= "    ord_id,\n";                                                        //È¯ÃíID
+                    $sql .= "    ord_id,\n";                                                        //ç™ºæ³¨ID
                 }
-                $sql .= "    buy_day,\n";                                                           //»ÅÆşÆü
-                $sql .= "    arrival_day,\n";                                                       //Æş²ÙÆü
-                $sql .= "    client_id,\n";                                                         //ÆÀ°ÕÀèID
+                $sql .= "    buy_day,\n";                                                           //ä»•å…¥æ—¥
+                $sql .= "    arrival_day,\n";                                                       //å…¥è·æ—¥
+                $sql .= "    client_id,\n";                                                         //å¾—æ„å…ˆID
                 if($direct != null){
-                    $sql .= "    direct_id,\n";                                                     //Ä¾Á÷ÀèID
+                    $sql .= "    direct_id,\n";                                                     //ç›´é€å…ˆID
                 }
-                $sql .= "    trade_id,\n";                                                          //¼è°úÀèCD
-                $sql .= "    note,\n";                                                              //È÷¹Í
-                $sql .= "    c_staff_id,\n";                                                        //»ÅÆşÃ´Åö¼ÔID
-                $sql .= "    ware_id,\n";                                                           //ÁÒ¸ËID
-                $sql .= "    e_staff_id,\n";                                                        //ÆşÎÏ¼ÔID
-                $sql .= "    shop_id,\n";                                                           //¥·¥ç¥Ã¥×ID
-                $sql .= "    net_amount,\n";                                                        //»ÅÆş¶â³Û¡ÊÀÇÈ´¤­¡Ë
-                $sql .= "    tax_amount,\n";                                                        //¾ÃÈñÀÇ³Û
-                $sql .= ($order_staff != null) ? " oc_staff_id,\n" : null;                          //È¯ÃíÃ´Åö¼ÔID
-                $sql .= "    total_split_num, \n";                                                  //Ê¬³ä²ó¿ô
-                $sql .= "    client_cd1, ";                                                         //ÆÀ°ÕÀè¥³¡¼¥É£±
-                $sql .= "    client_cd2, ";                                                         //ÆÀ°ÕÀè¥³¡¼¥É£²
-                $sql .= "    client_name, ";                                                        //ÆÀ°ÕÀèÌ¾£±
-                $sql .= "    client_name2, ";                                                       //ÆÀ°ÕÀèÌ¾£²
-                $sql .= ($direct != null) ? " direct_name, " : null;                                //Ä¾Á÷ÀèÌ¾£±
-                $sql .= ($direct != null) ? " direct_name2, " : null;                               //Ä¾Á÷ÀèÌ¾£²
-                $sql .= "    ware_name, ";                                                          //ÁÒ¸ËÌ¾
-                $sql .= "    c_staff_name, ";                                                       //»ÅÆşÃ´Åö¼ÔÌ¾
-                $sql .= ($order_staff != null) ? " oc_staff_name, " : null;                         //È¯ÃíÃ´Åö¼ÔÌ¾
-                $sql .= "    e_staff_name, ";                                                       //ÆşÎÏ¼ÔÌ¾
-                $sql .= "    client_cname, ";                                                       //Î¬¾Î
-                $sql .= "    buy_div ";                                                             //»ÅÆş¶èÊ¬
+                $sql .= "    trade_id,\n";                                                          //å–å¼•å…ˆCD
+                $sql .= "    note,\n";                                                              //å‚™è€ƒ
+                $sql .= "    c_staff_id,\n";                                                        //ä»•å…¥æ‹…å½“è€…ID
+                $sql .= "    ware_id,\n";                                                           //å€‰åº«ID
+                $sql .= "    e_staff_id,\n";                                                        //å…¥åŠ›è€…ID
+                $sql .= "    shop_id,\n";                                                           //ã‚·ãƒ§ãƒƒãƒ—ID
+                $sql .= "    net_amount,\n";                                                        //ä»•å…¥é‡‘é¡ï¼ˆç¨æŠœãï¼‰
+                $sql .= "    tax_amount,\n";                                                        //æ¶ˆè²»ç¨é¡
+                $sql .= ($order_staff != null) ? " oc_staff_id,\n" : null;                          //ç™ºæ³¨æ‹…å½“è€…ID
+                $sql .= "    total_split_num, \n";                                                  //åˆ†å‰²å›æ•°
+                $sql .= "    client_cd1, ";                                                         //å¾—æ„å…ˆã‚³ãƒ¼ãƒ‰ï¼‘
+                $sql .= "    client_cd2, ";                                                         //å¾—æ„å…ˆã‚³ãƒ¼ãƒ‰ï¼’
+                $sql .= "    client_name, ";                                                        //å¾—æ„å…ˆåï¼‘
+                $sql .= "    client_name2, ";                                                       //å¾—æ„å…ˆåï¼’
+                $sql .= ($direct != null) ? " direct_name, " : null;                                //ç›´é€å…ˆåï¼‘
+                $sql .= ($direct != null) ? " direct_name2, " : null;                               //ç›´é€å…ˆåï¼’
+                $sql .= "    ware_name, ";                                                          //å€‰åº«å
+                $sql .= "    c_staff_name, ";                                                       //ä»•å…¥æ‹…å½“è€…å
+                $sql .= ($order_staff != null) ? " oc_staff_name, " : null;                         //ç™ºæ³¨æ‹…å½“è€…å
+                $sql .= "    e_staff_name, ";                                                       //å…¥åŠ›è€…å
+                $sql .= "    client_cname, ";                                                       //ç•¥ç§°
+                $sql .= "    buy_div ";                                                             //ä»•å…¥åŒºåˆ†
                 $sql .= ")VALUES(\n";
-                $sql .= "    (SELECT COALESCE(MAX(buy_id), 0)+1 FROM t_buy_h),\n";                  //»ÅÆşÀèID
-                $sql .= "    '$buy_no',\n";                                                         //»ÅÆşÈÖ¹æ
+                $sql .= "    (SELECT COALESCE(MAX(buy_id), 0)+1 FROM t_buy_h),\n";                  //ä»•å…¥å…ˆID
+                $sql .= "    '$buy_no',\n";                                                         //ä»•å…¥ç•ªå·
                 if($order_flg == true){
-                    $sql .= "    $order_id,\n";                                                     //È¯ÃíID
+                    $sql .= "    $order_id,\n";                                                     //ç™ºæ³¨ID
                 }
-                $sql .= "    '$buy_date',\n";                                                       //»ÅÆşÆü
-                $sql .= "    '$arrival_date',\n";                                                   //Æş²ÙÍ½ÄêÆü
-                $sql .= "    $client_id,\n";                                                        //ÆÀ°ÕÀèID
+                $sql .= "    '$buy_date',\n";                                                       //ä»•å…¥æ—¥
+                $sql .= "    '$arrival_date',\n";                                                   //å…¥è·äºˆå®šæ—¥
+                $sql .= "    $client_id,\n";                                                        //å¾—æ„å…ˆID
                 if($direct != null){
-                    $sql .= "    $direct,\n";                                                       //Ä¾Á÷ÀèID
+                    $sql .= "    $direct,\n";                                                       //ç›´é€å…ˆID
                 }
-                $sql .= "    '$trade',\n";                                                          //¼è°úÀèID
-                $sql .= "    '$note',\n";                                                           //È÷¹Í
-                $sql .= "    $buy_staff,\n";                                                        //»ÅÆşÃ´Åö¼ÔID
-                $sql .= "    $ware,\n";                                                             //ÁÒ¸ËID
-                $sql .= "    $staff_id,\n";                                                         //ÆşÎÏ¼ÔID
-                $sql .= "    $shop_id,\n";                                                          //¥·¥ç¥Ã¥×ID
-                $sql .= "    $total_amount_data[0],\n";                                             //»ÅÆş¶â³Û¡ÊÀÇÈ´¤­¡Ë
-                $sql .= "    $total_amount_data[1],\n";                                             //¾ÃÈñÀÇ³Û
-                $sql .= ($order_staff != null) ? " $order_staff,\n" : null;                         //È¯ÃíÃ´Åö¼Ô
-                $sql .= ($trade == 25) ? "   2, \n" : "   1, \n";                                   //Ê¬³ä»ÙÊ§²ó¿ô
-                $sql .= "    (SELECT client_cd1 FROM t_client WHERE client_id = $client_id), ";     //ÆÀ°ÕÀè¥³¡¼¥É£±
-                $sql .= "    (SELECT client_cd2 FROM t_client WHERE client_id = $client_id), ";     //ÆÀ°ÕÀè¥³¡¼¥É£²
-                $sql .= "    (SELECT client_name FROM t_client WHERE client_id = $client_id), ";    //ÆÀ°ÕÀèÌ¾
-                $sql .= "    (SELECT client_name2 FROM t_client WHERE client_id = $client_id), ";   //ÆÀ°ÕÀèÌ¾£²
-                $sql .= ($direct != null) ? " (SELECT direct_name FROM t_direct WHERE direct_id = $direct), " : null;   //Ä¾Á÷ÀèÌ¾£±
-                $sql .= ($direct != null) ? " (SELECT direct_name2 FROM t_direct WHERE direct_id = $direct), " : null;  //Ä¾Á÷ÀèÌ¾£²
-                $sql .= "    (SELECT ware_name FROM t_ware WHERE ware_id = $ware), ";               //ÁÒ¸ËÌ¾
-                $sql .= "    (SELECT staff_name FROM t_staff WHERE staff_id = $buy_staff), ";       //»ÅÆşÃ´Åö¼ÔÌ¾
-                $sql .= ($order_staff != null) ? " (SELECT staff_name FROM t_staff WHERE staff_id = $order_staff), " : null;//È¯ÃíÃ´Åö¼ÔÌ¾
-                $sql .= "    (SELECT staff_name FROM t_staff WHERE staff_id = $staff_id), ";        //ÆşÎÏ¼ÔÌ¾
-                $sql .= "    (SELECT client_cname FROM t_client WHERE client_id = $client_id),\n";  //ÆÀ°ÕÀèÌ¾Î¬¾Î
-                $sql .= "   '2'\n";                                                                 //»ÅÆş¶èÊ¬
+                $sql .= "    '$trade',\n";                                                          //å–å¼•å…ˆID
+                $sql .= "    '$note',\n";                                                           //å‚™è€ƒ
+                $sql .= "    $buy_staff,\n";                                                        //ä»•å…¥æ‹…å½“è€…ID
+                $sql .= "    $ware,\n";                                                             //å€‰åº«ID
+                $sql .= "    $staff_id,\n";                                                         //å…¥åŠ›è€…ID
+                $sql .= "    $shop_id,\n";                                                          //ã‚·ãƒ§ãƒƒãƒ—ID
+                $sql .= "    $total_amount_data[0],\n";                                             //ä»•å…¥é‡‘é¡ï¼ˆç¨æŠœãï¼‰
+                $sql .= "    $total_amount_data[1],\n";                                             //æ¶ˆè²»ç¨é¡
+                $sql .= ($order_staff != null) ? " $order_staff,\n" : null;                         //ç™ºæ³¨æ‹…å½“è€…
+                $sql .= ($trade == 25) ? "   2, \n" : "   1, \n";                                   //åˆ†å‰²æ”¯æ‰•å›æ•°
+                $sql .= "    (SELECT client_cd1 FROM t_client WHERE client_id = $client_id), ";     //å¾—æ„å…ˆã‚³ãƒ¼ãƒ‰ï¼‘
+                $sql .= "    (SELECT client_cd2 FROM t_client WHERE client_id = $client_id), ";     //å¾—æ„å…ˆã‚³ãƒ¼ãƒ‰ï¼’
+                $sql .= "    (SELECT client_name FROM t_client WHERE client_id = $client_id), ";    //å¾—æ„å…ˆå
+                $sql .= "    (SELECT client_name2 FROM t_client WHERE client_id = $client_id), ";   //å¾—æ„å…ˆåï¼’
+                $sql .= ($direct != null) ? " (SELECT direct_name FROM t_direct WHERE direct_id = $direct), " : null;   //ç›´é€å…ˆåï¼‘
+                $sql .= ($direct != null) ? " (SELECT direct_name2 FROM t_direct WHERE direct_id = $direct), " : null;  //ç›´é€å…ˆåï¼’
+                $sql .= "    (SELECT ware_name FROM t_ware WHERE ware_id = $ware), ";               //å€‰åº«å
+                $sql .= "    (SELECT staff_name FROM t_staff WHERE staff_id = $buy_staff), ";       //ä»•å…¥æ‹…å½“è€…å
+                $sql .= ($order_staff != null) ? " (SELECT staff_name FROM t_staff WHERE staff_id = $order_staff), " : null;//ç™ºæ³¨æ‹…å½“è€…å
+                $sql .= "    (SELECT staff_name FROM t_staff WHERE staff_id = $staff_id), ";        //å…¥åŠ›è€…å
+                $sql .= "    (SELECT client_cname FROM t_client WHERE client_id = $client_id),\n";  //å¾—æ„å…ˆåç•¥ç§°
+                $sql .= "   '2'\n";                                                                 //ä»•å…¥åŒºåˆ†
                 $sql .= ");\n";
 
                 $result = Db_Query($db_con, $sql);
 
-                //¼ºÇÔ¤·¤¿¾ì¹ç¤Ï¥í¡¼¥ë¥Ğ¥Ã¥¯
+                //å¤±æ•—ã—ãŸå ´åˆã¯ãƒ­ãƒ¼ãƒ«ãƒãƒƒã‚¯
                 if($result === false){
                     $err_message = pg_last_error();
                     $err_format = "t_buy_h_buy_no_key";
                     Db_Query($db_con, "ROLLBACK");
 
-                    //È¯ÃíNO¤¬½ÅÊ£¤·¤¿¾ì¹ç
+                    //ç™ºæ³¨NOãŒé‡è¤‡ã—ãŸå ´åˆ
                     if(strstr($err_message,$err_format) !== false){
-                        $error = "Æ±»ş¤Ë»ÅÆş¤ò¹Ô¤Ã¤¿¤¿¤á¡¢ÅÁÉ¼ÈÖ¹æ¤¬½ÅÊ£¤·¤Ş¤·¤¿¡£¤â¤¦°ìÅÙ»ÅÆş¤ò¹Ô¤Ã¤Æ¤¯¤À¤µ¤¤¡£";
+                        $error = "åŒæ™‚ã«ä»•å…¥ã‚’è¡Œã£ãŸãŸã‚ã€ä¼ç¥¨ç•ªå·ãŒé‡è¤‡ã—ã¾ã—ãŸã€‚ã‚‚ã†ä¸€åº¦ä»•å…¥ã‚’è¡Œã£ã¦ãã ã•ã„ã€‚";
 
-                        //ºÆÅÙÈ¯ÃíNO¤ò¼èÆÀ¤¹¤ë
+                        //å†åº¦ç™ºæ³¨NOã‚’å–å¾—ã™ã‚‹
                         $sql  = "SELECT ";
                         $sql .= "   MAX(buy_no)";
                         $sql .= " FROM";
@@ -2140,7 +2140,7 @@ if($buy_button_flg == true || $buy_comp_flg == true){
             }
             if($duplicate_err != true){
 
-                //»ÅÆşID¤òÃê½Ğ
+                //ä»•å…¥IDã‚’æŠ½å‡º
                 $sql  = "SELECT";
                 $sql .= "   buy_id";
                 $sql .= " FROM";
@@ -2153,7 +2153,7 @@ if($buy_button_flg == true || $buy_comp_flg == true){
                 $result = Db_Query($db_con, $sql);
                 $buy_id = pg_fetch_result($result,0,0);
 
-                //³äÉê»ÙÊ§¥Æ¡¼¥Ö¥ë¤ËÅĞÏ¿
+                //å‰²è³¦æ”¯æ‰•ãƒ†ãƒ¼ãƒ–ãƒ«ã«ç™»éŒ²
                 if($trade == "25"){
                     $division_array = Division_Price($db_con, $client_id, ($total_amount_data[0] + $total_amount_data[1]), $buy_day["y"], $buy_day["m"], 2);
                     for($k=0;$k<2;$k++){
@@ -2178,11 +2178,11 @@ if($buy_button_flg == true || $buy_comp_flg == true){
                 }
 
                 for($i = 0; $i < count($goods_id); $i++){
-                    //¹Ô
+                    //è¡Œ
                     $line = $i + 1;
 
-                    //»ÅÆş¶â³ÛÀÇÈ´¤­¡¢¾ÃÈñÀÇ³Û¡¢¾ÃÈñÀÇ¹ç·×¤ò»»½Ğ
-                    $price = $buy_price[$i]["i"].".".$buy_price[$i]["d"];   //»ÅÆş¶â³Û
+                    //ä»•å…¥é‡‘é¡ç¨æŠœãã€æ¶ˆè²»ç¨é¡ã€æ¶ˆè²»ç¨åˆè¨ˆã‚’ç®—å‡º
+                    $price = $buy_price[$i]["i"].".".$buy_price[$i]["d"];   //ä»•å…¥é‡‘é¡
                     $buy_amount = bcmul($price, $buy_num[$i],3);
                     $buy_amount = Coax_Col($coax, $buy_amount);
 
@@ -2215,13 +2215,13 @@ if($buy_button_flg == true || $buy_comp_flg == true){
                     $sql .= ");\n";
 
                     $result = Db_Query($db_con, $sql);
-                    //¼ºÇÔ¤·¤¿¾ì¹ç¤Ï¥í¡¼¥ë¥Ğ¥Ã¥¯
+                    //å¤±æ•—ã—ãŸå ´åˆã¯ãƒ­ãƒ¼ãƒ«ãƒãƒƒã‚¯
                     if($result === false){
                         Db_Query($db_con, "ROLLBACK");
                         exit;
                     }
 
-                    //»ÅÆş¥Ç¡¼¥¿ID¤òÃê½Ğ
+                    //ä»•å…¥ãƒ‡ãƒ¼ã‚¿IDã‚’æŠ½å‡º
                     $sql  = "SELECT";
                     $sql .= "   buy_d_id";
                     $sql .= " FROM";
@@ -2234,16 +2234,16 @@ if($buy_button_flg == true || $buy_comp_flg == true){
                     $result = Db_Query($db_con, $sql);
                     $buy_d_id = pg_fetch_result($result,0,0);
 
-                    //Ä¾Á÷Àè¤¬ÁªÂò¤µ¤ì¤Æ¤¤¤Ê¤±¤ì¤Ğ½èÍı³«»Ï
+                    //ç›´é€å…ˆãŒé¸æŠã•ã‚Œã¦ã„ãªã‘ã‚Œã°å‡¦ç†é–‹å§‹
 //                    if($direct == null){
 
-                    //ºß¸Ë¿ô¥Æ¡¼¥Ö¥ë
-                    //£±¡¡È¯ÃíID<>NULL¤Î¾ì¹ç
+                    //åœ¨åº«æ•°ãƒ†ãƒ¼ãƒ–ãƒ«
+                    //ï¼‘ã€€ç™ºæ³¨ID<>NULLã®å ´åˆ
                     if($order_id != NULL){
 
                         if($order_d_id[$i] != "NULL"){
-                            //ºß¸Ë¼õ¤±Ê§¤¤¥Æ¡¼¥Ö¥ë
-                            //È¯Ãí»Äºï½ü
+                            //åœ¨åº«å—ã‘æ‰•ã„ãƒ†ãƒ¼ãƒ–ãƒ«
+                            //ç™ºæ³¨æ®‹å‰Šé™¤
                             $sql  = "INSERT INTO t_stock_hand (\n";
                             $sql .= "    goods_id,\n";
                             $sql .= "    enter_day,\n";
@@ -2268,17 +2268,17 @@ if($buy_button_flg == true || $buy_comp_flg == true){
                             $sql .= "    '2',\n";
 //                        $sql .= "    $order_num[$i] - $buy_num[$i],";
 
-                            //È¯Ãí»ÄÂÇ¾Ã¤·²ÄÇ½¿ô¤òÃê½Ğ
+                            //ç™ºæ³¨æ®‹æ‰“æ¶ˆã—å¯èƒ½æ•°ã‚’æŠ½å‡º
                             $deny_num = Get_Deny_Num($db_con, $order_d_id[$i], $buy_id);
-//print "»ÅÆş¿ô¡§".$buy_num[$i] ."<br>";
-//print "È¯Ãí»ÄÂÇ¾Ã²ÄÇ½¿ô¡§".$deny_num ."<br>";
-                            //»ÅÆş¿ô¤¬È¯Ãí»ÄÂÇ¾Ã²ÄÇ½¿ô¤òÄ¶¤¨¤¿¾ì¹ç
+//print "ä»•å…¥æ•°ï¼š".$buy_num[$i] ."<br>";
+//print "ç™ºæ³¨æ®‹æ‰“æ¶ˆå¯èƒ½æ•°ï¼š".$deny_num ."<br>";
+                            //ä»•å…¥æ•°ãŒç™ºæ³¨æ®‹æ‰“æ¶ˆå¯èƒ½æ•°ã‚’è¶…ãˆãŸå ´åˆ
                             if($buy_num[$i] > $deny_num){
                                 $del_num = $deny_num;
                             }else{
                                 $del_num = $buy_num[$i];
                             }
-//print "È¯Ãí»ÄÂÇ¾Ã¿ô¡§".$del_num ."<br>";
+//print "ç™ºæ³¨æ®‹æ‰“æ¶ˆæ•°ï¼š".$del_num ."<br>";
 
                             $sql .= "    $del_num,\n";
                             $sql .= "    '$buy_no',\n";
@@ -2289,7 +2289,7 @@ if($buy_button_flg == true || $buy_comp_flg == true){
                             $sql .= ");\n";
 
                             $result = Db_Query($db_con, $sql);
-                            //¼ºÇÔ¤·¤¿¾ì¹ç¤Ï¥í¡¼¥ë¥Ğ¥Ã¥¯
+                            //å¤±æ•—ã—ãŸå ´åˆã¯ãƒ­ãƒ¼ãƒ«ãƒãƒƒã‚¯
                             if($result === false){
                                 Db_Query($db_con,"ROLLBACK");
                                 exit;
@@ -2297,7 +2297,7 @@ if($buy_button_flg == true || $buy_comp_flg == true){
 
                         }
 
-                        //»ÅÆşÈ¯À¸
+                        //ä»•å…¥ç™ºç”Ÿ
                         $sql  = "INSERT INTO t_stock_hand (";
                         $sql .= "    goods_id,";
                         $sql .= "    enter_day,";
@@ -2329,19 +2329,19 @@ if($buy_button_flg == true || $buy_comp_flg == true){
                         $sql .= ");";
 
                         $result = Db_Query($db_con, $sql);
-                        //¼ºÇÔ¤·¤¿¾ì¹ç¤Ï¥í¡¼¥ë¥Ğ¥Ã¥¯
+                        //å¤±æ•—ã—ãŸå ´åˆã¯ãƒ­ãƒ¼ãƒ«ãƒãƒƒã‚¯
                         if($result === false){
                             Db_Query($db_con, "ROLLBACK");
                             exit;
                         }
 
-                    //£²¡¡È¯ÃíID¡áNULL¡¡AND¡¡¼è°ú¶èÊ¬¡á£²£±¡Ê³İ»ÅÆş¡Ë¡¦£·£±¡Ê¸½¶â»ÅÆş¡Ë¤Î¾ì¹ç
+                    //ï¼’ã€€ç™ºæ³¨IDï¼NULLã€€ANDã€€å–å¼•åŒºåˆ†ï¼ï¼’ï¼‘ï¼ˆæ›ä»•å…¥ï¼‰ãƒ»ï¼—ï¼‘ï¼ˆç¾é‡‘ä»•å…¥ï¼‰ã®å ´åˆ
                     }elseif($order_id == NULL && ($trade == '21' || $trade == '71' || $trade == '25')){
 
                         $result = Db_Query($db_con, $sql);
                         $num = pg_num_rows($result);
    
-                        //ºß¸Ë¼õ¤±Ê§¤¤¥Æ¡¼¥Ö¥ë¡Ê»ÅÆşÈ¯À¸¡Ë
+                        //åœ¨åº«å—ã‘æ‰•ã„ãƒ†ãƒ¼ãƒ–ãƒ«ï¼ˆä»•å…¥ç™ºç”Ÿï¼‰
                         $sql  = "INSERT INTO t_stock_hand (";
                         $sql .= "    goods_id,";
                         $sql .= "    enter_day,";
@@ -2373,15 +2373,15 @@ if($buy_button_flg == true || $buy_comp_flg == true){
                         $sql .= ");";
 
                         $result = Db_Query($db_con, $sql);
-                        //¼ºÇÔ¤·¤¿¾ì¹ç¤Ï¥í¡¼¥ë¥Ğ¥Ã¥¯
+                        //å¤±æ•—ã—ãŸå ´åˆã¯ãƒ­ãƒ¼ãƒ«ãƒãƒƒã‚¯
                         if($result === false){
                             Db_Query($db_con,"ROLLBACK");
                             exit;
                         }
-                    //£³¡¡È¯ÃíID¡áNULL¡¡AND¡¡¼è°ú¶èÊ¬¡á£²£²¡Ê³İÊÖÉÊ¡Ë¡¦£·£²¡Ê¸½¶âÊÖÉÊ¡Ë¤Î¾ì¹ç
+                    //ï¼“ã€€ç™ºæ³¨IDï¼NULLã€€ANDã€€å–å¼•åŒºåˆ†ï¼ï¼’ï¼’ï¼ˆæ›è¿”å“ï¼‰ãƒ»ï¼—ï¼’ï¼ˆç¾é‡‘è¿”å“ï¼‰ã®å ´åˆ
                     }elseif($order_id == NULL && ($trade == '23' || $trade == '73')){
 
-                        //ºß¸Ë¼õ¤±Ê§¤¤¡Ê»ÅÆşÈ¯À¸¡Ë
+                        //åœ¨åº«å—ã‘æ‰•ã„ï¼ˆä»•å…¥ç™ºç”Ÿï¼‰
                         $sql  = "INSERT INTO t_stock_hand (";
                         $sql .= "    goods_id,";
                         $sql .= "    enter_day,";
@@ -2413,7 +2413,7 @@ if($buy_button_flg == true || $buy_comp_flg == true){
                         $sql .= ");";
 
                         $result = Db_Query($db_con, $sql);
-                        //¼ºÇÔ¤·¤¿¾ì¹ç¤Ï¥í¡¼¥ë¥Ğ¥Ã¥¯
+                        //å¤±æ•—ã—ãŸå ´åˆã¯ãƒ­ãƒ¼ãƒ«ãƒãƒƒã‚¯
                         if($result === false){
                             Db_Query($db_con,"ROLLBACK");
                             exit;
@@ -2421,14 +2421,14 @@ if($buy_button_flg == true || $buy_comp_flg == true){
 //                        }
                     }
 
-                    //È¯Ãí¤òµ¯¤³¤·¤¤¤Æ¤¤¤ë¤â¤Î¤Ï½èÍı³«»Ï
+                    //ç™ºæ³¨ã‚’èµ·ã“ã—ã„ã¦ã„ã‚‹ã‚‚ã®ã¯å‡¦ç†é–‹å§‹
                     if($order_id != NULL){
-                        //¿·¤¿¤Ë¾¦ÉÊ¤òÄÉ²Ã¤µ¤ì¤¿¾ì¹ç
+                        //æ–°ãŸã«å•†å“ã‚’è¿½åŠ ã•ã‚ŒãŸå ´åˆ
                         if($order_d_id[$i] == null){
                             $order_d_id[$i] = "null";
                         }
 
-                        //È¯Ãí¥Ø¥Ã¥À¥Æ¡¼¥Ö¥ë¡Ê½èÍı¾õ¶·¹¹¿·½èÍı¡Ë
+                        //ç™ºæ³¨ãƒ˜ãƒƒãƒ€ãƒ†ãƒ¼ãƒ–ãƒ«ï¼ˆå‡¦ç†çŠ¶æ³æ›´æ–°å‡¦ç†ï¼‰
                         $sql  = "UPDATE\n";
                         $sql .=     " t_order_d\n";
                         $sql .= " SET\n";
@@ -2450,14 +2450,14 @@ if($buy_button_flg == true || $buy_comp_flg == true){
                         $sql .= ";\n";
 
                         $result = Db_Query($db_con, $sql);
-                        //¼ºÇÔ¤·¤¿¾ì¹ç¤Ï¥í¡¼¥ë¥Ğ¥Ã¥¯
+                        //å¤±æ•—ã—ãŸå ´åˆã¯ãƒ­ãƒ¼ãƒ«ãƒãƒƒã‚¯
                         if($result === false){
                             Db_Query($db_con, "ROLLBACK");
                             exit;
                         }
 
-                        //º£²ó»ÅÆş¤¿¿ô¤¬¡¢È¯Ãí¿ô¤òÄ¶¤¨¤Æ¤¤¤Ê¤¤¤«³ÎÇ§
-                        //»ÅÆş²ÄÇ½·ï¿ô¤òÃê½Ğ
+                        //ä»Šå›ä»•å…¥ãŸæ•°ãŒã€ç™ºæ³¨æ•°ã‚’è¶…ãˆã¦ã„ãªã„ã‹ç¢ºèª
+                        //ä»•å…¥å¯èƒ½ä»¶æ•°ã‚’æŠ½å‡º
                         $sql  = "SELECT\n";
                         $sql .= "    t_order_h.num - COALESCE(t_buy_h.num, 0) AS num \n";
                         $sql .= "FROM\n";
@@ -2493,20 +2493,20 @@ if($buy_button_flg == true || $buy_comp_flg == true){
                             $buy_ord_num = pg_fetch_result($result,0,0);
                         }
 
-                        //»ÅÆş¿ô¤¬È¯Ãí¿ô¤ò¾å²ó¤Ã¤Æ¤¤¤ë¾ì¹ç
+                        //ä»•å…¥æ•°ãŒç™ºæ³¨æ•°ã‚’ä¸Šå›ã£ã¦ã„ã‚‹å ´åˆ
                         if($buy_ord_num < 0){
                             Db_Query($db_con, "ROLLBACK;");
                             $rollback_flg = true;
-                            $buy_ord_num_err = "»ÅÆş¿ô¤¬È¯Ãí¿ô¤òÄ¶¤¨¤Æ¤¤¤Ş¤¹¡£";
+                            $buy_ord_num_err = "ä»•å…¥æ•°ãŒç™ºæ³¨æ•°ã‚’è¶…ãˆã¦ã„ã¾ã™ã€‚";
                             break;
                         }
                     }
                 }
 
                 if($rollback_flg != true){
-                    //È¯Ãí¤òµ¯¤³¤·¤Æ¤¤¤ë¤â¤Î¤Ï½èÍı³«»Ï
+                    //ç™ºæ³¨ã‚’èµ·ã“ã—ã¦ã„ã‚‹ã‚‚ã®ã¯å‡¦ç†é–‹å§‹
                     if($order_id != NULL){
-                        //½èÍı¾õ¶·¹¹¿·½èÍı
+                        //å‡¦ç†çŠ¶æ³æ›´æ–°å‡¦ç†
                         $ary_order_d_id = implode(",",$order_d_id);
 
                         $sql  = "SELECT";
@@ -2523,7 +2523,7 @@ if($buy_button_flg == true || $buy_comp_flg == true){
                             $rest_data[] = pg_fetch_result($result,$i,0);
                         }
 
-                        //È¯Ãí»Ä¤¬¤¢¤ë¾ì¹ç
+                        //ç™ºæ³¨æ®‹ãŒã‚ã‚‹å ´åˆ
                         if(in_array('t',$rest_data)){
                             $sql  = "UPDATE";
                             $sql .= "    t_order_h";
@@ -2532,7 +2532,7 @@ if($buy_button_flg == true || $buy_comp_flg == true){
                             $sql .= " WHERE";
                             $sql .= "    ord_id = $order_id";
                             $sql .= ";";
-                        //È¯Ãí¤·¤¿Á´¤Æ¤Î¾¦ÉÊ¤ÎÈ¯Ãí»Ä¥Õ¥é¥°¡áf¤Î¾ì¹ç
+                        //ç™ºæ³¨ã—ãŸå…¨ã¦ã®å•†å“ã®ç™ºæ³¨æ®‹ãƒ•ãƒ©ã‚°ï¼fã®å ´åˆ
                         }else{
                             $sql  = "UPDATE";
                             $sql .= "    t_order_h";
@@ -2544,7 +2544,7 @@ if($buy_button_flg == true || $buy_comp_flg == true){
                         }
 
                         $result = Db_Query($db_con, $sql);
-                        //¼ºÇÔ¤·¤¿¾ì¹ç¤Ï¥í¡¼¥ë¥Ğ¥Ã¥¯
+                        //å¤±æ•—ã—ãŸå ´åˆã¯ãƒ­ãƒ¼ãƒ«ãƒãƒƒã‚¯
                         if($result === false){
                             Db_Query($db_con, "ROLLBACK");
                             exit;
@@ -2552,8 +2552,8 @@ if($buy_button_flg == true || $buy_comp_flg == true){
 
                     }
 
-                    //¸½¶â¼è°ú¤Î¼«Æ°»ÙÊ§½èÍı
-                    //¼è°ú¶èÊ¬¡á£·£±¡Ê¸½¶â»ÅÆş¡Ë¡¦£·3¡Ê¸½¶âÃÍ°ú¡Ë¡¦£·4¡Ê¸½¶âÊÖÉÊ¡Ë¤Î¾ì¹ç¤Î¤ß½èÍı¤¹¤ë
+                    //ç¾é‡‘å–å¼•ã®è‡ªå‹•æ”¯æ‰•å‡¦ç†
+                    //å–å¼•åŒºåˆ†ï¼ï¼—ï¼‘ï¼ˆç¾é‡‘ä»•å…¥ï¼‰ãƒ»ï¼—3ï¼ˆç¾é‡‘å€¤å¼•ï¼‰ãƒ»ï¼—4ï¼ˆç¾é‡‘è¿”å“ï¼‰ã®å ´åˆã®ã¿å‡¦ç†ã™ã‚‹
                     if($trade == '71' || $trade == '73' || $trade == '74'){
 
                         $sql  = "SELECT";
@@ -2570,22 +2570,22 @@ if($buy_button_flg == true || $buy_comp_flg == true){
                         $pay_no = str_pad($pay_no, 8, 0, STR_PAD_LEFT);
 
                         $sql  = "INSERT INTO t_payout_h(\n";
-                        $sql .= "   pay_id,\n";               //»ÙÊ§ID
-                        $sql .= "   pay_no,\n";               //»ÙÊ§ÈÖ¹æ
-                        $sql .= "   pay_day,\n";              //»ÙÊ§Æü
-                        $sql .= "   client_id,\n";            //»ÅÆşÀèID
-                        $sql .= "   client_name,\n";          //»ÅÆşÀèÌ¾
-                        $sql .= "   client_name2,\n";         //»ÅÆşÀèÌ¾£²
-                        $sql .= "   client_cname,\n";         //»ÅÆşÀè¡ÊÎ¬¾Î¡Ë
-                        $sql .= "   client_cd1,\n";           //»ÅÆşÀè¥³¡¼¥É
-                        $sql .= "   client_cd2,\n";           //»ÅÆşÀè¥³¡¼¥É
-                        $sql .= "   e_staff_id,\n";           //ÆşÎÏ¼ÔID
-                        $sql .= "   e_staff_name,\n";         //ÆşÎÏ¼ÔÌ¾
-                        $sql .= "   c_staff_id,\n";           //Ã´Åö¼ÔID
-                        $sql .= "   c_staff_name,\n";         //Ã´Åö¼ÔÌ¾
-                        $sql .= "   input_day,\n";            //ÆşÎÏÆü
-                        $sql .= "   buy_id,\n";               //»ÅÆşID
-                        $sql .= "   shop_id\n";               //¥·¥ç¥Ã¥×ID
+                        $sql .= "   pay_id,\n";               //æ”¯æ‰•ID
+                        $sql .= "   pay_no,\n";               //æ”¯æ‰•ç•ªå·
+                        $sql .= "   pay_day,\n";              //æ”¯æ‰•æ—¥
+                        $sql .= "   client_id,\n";            //ä»•å…¥å…ˆID
+                        $sql .= "   client_name,\n";          //ä»•å…¥å…ˆå
+                        $sql .= "   client_name2,\n";         //ä»•å…¥å…ˆåï¼’
+                        $sql .= "   client_cname,\n";         //ä»•å…¥å…ˆï¼ˆç•¥ç§°ï¼‰
+                        $sql .= "   client_cd1,\n";           //ä»•å…¥å…ˆã‚³ãƒ¼ãƒ‰
+                        $sql .= "   client_cd2,\n";           //ä»•å…¥å…ˆã‚³ãƒ¼ãƒ‰
+                        $sql .= "   e_staff_id,\n";           //å…¥åŠ›è€…ID
+                        $sql .= "   e_staff_name,\n";         //å…¥åŠ›è€…å
+                        $sql .= "   c_staff_id,\n";           //æ‹…å½“è€…ID
+                        $sql .= "   c_staff_name,\n";         //æ‹…å½“è€…å
+                        $sql .= "   input_day,\n";            //å…¥åŠ›æ—¥
+                        $sql .= "   buy_id,\n";               //ä»•å…¥ID
+                        $sql .= "   shop_id\n";               //ã‚·ãƒ§ãƒƒãƒ—ID
                         $sql .= ")VALUES(\n";
                         $sql .= "   (SELECT COALESCE(MAX(pay_id), 0)+1 FROM t_payout_h),\n";
                         $sql .= "   '$pay_no',\n";
@@ -2607,16 +2607,16 @@ if($buy_button_flg == true || $buy_comp_flg == true){
 
                         $result = Db_Query($db_con, $sql);
 
-                        //¼ºÇÔ¤·¤¿¾ì¹ç¤Ï¥í¡¼¥ë¥Ğ¥Ã¥¯
+                        //å¤±æ•—ã—ãŸå ´åˆã¯ãƒ­ãƒ¼ãƒ«ãƒãƒƒã‚¯
                         if($result === false){
                             $err_message = pg_last_error();
                             $err_format = "t_payout_h_pay_no_key";
                             $err_flg = true;
                             Db_Query($db_con, "ROLLBACK;");
 
-                            //½ÅÊ£¤·¤¿¾ì¹ç
+                            //é‡è¤‡ã—ãŸå ´åˆ
                             if(strstr($err_message, $err_format) != false){
-                                $duplicate_msg = "»ÙÊ§¤¬Æ±»ş¤Ë¹Ô¤Ê¤ï¤ì¤¿¤¿¤á¡¢ÅÁÉ¼ÈÖ¹æ¤ÎÉÕÈÖ¤Ë¼ºÇÔ¤·¤Ş¤·¤¿¡£";
+                                $duplicate_msg = "æ”¯æ‰•ãŒåŒæ™‚ã«è¡Œãªã‚ã‚ŒãŸãŸã‚ã€ä¼ç¥¨ç•ªå·ã®ä»˜ç•ªã«å¤±æ•—ã—ã¾ã—ãŸã€‚";
                                 $duplicate_flg = true;
                             }else{
                                 exit;
@@ -2624,7 +2624,7 @@ if($buy_button_flg == true || $buy_comp_flg == true){
                         }
 
                         if($duplicate_flg != true){
-                            //ÅĞÏ¿¤·¤¿»ÙÊ§¥Ø¥Ã¥ÀID¤òÃê½Ğ
+                            //ç™»éŒ²ã—ãŸæ”¯æ‰•ãƒ˜ãƒƒãƒ€IDã‚’æŠ½å‡º
                             $sql  = "SELECT";
                             $sql .= "   pay_id ";
                             $sql .= "FROM";
@@ -2638,7 +2638,7 @@ if($buy_button_flg == true || $buy_comp_flg == true){
                             $result = Db_Query($db_con, $sql);
                             $pay_id = pg_fetch_result($result, 0,0);
 
-                            //»ÙÊ§¤¤¥Ç¡¼¥¿¥Æ¡¼¥Ö¥ë¤ØÅĞÏ¿
+                            //æ”¯æ‰•ã„ãƒ‡ãƒ¼ã‚¿ãƒ†ãƒ¼ãƒ–ãƒ«ã¸ç™»éŒ²
                             $sql  = "INSERT INTO t_payout_d (";
                             $sql .= "   pay_d_id,";
                             $sql .= "   pay_id,";
@@ -2648,10 +2648,10 @@ if($buy_button_flg == true || $buy_comp_flg == true){
                             $sql .= "   (SELECT COALESCE(MAX(pay_d_id),0)+1 FROM t_payout_d),";
                             $sql .= "   $pay_id,";
                             $sql .= "   '49',";
-                            //¼è°ú¶èÊ¬¤¬£·£±¸½¶â»ÙÊ§¤Î¾ì¹ç
+                            //å–å¼•åŒºåˆ†ãŒï¼—ï¼‘ç¾é‡‘æ”¯æ‰•ã®å ´åˆ
                             if($trade == '71'){
                                 $sql .= "   $total_amount_data[2]";
-                            //¼è°ú¶èÊ¬¤¬£·£³¡¦£·£´¤Î¾ì¹ç
+                            //å–å¼•åŒºåˆ†ãŒï¼—ï¼“ãƒ»ï¼—ï¼”ã®å ´åˆ
                             }else{
                                 $sql .= "   $total_amount_data[2]*-1";
                             }
@@ -2670,23 +2670,23 @@ if($buy_button_flg == true || $buy_comp_flg == true){
                 }
             }
 
-        //È¯Ãí³ÎÇ§¤Ø¥Ü¥¿¥ó²¡²¼¥Õ¥é¥°¤¬true¤Î¾ì¹ç
+        //ç™ºæ³¨ç¢ºèªã¸ãƒœã‚¿ãƒ³æŠ¼ä¸‹ãƒ•ãƒ©ã‚°ãŒtrueã®å ´åˆ
         }elseif($buy_button_flg == true){
-            //¥Õ¥©¡¼¥à¤ò¸Ç¤á¤ë¤¿¤á¤Î¥Õ¥ê¡¼¥º¥Õ¥é¥°
+            //ãƒ•ã‚©ãƒ¼ãƒ ã‚’å›ºã‚ã‚‹ãŸã‚ã®ãƒ•ãƒªãƒ¼ã‚ºãƒ•ãƒ©ã‚°
             $freeze_flg = true;
         }
     }
 }
 
 /****************************/
-//Æ°Åª¤ËÁı¸º¤¹¤ë¥Õ¥©¡¼¥àºîÀ®
+//å‹•çš„ã«å¢—æ¸›ã™ã‚‹ãƒ•ã‚©ãƒ¼ãƒ ä½œæˆ
 /****************************/
-//¹ÔÈÖ¹æ¥«¥¦¥ó¥¿
+//è¡Œç•ªå·ã‚«ã‚¦ãƒ³ã‚¿
 $row_num = 1;
 
 for($i = 0; $i < $max_row; $i++){
 
-    //»ÅÆşÀè¤¬ÁªÂò¤µ¤ì¤Æ¤¤¤Ê¤¤¤«»ÅÆşÅĞÏ¿³ÎÇ§¤Î¾ì¹ç¤Ï¥Õ¥ê¡¼¥º
+    //ä»•å…¥å…ˆãŒé¸æŠã•ã‚Œã¦ã„ãªã„ã‹ä»•å…¥ç™»éŒ²ç¢ºèªã®å ´åˆã¯ãƒ•ãƒªãƒ¼ã‚º
     if($select_flg == false 
         || 
     //aoyama-n 2009-09-15
@@ -2714,7 +2714,7 @@ for($i = 0; $i < $max_row; $i++){
     }
 
     //aoyama-n 2009-09-15
-    //ÃÍ°ú¾¦ÉÊµÚ¤Ó¼è°ú¶èÊ¬¤¬ÃÍ°ú¡¦ÊÖÉÊ¤Î¾ì¹ç¤ÏÀÖ»ú¤ÇÉ½¼¨
+    //å€¤å¼•å•†å“åŠã³å–å¼•åŒºåˆ†ãŒå€¤å¼•ãƒ»è¿”å“ã®å ´åˆã¯èµ¤å­—ã§è¡¨ç¤º
     $font_color = "";
     $form_trade       = $form->getElementValue("form_trade");
     $hdn_discount_flg = $form->getElementValue("hdn_discount_flg[$i]");
@@ -2727,17 +2727,17 @@ for($i = 0; $i < $max_row; $i++){
     }
 
 
-    //É½¼¨¹ÔÈ½Äê
+    //è¡¨ç¤ºè¡Œåˆ¤å®š
     if(!in_array("$i", $del_history)){
         $del_data = $del_row.",".$i;
 
-        //È¯ÃíID
+        //ç™ºæ³¨ID
         $form->addElement("hidden","hdn_order_d_id[$i]");
 
-        //¾¦ÉÊID
+        //å•†å“ID
         $form->addElement("hidden","hdn_goods_id[$i]");
 
-        //¾¦ÉÊ¥³¡¼¥É
+        //å•†å“ã‚³ãƒ¼ãƒ‰
         //aoyama-n 2009-09-15
         if($select_flg == true){
             $form->addElement(
@@ -2757,7 +2757,7 @@ for($i = 0; $i < $max_row; $i++){
             );
         }
 
-        //¾¦ÉÊÌ¾
+        //å•†å“å
         //aoyama-n 20009-09-15
         #if($name_change[$i] == '2'){
         #    $form->addElement(
@@ -2796,7 +2796,7 @@ for($i = 0; $i < $max_row; $i++){
         $form->addElement("hidden","hdn_name_change[$i]","","");
         $form->addElement("hidden","hdn_stock_manage[$i]","","");
 
-        //Æş¿ô
+        //å…¥æ•°
         //aoyama-n 2009-09-15
         $form->addElement("text","form_in_num[$i]","",
             "size=\"11\" maxLength=\"9\" 
@@ -2807,7 +2807,7 @@ for($i = 0; $i < $max_row; $i++){
             readonly"
         );
 
-        //ÃíÊ¸Æş¿ô
+        //æ³¨æ–‡å…¥æ•°
         //aoyama-n 2009-09-15
         if($freeze_flg == true){
             $form->addElement("text","form_order_in_num[$i]","",
@@ -2831,7 +2831,7 @@ for($i = 0; $i < $max_row; $i++){
             );
         }
 
-        //¸½ºß¸Ë¿ô
+        //ç¾åœ¨åº«æ•°
         //aoyama-n 2009-09-15
         $form->addElement(
             "text","form_stock_num[$i]","",
@@ -2842,7 +2842,7 @@ for($i = 0; $i < $max_row; $i++){
             readonly"
         );
 
-        //È¯Ãí»Ä
+        //ç™ºæ³¨æ®‹
         //aoyama-n 2009-09-15
         $form->addElement(
             "hidden","form_order_num[$i]","",
@@ -2853,7 +2853,7 @@ for($i = 0; $i < $max_row; $i++){
             text-align: right \"readonly"
         );
 
-        //»ÅÆşºÑ¿ô
+        //ä»•å…¥æ¸ˆæ•°
         $form->addElement(
             "text","form_rbuy_num[$i]","",
             'size="11" maxLength=\"9\" 
@@ -2863,7 +2863,7 @@ for($i = 0; $i < $max_row; $i++){
             text-align: right" readonly'
         );
 
-        //»ÅÆş¿ô
+        //ä»•å…¥æ•°
         //aoyama-n 2009-09-15
         if($freeze_flg == true){
             $form->addElement("text","form_buy_num[$i]","",
@@ -2887,7 +2887,7 @@ for($i = 0; $i < $max_row; $i++){
             );
         }
 
-        //»ÅÆşÃ±²Á
+        //ä»•å…¥å˜ä¾¡
         //aoyama-n 2009-09-15
         if($select_flg == false){
             $form_buy_price[$i][] =& $form->createElement(
@@ -2940,7 +2940,7 @@ for($i = 0; $i < $max_row; $i++){
         }
         $form->addGroup($form_buy_price[$i], "form_buy_price[$i]", "");
 
-        //²İÀÇ¶èÊ¬
+        //èª²ç¨åŒºåˆ†
         $form->addElement(
             "text","form_tax_div[$i]","",
             "size=\"11\" maxLength=\"9\" 
@@ -2951,7 +2951,7 @@ for($i = 0; $i < $max_row; $i++){
         );
         $form->addElement("hidden","hdn_tax_div[$i]","","");
 
-        //¶â³Û(ÀÇÈ´¤­)
+        //é‡‘é¡(ç¨æŠœã)
         //aoyama-n 2009-09-15
         $form->addElement(
             "text","form_buy_amount[$i]","",
@@ -2962,7 +2962,7 @@ for($i = 0; $i < $max_row; $i++){
             text-align: right\" readonly"
         );
 
-        //È¯Ãí»Ä
+        //ç™ºæ³¨æ®‹
         //aoyama-n 2009-09-15
         $form->addElement(
             "text","form_rorder_num[$i]","",
@@ -2973,37 +2973,37 @@ for($i = 0; $i < $max_row; $i++){
             text-align: right\" readonly'"
         );
 
-        //¸¡º÷¥ê¥ó¥¯
+        //æ¤œç´¢ãƒªãƒ³ã‚¯
         $form->addElement(
-            "link","form_search[$i]","","#","¸¡º÷",
+            "link","form_search[$i]","","#","æ¤œç´¢",
             "TABINDEX=-1
             onClick=\"return Open_SubWin_2('../dialog/1-0-210.php', Array('form_goods_cd[$i]','hdn_goods_search_flg'), 500, 450,5,$client_id,$i,$row_num);\""
             );
 
 
-        //ÅĞÏ¿³ÎÇ§²èÌÌ¤Î¾ì¹ç¤ÏÈóÉ½¼¨
+        //ç™»éŒ²ç¢ºèªç”»é¢ã®å ´åˆã¯éè¡¨ç¤º
         if($select_flg === true ){
-            //ºï½ü¥ê¥ó¥¯
-            //ºÇ½ª¹Ô¤òºï½ü¤¹¤ë¾ì¹ç¡¢ºï½ü¤·¤¿¸å¤ÎºÇ½ª¹Ô¤Ë¹ç¤ï¤»¤ë
+            //å‰Šé™¤ãƒªãƒ³ã‚¯
+            //æœ€çµ‚è¡Œã‚’å‰Šé™¤ã™ã‚‹å ´åˆã€å‰Šé™¤ã—ãŸå¾Œã®æœ€çµ‚è¡Œã«åˆã‚ã›ã‚‹
             if($row_num == $max_row-$del_num){
                 $form->addElement(
                     "link","form_del_row[$i]","","#",
-                    "<font color='#FEFEFE'>ºï½ü</font>",
+                    "<font color='#FEFEFE'>å‰Šé™¤</font>",
                     "TABINDEX=-1 
-                    onClick=\"javascript:Dialogue_3('ºï½ü¤·¤Ş¤¹¡£', '$del_data', 'del_row' ,$row_num-1);return false;\""
+                    onClick=\"javascript:Dialogue_3('å‰Šé™¤ã—ã¾ã™ã€‚', '$del_data', 'del_row' ,$row_num-1);return false;\""
                 );
-            //ºÇ½ª¹Ô°Ê³°¤òºï½ü¤¹¤ë¾ì¹ç¡¢ºï½ü¤¹¤ë¹Ô¤ÈÆ±¤¸NO¤Î¹Ô¤Ë¹ç¤ï¤»¤ë
+            //æœ€çµ‚è¡Œä»¥å¤–ã‚’å‰Šé™¤ã™ã‚‹å ´åˆã€å‰Šé™¤ã™ã‚‹è¡Œã¨åŒã˜NOã®è¡Œã«åˆã‚ã›ã‚‹
             }else{
                 $form->addElement(
                     "link","form_del_row[$i]","","#",
-                    "<font color='#FEFEFE'>ºï½ü</font>",
+                    "<font color='#FEFEFE'>å‰Šé™¤</font>",
                     "TABINDEX=-1 
-                    onClick=\"javascript:Dialogue_3('ºï½ü¤·¤Ş¤¹¡£', '$del_data', 'del_row' ,$row_num);return false;\""
+                    onClick=\"javascript:Dialogue_3('å‰Šé™¤ã—ã¾ã™ã€‚', '$del_data', 'del_row' ,$row_num);return false;\""
                 );
             }
         }
 
-        //¥Õ¥ê¡¼¥º¥Õ¥é¥°¤¬true¤Î¾ì¹ç
+        //ãƒ•ãƒªãƒ¼ã‚ºãƒ•ãƒ©ã‚°ãŒtrueã®å ´åˆ
         //aoyama-n 2009-09-15
         /********************
         if($freeze_flg == true){
@@ -3012,21 +3012,21 @@ for($i = 0; $i < $max_row; $i++){
         ********************/
 
         /****************************/
-        //É½¼¨ÍÑHTMLºîÀ®
+        //è¡¨ç¤ºç”¨HTMLä½œæˆ
         /****************************/
         $html .= "<tr class=\"Result1\">";
         $html .=    "<A NAME=$row_num><td align=\"right\">$row_num</td></A>";
         $html .=    "<td align=\"left\">";
         $html .=        $form->_elements[$form->_elementIndex["form_goods_cd[$i]"]]->toHtml();
-        //ÁÒ¸Ë¡¢»ÅÆşÀè¤¬ÁªÂò¤µ¤ì¤Æ¤¤¤Æ¡¢³ÎÇ§²èÌÌ¤ÎÉ½¼¨¤Ç¤Ê¤¤¾ì¹ç
+        //å€‰åº«ã€ä»•å…¥å…ˆãŒé¸æŠã•ã‚Œã¦ã„ã¦ã€ç¢ºèªç”»é¢ã®è¡¨ç¤ºã§ãªã„å ´åˆ
         if($select_flg === true && $freeze_flg != true 
                && 
-        //È¯Ãí¥Ç¡¼¥¿ID¤¬null¤Î¾ì¹ç
+        //ç™ºæ³¨ãƒ‡ãƒ¼ã‚¿IDãŒnullã®å ´åˆ
         ($order_d_id[$i] == null)
         ){
-            $html .=    "¡Ê";
+            $html .=    "ï¼ˆ";
             $html .=        $form->_elements[$form->_elementIndex["form_search[$i]"]]->toHtml();
-            $html .=    "¡Ë";
+            $html .=    "ï¼‰";
         }
         $html .=    "<br>";
         $html .=        $form->_elements[$form->_elementIndex["form_goods_name[$i]"]]->toHtml();
@@ -3054,7 +3054,7 @@ for($i = 0; $i < $max_row; $i++){
         $html .=        $form->_elements[$form->_elementIndex["form_buy_amount[$i]"]]->toHtml();
         $html .=    "</td>";
 
-        //ÁÒ¸Ë¡¢»ÅÆşÀè¤òÁªÂòºÑ¤ßOR³ÎÇ§²èÌÌ°Ê³°
+        //å€‰åº«ã€ä»•å…¥å…ˆã‚’é¸æŠæ¸ˆã¿ORç¢ºèªç”»é¢ä»¥å¤–
         if($freeze_flg === true || $select_flg === false){
             $show_del_subject_flg = false;
         }elseif($select_flg === true && $freeze_flg != true && $order_d_id[$i] == null){
@@ -3070,82 +3070,82 @@ for($i = 0; $i < $max_row; $i++){
             $show_del_subject_flg = true;
         } 
        $html .= "</tr>";
-        //¹ÔÈÖ¹æ¤ò¡Ü1
+        //è¡Œç•ªå·ã‚’ï¼‹1
         $row_num = $row_num+1;
     }
 }
 
-//ÅĞÏ¿³ÎÇ§²èÌÌ¤Ç¤Ï¡¢°Ê²¼¤Î¥Ü¥¿¥ó¤òÉ½¼¨¤·¤Ê¤¤
+//ç™»éŒ²ç¢ºèªç”»é¢ã§ã¯ã€ä»¥ä¸‹ã®ãƒœã‚¿ãƒ³ã‚’è¡¨ç¤ºã—ãªã„
 if($select_flg == true && $freeze_flg !== true){
     //button
-    $form->addElement("submit","form_buy_button","»ÅÆş³ÎÇ§²èÌÌ¤Ø", $disabled);
-    $form->addElement("button","form_sum_button","¹ç¡¡·×",
+    $form->addElement("submit","form_buy_button","ä»•å…¥ç¢ºèªç”»é¢ã¸", $disabled);
+    $form->addElement("button","form_sum_button","åˆã€€è¨ˆ",
             "onClick=\"javascript:Button_Submit('hdn_sum_button_flg','#foot','t', this)\""
     );
 
-    //È¯Ãí¤«¤é»ÅÆş¤òµ¯¤³¤·¤Æ¤¤¤ë¾ì¹ç¤ÏÉ½¼¨¤·¤Ê¤¤
-    //¹ÔÄÉ²Ã¥Ü¥¿¥ó
+    //ç™ºæ³¨ã‹ã‚‰ä»•å…¥ã‚’èµ·ã“ã—ã¦ã„ã‚‹å ´åˆã¯è¡¨ç¤ºã—ãªã„
+    //è¡Œè¿½åŠ ãƒœã‚¿ãƒ³
     if($order_flg != true){
         if($update_flg != true){
-            //»ÅÆşÀè¥ê¥ó¥¯
+            //ä»•å…¥å…ˆãƒªãƒ³ã‚¯
 /*
-            $form->addElement("link","form_client_link","","./1-3-201.php","»ÅÆşÀè","
+            $form->addElement("link","form_client_link","","./1-3-201.php","ä»•å…¥å…ˆ","
                 onClick=\"return Open_SubWin('../dialog/1-0-208.php',Array('form_client[cd]','form_client[name]', 'hdn_client_search_flg'),500,450,5,1);\""
             );
 */
-            $form->addElement("link","form_client_link","#","./1-3-207.php","»ÅÆşÀè","
+            $form->addElement("link","form_client_link","#","./1-3-207.php","ä»•å…¥å…ˆ","
             onClick=\"return Open_SubWin('../dialog/1-0-250.php',Array('form_client[cd1]','form_client[cd2]','form_client[name]','hdn_client_search_flg'),500,450,'1-3-207',1);\"");
         }else{
-            $form->addElement("static","form_client_link","","»ÅÆşÀè");
+            $form->addElement("static","form_client_link","","ä»•å…¥å…ˆ");
         }
     }else{
-        $form->addElement("static","form_client_link","","»ÅÆşÀè");
+        $form->addElement("static","form_client_link","","ä»•å…¥å…ˆ");
 //        $select_flg = false;
     }
 
-        $form->addElement("button","form_add_row_button", "ÄÉ¡¡²Ã", 
+        $form->addElement("button","form_add_row_button", "è¿½ã€€åŠ ", 
             "onClick=\"javascript:Button_Submit('add_row_flg','./1-3-207.php#foot','true', this)\""
         );
     if($update_flg != true){    
-        //É½¼¨¥Ü¥¿¥ó
-        $form->addElement("button","form_show_button","É½¡¡¼¨",
+        //è¡¨ç¤ºãƒœã‚¿ãƒ³
+        $form->addElement("button","form_show_button","è¡¨ã€€ç¤º",
             "onClick=\"javascript:Button_Submit('hdn_show_button_flg','#','t', this)\""
         );
     }
 }elseif($freeze_flg == true){
-    //ÅĞÏ¿³ÎÇ§²èÌÌ¤Ç¤Ï°Ê²¼¤Î¥Ü¥¿¥ó¤òÉ½¼¨
-    //Ìá¤ë  
-    $form->addElement("button","form_back_button","Ìá¡¡¤ë","onClick=\"javascript:history.back()\"");
+    //ç™»éŒ²ç¢ºèªç”»é¢ã§ã¯ä»¥ä¸‹ã®ãƒœã‚¿ãƒ³ã‚’è¡¨ç¤º
+    //æˆ»ã‚‹  
+    $form->addElement("button","form_back_button","æˆ»ã€€ã‚‹","onClick=\"javascript:history.back()\"");
     
     //OK    
-    $form->addElement("submit","form_comp_button","»ÅÆş´°Î»", $disabled);
+    $form->addElement("submit","form_comp_button","ä»•å…¥å®Œäº†", $disabled);
 
-    //È¯ÃíÀè
-    $form->addElement("static","form_client_link","","È¯ÃíÀè"); 
+    //ç™ºæ³¨å…ˆ
+    $form->addElement("static","form_client_link","","ç™ºæ³¨å…ˆ"); 
 
     $form->freeze();
 }else{
-    //É½¼¨¥Ü¥¿¥ó
-    $form->addElement("button","form_show_button","É½¡¡¼¨",
+    //è¡¨ç¤ºãƒœã‚¿ãƒ³
+    $form->addElement("button","form_show_button","è¡¨ã€€ç¤º",
         "onClick=\"javascript:Button_Submit('hdn_show_button_flg','#','t', this)\""
     );
 
-    $form->addElement("button","form_sum_button","¹ç¡¡·×",
+    $form->addElement("button","form_sum_button","åˆã€€è¨ˆ",
             "onClick=\"javascript:Button_Submit('hdn_sum_button_flg','#foot','t', this)\""
     );
-    //»ÅÆşÀè¥ê¥ó¥¯
+    //ä»•å…¥å…ˆãƒªãƒ³ã‚¯
 /*
-    $form->addElement("link","form_client_link","","./1-3-201.php","»ÅÆşÀè","
+    $form->addElement("link","form_client_link","","./1-3-201.php","ä»•å…¥å…ˆ","
         onClick=\"return Open_SubWin('../dialog/1-0-208.php',Array('form_client[cd]','form_client[name]', 'hdn_client_search_flg'),500,450,5,1);\""
     );
 */
-    $form->addElement("link","form_client_link","#","./1-3-207.php","»ÅÆşÀè","
+    $form->addElement("link","form_client_link","#","./1-3-207.php","ä»•å…¥å…ˆ","
             onClick=\"return Open_SubWin('../dialog/1-0-250.php',Array('form_client[cd1]','form_client[cd2]','form_client[name]','hdn_client_search_flg'),500,450,'1-3-207',1);\"");
 
 }
 
 /**
- *¡¡»ÅÆş²ÄÇ½¿ô¤òÃê½Ğ¤¹¤ë´Ø¿ô
+ *ã€€ä»•å…¥å¯èƒ½æ•°ã‚’æŠ½å‡ºã™ã‚‹é–¢æ•°
  *
  *
  *
@@ -3153,7 +3153,7 @@ if($select_flg == true && $freeze_flg !== true){
 **/
 function Get_Deny_Num($db_con, $ord_d_id, $buy_id){
 
-    //»ÅÆş²ÄÇ½·ï¿ô¤òÃê½Ğ
+    //ä»•å…¥å¯èƒ½ä»¶æ•°ã‚’æŠ½å‡º
     $sql  = "SELECT\n";
     $sql .= "    t_order_h.num - COALESCE(t_buy_h.num, 0) AS num \n";
     $sql .= "FROM\n";
@@ -3193,7 +3193,7 @@ function Get_Deny_Num($db_con, $ord_d_id, $buy_id){
 
 
 
-//¥í¥Ã¥È¿ô¤ò·×»»¤¹¤ë
+//ãƒ­ãƒƒãƒˆæ•°ã‚’è¨ˆç®—ã™ã‚‹
 $js  = " function in_num(num,id,order_num,price_i,price_d,amount,coax){\n";
 $js .= "    var in_num = \"form_in_num\"+\"[\"+num+\"]\";\n";
 $js .= "    var ord_in_num = \"form_order_in_num\"+\"[\"+num+\"]\";\n";
@@ -3210,7 +3210,7 @@ $js .= "    document.dateForm.elements[ord_num].value = v_num;\n";
 $js .= "    Mult(id,order_num,price_i,price_d,amount,coax);\n";
 $js .= "}\n";
 
-//ÃíÊ¸¥í¥Ã¥È¿ô¤ò·×»»¤¹¤ë
+//æ³¨æ–‡ãƒ­ãƒƒãƒˆæ•°ã‚’è¨ˆç®—ã™ã‚‹
 $js .= "function ord_in_num(num){\n";
 $js .= "    var in_num = \"form_in_num\"+\"[\"+num+\"]\";\n";
 $js .= "    var ord_in_num = \"form_order_in_num\"+\"[\"+num+\"]\";\n";
@@ -3228,41 +3228,41 @@ $js .= "    }\n";
 $js .= "}\n";
 
 /****************************/
-// »ÅÆşÀè¤Î¾õÂÖ¼èÆÀ
+// ä»•å…¥å…ˆã®çŠ¶æ…‹å–å¾—
 /****************************/
 $client_state_print = Get_Client_State($db_con, $client_id);
 
 
 /****************************/
-//HTML¥Ø¥Ã¥À
+//HTMLãƒ˜ãƒƒãƒ€
 /****************************/
 $html_header = Html_Header($page_title);
 
 /****************************/
-//HTML¥Õ¥Ã¥¿
+//HTMLãƒ•ãƒƒã‚¿
 /****************************/
 $html_footer = Html_Footer();
 
 /****************************/
-//¥á¥Ë¥å¡¼ºîÀ®
+//ãƒ¡ãƒ‹ãƒ¥ãƒ¼ä½œæˆ
 /****************************/
 $page_menu = Create_Menu_h('buy','2');
 
 /****************************/
-//²èÌÌ¥Ø¥Ã¥À¡¼ºîÀ®
+//ç”»é¢ãƒ˜ãƒƒãƒ€ãƒ¼ä½œæˆ
 /****************************/
-$page_title .= "¡¡".$form->_elements[$form->_elementIndex[change_button]]->toHtml();
-$page_title .= "¡¡".$form->_elements[$form->_elementIndex[new_button]]->toHtml();
+$page_title .= "ã€€".$form->_elements[$form->_elementIndex[change_button]]->toHtml();
+$page_title .= "ã€€".$form->_elements[$form->_elementIndex[new_button]]->toHtml();
 $page_header = Create_Header($page_title);
 
-// Render´ØÏ¢¤ÎÀßÄê
+// Renderé–¢é€£ã®è¨­å®š
 $renderer =& new HTML_QuickForm_Renderer_ArraySmarty($smarty);
 $form->accept($renderer);
 
-//form´ØÏ¢¤ÎÊÑ¿ô¤òassign
+//formé–¢é€£ã®å¤‰æ•°ã‚’assign
 $smarty->assign('form',$renderer->toArray());
 
-//¤½¤ÎÂ¾¤ÎÊÑ¿ô¤òassign
+//ãã®ä»–ã®å¤‰æ•°ã‚’assign
 $smarty->assign('var',array(
 	'html_header'   => "$html_header",
 	'page_menu'     => "$page_menu",
@@ -3290,7 +3290,7 @@ $smarty->assign("price_err", $price_err);
 $smarty->assign("duplicate_goods_err", $duplicate_goods_err);
 $smarty->assign("ord_num_err", $ord_num_err);
 
-//¥Æ¥ó¥×¥ì¡¼¥È¤ØÃÍ¤òÅÏ¤¹
+//ãƒ†ãƒ³ãƒ—ãƒ¬ãƒ¼ãƒˆã¸å€¤ã‚’æ¸¡ã™
 $smarty->display(basename($_SERVER[PHP_SELF] .".tpl"));
 
 ?>
