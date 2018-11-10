@@ -1038,7 +1038,7 @@ if($sum_button_flg == true){
 if($client_search_flg == true){
 
 /*
-    //締日を抽出
+    //締日を抽出 extract the closing date
     $sql  = "SELECT\n";
     $sql .= "   close_day\n";
     $sql .= " FROM\n";
@@ -1050,7 +1050,7 @@ if($client_search_flg == true){
     $result = Db_Query($db_con,$sql);
     $close_day = pg_fetch_result($result, 0, 0);
 
-    //日付生成
+    //日付生成 craete date
     $yy = date('Y');
     $mm = date('m');
     if($close_day < 29){
@@ -1059,7 +1059,7 @@ if($client_search_flg == true){
         $last_close_day = date('Ymd', mktime(0,0,0,$mm+1,-1,$yy));
     }
 
-    //前回締め日からの買上額を抽出
+    //前回締め日からの買上額を抽出 extract amount bought from the previous closing date
     $sql  = "SELECT\n";
     $sql .= "    (COALESCE(t_plus.net_amount,0) - COALESCE(t_minus.net_amount,0)) AS ap_balance\n";
     $sql .= " FROM\n";
@@ -1122,15 +1122,15 @@ if($client_search_flg == true){
 */
 
     /****************************/
-    // 買掛データ取得（残高のみ）
+    // 買掛データ取得（残高のみ）acquire payable data (only balance)
     /****************************/
-    // 伝票明細データ取得（データが無い場合は空配列作成）
+    // 伝票明細データ取得（データが無い場合は空配列作成） acquire slip detail data ( if there is no data then create a blank array)
     $sql = Ap_Particular_Sql(START_DAY, date("Y-m-d"), $client_id);
     $res = Db_Query($db_con, $sql);
     $num = pg_num_rows($res);
     $ary_ap_particular_data = ($num > 0) ? Get_Data($res, 2, "ASSOC") : array(null);
 
-    // 買掛残高算出
+    // 買掛残高算出 compute the payabale balance
     foreach ($ary_ap_particular_data as $key => $value){
         $ap_balance += ($value["buy_amount"] - $value["payout_amount"]);
     }
@@ -1139,29 +1139,29 @@ if($client_search_flg == true){
 
 }
 
-//最大行数をhiddenにセット
+//最大行数をhiddenにセット set the max row number to hidden
 $set_data["max_row"] = $max_row;
 
-//上記処理により生成した値をフォームにセット
+//上記処理により生成した値をフォームにセット set the value that was created in the above process in the form
 $form->setConstants($set_data);
 
-//仕入先OR倉庫が選択されていない場合
+//仕入先OR倉庫が選択されていない場合 if the purchase client or warehouse is not selected
 if($client_search_flg == true && $ware_search_flg == true){
-    //画面に表示する警告メッセージ
+    //画面に表示する警告メッセージ warning message to be displayed in the screen
     $warning = "商品を選択して下さい。"; 
-    //入力を制限するフラグ
+    //入力を制限するフラグ flag that will limi input
     $select_flg = true;
 }else{
-    //画面に表示する警告メッセージ
+    //画面に表示する警告メッセージ warning message to be displayed in the screen
     $warning = "仕入先と倉庫を選択して下さい。";
-    //入力を制限するフラグ
+    //入力を制限するフラグ flag that will limit input 
     $select_flg = false;  
 }    
 
 /****************************/
-//フォーム作成
+//フォーム作成 craete form
 /****************************/
-//伝票番号
+//伝票番号 slip number
 $form->addElement(
     "text","form_buy_no","",
     "style=\"color : #525552; 
@@ -1170,7 +1170,7 @@ $form->addElement(
     text-align: left\" readonly'"
 );
 
-//発注残
+//発注残 outstanding order
 //if($update_data_flg == true || $_POST[hdn_buy_id] != null){
 if($update_data_flg == true || $update_flg == true){
     $form->addElement(
@@ -1216,7 +1216,7 @@ if($update_data_flg == true || $update_flg == true){
     $form->addElement("select","form_order_no","",$select_value, $g_form_option_select);
 }
 
-//発注日
+//発注日 purchase order date
 $form_order_day[] = $form->createElement(
     "text","y","",
     "size=\"4\" maxLength=\"4\"
@@ -1244,7 +1244,7 @@ $form_order_day[] = $form->createElement(
 );
 $form->addGroup( $form_order_day,"form_order_day","");
 
-//入荷予定日
+//入荷予定日 planned delivery date
 $form_arrival_hope_day[] = $form->createElement(
     "text","y","",
     "size=\"4\" maxLength=\"4\"
@@ -1272,7 +1272,7 @@ $form_arrival_hope_day[] = $form->createElement(
 );
 $form->addGroup( $form_arrival_hope_day,"form_arrival_hope_day","");
 
-//入荷日
+//入荷日 delivery date
 $form_arrival_day[] = $form->createElement(
     "text","y","",
     "size=\"4\" maxLength=\"4\" 
@@ -1305,7 +1305,7 @@ $form_arrival_day[] = $form->createElement(
 );
 $form->addGroup( $form_arrival_day,"form_arrival_day","");
 
-//仕入日
+//仕入日 purchase date
 $form_buy_day[] = $form->createElement(
     "text","y","",
     "size=\"4\" maxLength=\"4\" 
@@ -1332,8 +1332,8 @@ $form_buy_day[] = $form->createElement(
 );
 $form->addGroup( $form_buy_day,"form_buy_day","");
 
-//仕入先
-//仕入先
+//仕入先 purchase client
+//仕入先 purchase client
 $freeze_form = $form_client[] = $form->createElement(
     "text","cd1","",
     "size=\"7\" maxLength=\"6\"
@@ -1342,7 +1342,7 @@ $freeze_form = $form_client[] = $form->createElement(
     onkeyup=\"changeText(this.form,'form_client[cd1]','form_client[cd2]',6)\"
     $g_form_option"
 );
-//仕入変更　OR　発注からの仕入時には仕入先は変更不可
+//仕入変更　OR　発注からの仕入時には仕入先は変更不可 purchase client cannot be changed when the purchase is from edit purchase or purchase order
 if($update_data_flg == true || $_POST[hdn_buy_id] != null || $order_flg == true){
     $freeze_form->freeze();
 }
@@ -1355,7 +1355,7 @@ $freeze_form = $form_client[] = $form->createElement(
     $g_form_option"
 );
 
-//仕入変更　OR　発注からの仕入時には仕入先は変更不可
+//仕入変更　OR　発注からの仕入時には仕入先は変更不可 purchase client cannot be changed when the purchase is from edit purchase or purchase order
 if($update_data_flg == true || $_POST[hdn_buy_id] != null || $order_flg == true){
     $freeze_form->freeze();
 }
@@ -1365,11 +1365,11 @@ $form_client[] = $form->createElement(
 );
 $form->addGroup($form_client, "form_client", "");
 
-//直送先
+//直送先 direct destination
 $select_value = Select_Get($db_con,'direct');
 $update_form[0] = $form->addElement('select', 'form_direct', "", $select_value,"class=\"Tohaba\"".$g_form_option_select);
 
-//仕入倉庫
+//仕入倉庫 purchase warehouse
 $where  = " WHERE";
 $where .= "  shop_id = $_SESSION[client_id]";
 $where .= "  AND";
@@ -1380,9 +1380,9 @@ $update_form[1] = $form->addElement(
         onChange=\"javascript:Button_Submit('hdn_ware_select_flg','#','t', this)\""
 );
 
-//取引区分
+//取引区分 trade classification
 $select_value = null;
-//発注IDがある場合
+//発注IDがある場合 if there is a purchase order ID
 if($order_flg == true){
     $select_value = select_Get($db_con, 'trade_buy_ord');
 }else{
@@ -1390,7 +1390,8 @@ if($order_flg == true){
 }
 $select_value = Select_Get($db_con, 'trade_buy');
 $update_form[2] = $form->addElement('select', 'form_trade', null, null,$g_form_option_select);
-//返品、値引きの色を変更
+//返品、値引きの色を変更 change the color for returns and discount
+ 
 $select_value_key = array_keys($select_value);
 for($i = 0; $i < count($select_value); $i++){
     if($select_value_key[$i] == 23 || $select_value_key[$i] == 24 || $select_value_key[$i] == 73 || $select_value_key[$i] == 74){
@@ -1399,15 +1400,15 @@ for($i = 0; $i < count($select_value); $i++){
           $color="";
     }
     #2009-09-28 hashimoto-y
-    #取引区分から値引きを表示しない。切り戻しの場合にはここのif文を外す。
+    #取引区分から値引きを表示しない。切り戻しの場合にはここのif文を外す。do not show the discount from the trade classification. if you will return it then take out this if statement.
     if($select_value_key[$i] != 24 && $select_value_key[$i] != 74){
         $update_form[2]->addOption($select_value[$select_value_key[$i]], $select_value_key[$i],$color);
     }
 }
 
-//発注IDがある場合
+//発注IDがある場合 if there is a purchase order ID
 if($order_flg == true){
-    //発注担当者
+    //発注担当者 purchase order assigned staff
     $select_value = Select_Get($db_con,'staff');
     $order_form[] = $form->addElement('select', 'form_order_staff', '', $select_value,$g_form_option_select);
     $count = count($order_form);
@@ -1417,10 +1418,10 @@ if($order_flg == true){
 }
 
 $select_value = Select_Get($db_con,'staff','true');
-//仕入担当者
+//仕入担当者 purchase assigned staff
 $update_form[3] = $form->addElement('select', 'form_buy_staff', '', $select_value,$g_form_option_select);
 
-//仕入入力変更の際は指定したフォームをフリーズする
+//仕入入力変更の際は指定したフォームをフリーズする freeze the assigned form if the purchase input is changed
 //if($update_flg == true && $order_flg == true){
 if($update_flg == true && $order_flg == true){
     for($i = 0; $i < count($update_form); $i++){
@@ -1428,11 +1429,11 @@ if($update_flg == true && $order_flg == true){
     }
 }
 
-//備考
+//備考 remarks
 //$form->addElement("text","form_note","","size=\"50\" maxLength=\"20\" $g_form_option");
 $form->addElement("textarea","form_note",""," rows=\"2\" cols=\"75\" $g_form_option_area");
 
-//仕入金額(合計)
+//仕入金額(合計) purchase amount (total)
 $form->addElement(
         "text","form_buy_money","",
         "size=\"25\" maxLength=\"18\"
@@ -1443,7 +1444,7 @@ $form->addElement(
          readonly"
 );
 
-//消費税額(合計)
+//消費税額(合計) tax amount (total)
 $form->addElement(
         "text","form_tax_money","",
         "size=\"25\" maxLength=\"18\"
@@ -1454,7 +1455,7 @@ $form->addElement(
          readonly"
 );
 
-//仕入金額（税込合計)
+//仕入金額（税込合計) purchase amount (with tax total)
 $form->addElement(
         "text","form_total_money","",
         "size=\"25\" maxLength=\"18\"
@@ -1465,48 +1466,48 @@ $form->addElement(
          readonly"
 );
 
-//追加リンク
+//追加リンク added link
 $form->addElement("link","add_row_link","","#","追加","
     onClick=\"javascript:Button_Submit_1('add_row_flg', '#', 'true', this);\""
 );
 
-//入力・変更
+//入力・変更 input・edit
 $form->addElement("button","new_button","入　力",$g_button_color."onClick=\"location.href='$_SERVER[PHP_SELF]'\"");
-//照会
+//照会 display/inquiry
 $form->addElement("button","change_button","照会・変更","onClick=\"javascript:Referer('1-3-202.php')\"");
 
 /*
 if($update_flg === false || $update_data_flg === false){
-    //仕入先対象
+    //仕入先対象 for purchase client
     $form->addElement("button","form_client_button","仕入先","onClick=\"javascript:location.href='./1-3-201.php'\"");
-    //FC 対象
+    //FC 対象 for FC 
     $form->addElement("button","form_fc_button","Ｆ　Ｃ",$g_button_color."onClick=\"javascript:location.href='./1-3-207.php';\"");
 }
 */
 
 //hidden
-//各入力フラグ
-$form->addElement("hidden", "hdn_client_search_flg");       //仕入先コード入力フラグ
-$form->addElement("hidden", "hdn_goods_search_flg");        //商品コード入力フラグ
-$form->addElement("hidden", "hdn_ware_select_flg");         //倉庫選択フラグ
-$form->addElement("hidden", "hdn_sum_button_flg");          //合計ボタン押下フラグ
-$form->addElement("hidden", "add_row_flg");                 //行追加ボタン押下フラグ
-$form->addElement("hidden", "hdn_show_button_flg");         //表示ボタン押下フラグ
-//持ちまわる仕入先の情報
-$form->addElement("hidden", "hdn_coax");                    //丸め区分
-$form->addElement("hidden", "hdn_tax_franct");              //端数区分
-$form->addElement("hidden", "hdn_client_id");               //得意先ID
-$form->addElement("hidden", "hdn_order_id");                //変更時（発注ID）
+//各入力フラグ for each input flag
+$form->addElement("hidden", "hdn_client_search_flg");       //仕入先コード入力フラグ input flag for purchase code
+$form->addElement("hidden", "hdn_goods_search_flg");        //商品コード入力フラグ product code input flag
+$form->addElement("hidden", "hdn_ware_select_flg");         //倉庫選択フラグ warehouse selection flag
+$form->addElement("hidden", "hdn_sum_button_flg");          //合計ボタン押下フラグ flag for when total button is pressed
+$form->addElement("hidden", "add_row_flg");                 //行追加ボタン押下フラグ flag for when add row button is pressed
+$form->addElement("hidden", "hdn_show_button_flg");         //表示ボタン押下フラグ flag for when dispaly button is pressed
+//持ちまわる仕入先の情報 purchase client information that will be used
+$form->addElement("hidden", "hdn_coax");                    //丸め区分 round up down
+$form->addElement("hidden", "hdn_tax_franct");              //端数区分 round up down
+$form->addElement("hidden", "hdn_client_id");               //得意先ID customer ID
+$form->addElement("hidden", "hdn_order_id");                //変更時（発注ID） when change (purchase order ID)
 $form->addElement("hidden", "hdn_buy_id");
-$form->addElement("hidden", "hdn_buy_enter_day");           //仕入登録日
-$form->addElement("hidden", "hdn_ord_enter_day");           //発注登録日
-$form->addElement("hidden", "hdn_ord_change_day");          //発注変更日
+$form->addElement("hidden", "hdn_buy_enter_day");           //仕入登録日 purchase registration date
+$form->addElement("hidden", "hdn_ord_enter_day");           //発注登録日 purchase order registration date
+$form->addElement("hidden", "hdn_ord_change_day");          //発注変更日 purchase order change date
 
-//表示行数に関係する情報
-$form->addElement("hidden", "del_row");                     //削除行
-$form->addElement("hidden", "max_row");                     //最大行数
+//表示行数に関係する情報 info regarding number of displayed rows
+$form->addElement("hidden", "del_row");                     //削除行 deleted rows
+$form->addElement("hidden", "max_row");                     //最大行数 max row numnber
 
-//更新フラグ
+//更新フラグ update flag
 $form->addElement("hidden", "renew_flg", "1");
 
 //aoyama-n 2009-09-15
@@ -1518,22 +1519,22 @@ for($i = 0; $i < $max_row; $i++){
 }
 
 /****************************/
-//ボタン押下処理判定
+//ボタン押下処理判定 decision on when button is pressed
 /****************************/
 $buy_button_flg = ($_POST["form_buy_button"] == "仕入確認画面へ")? true : false;
 
 $buy_comp_flg   = ($_POST["form_comp_button"] == "仕入完了")?　true : false;
 
 /****************************/
-//仕入確認ボタン押下処理
+//仕入確認ボタン押下処理when purchase confirm button is pressed
 /****************************/
 if($buy_button_flg == true || $buy_comp_flg == true){
 
     /******************************/
-    //ルール作成（QuickForm）
+    //ルール作成（QuickForm）create rult
     /******************************/
-    //入荷日
-    //●必須チェック
+    //入荷日 delvery date
+    //●必須チェック required field
     $form->addGroupRule('form_arrival_day', array(
             'y' => array(
                     array('入荷日の日付は妥当ではありません。', 'required')
@@ -1557,8 +1558,8 @@ if($buy_button_flg == true || $buy_comp_flg == true){
             )               
     ));
     
-    //仕入日
-    //●必須チェック
+    //仕入日 purchase date
+    //●必須チェック required field
     $form->addGroupRule('form_buy_day', array(
             'y' => array(
                     array('仕入日の日付は妥当ではありません。','required')
@@ -1582,8 +1583,8 @@ if($buy_button_flg == true || $buy_comp_flg == true){
             )
     ));
 
-    //仕入先CD
-    //●必須チェック
+    //仕入先CD purchase CD
+    //●必須チェック required checck
     $form->addGroupRule('form_client', array(
             'cd1' => array(
                     array('正しい仕入先コードを入力してください。','required')
@@ -1596,48 +1597,48 @@ if($buy_button_flg == true || $buy_comp_flg == true){
             )
     ));
 
-    //仕入倉庫
-    //●必須チェック
+    //仕入倉庫 purchase warehouse
+    //●必須チェック required field
     $form->addRule('form_ware','仕入倉庫を選択してください。','required');
 
-    //取引区分
-    //●必須チェック
+    //取引区分 trade classifcaiton
+    //●必須チェック required field
     $form->addRule('form_trade','取引区分を選択してください。','required');
 
-    //仕入担当者
-    //●必須チェック
+    //仕入担当者 purchase assigned staff
+    //●必須チェック required field
     $form->addRule('form_buy_staff','仕入担当者を選択してください。','required');
 
-    // ■備考
-    // 文字数チェック
+    // ■備考 remarks 
+    // 文字数チェック string number check
     $form->registerRule("mb_maxlength", "function", "Mb_Maxlength");
     $form->addRule("form_note", "備考は100文字以内です。","mb_maxlength", "100");
 
     /******************************/
-    //POST取得
+    //POST取得 acquire POST
     /******************************/
-    $client_id                  = $_POST["hdn_client_id"];                  //仕入ID
-    $client_cd1                 = $_POST["form_client"]["cd1"];             //仕入先CD
-    $client_cd2                 = $_POST["form_client"]["cd2"];             //仕入先CD
-    $buy_no                     = $_POST["form_buy_no"];                    //仕入番号
-    $order_no                   = $_POST["form_order_no"];                  //発注番号
-    $order_date                 = $_POST["form_order_day"]["y"];            //発注日（年）
-    $order_date                 = $_POST["form_order_day"]["m"];            //発注日（月）
-    $order_date                 = $_POST["form_order_day"]["d"];            //発注日（日）
-    $arrival_day["y"]           = $_POST["form_arrival_day"]["y"];          //入荷日（年）
-    $arrival_day["m"]           = $_POST["form_arrival_day"]["m"];          //入荷日（月）
-    $arrival_day["d"]           = $_POST["form_arrival_day"]["d"];          //入荷日（日）
-    $buy_day["y"]               = $_POST["form_buy_day"]["y"];              //仕入日（年）
-    $buy_day["m"]               = $_POST["form_buy_day"]["m"];              //仕入日（月）
-    $buy_day["d"]               = $_POST["form_buy_day"]["d"];              //仕入日（日）
-    $direct                     = ($_POST["form_direct"] != NULL)? $_POST["form_direct"] : NULL;  //直送先
-    $ware                       = $_POST["form_ware"];                      //仕入倉庫
-    $trade                      = $_POST["form_trade"];                     //取引区分
-    $buy_staff                  = $_POST["form_buy_staff"];                 //仕入担当者
-    $order_staff                = ($_POST["form_order_staff"] != null)? $_POST["form_order_staff"] : null; //仕入担当者
-    $note                       = $_POST["form_note"];                      //備考
+    $client_id                  = $_POST["hdn_client_id"];                  //仕入ID purchase ID
+    $client_cd1                 = $_POST["form_client"]["cd1"];             //仕入先CD purchase client CD
+    $client_cd2                 = $_POST["form_client"]["cd2"];             //仕入先CD purchase client code
+    $buy_no                     = $_POST["form_buy_no"];                    //仕入番号 purchse number 
+    $order_no                   = $_POST["form_order_no"];                  //発注番号 purchase order number 
+    $order_date                 = $_POST["form_order_day"]["y"];            //発注日（年）purchase order date (year)
+    $order_date                 = $_POST["form_order_day"]["m"];            //発注日（月）purchase order date (month)
+    $order_date                 = $_POST["form_order_day"]["d"];            //発注日（日）purchase order date (day)
+    $arrival_day["y"]           = $_POST["form_arrival_day"]["y"];          //入荷日（年）delivered date (year)
+    $arrival_day["m"]           = $_POST["form_arrival_day"]["m"];          //入荷日（月）delivered date (month)
+    $arrival_day["d"]           = $_POST["form_arrival_day"]["d"];          //入荷日（日）delivered date (day)
+    $buy_day["y"]               = $_POST["form_buy_day"]["y"];              //仕入日（年）purchase date (year)
+    $buy_day["m"]               = $_POST["form_buy_day"]["m"];              //仕入日（月）purchase date (month)
+    $buy_day["d"]               = $_POST["form_buy_day"]["d"];              //仕入日（日）purchase date (day)
+    $direct                     = ($_POST["form_direct"] != NULL)? $_POST["form_direct"] : NULL;  //直送先 direct destination
+    $ware                       = $_POST["form_ware"];                      //仕入倉庫 purchase warehouse
+    $trade                      = $_POST["form_trade"];                     //取引区分 trade classification
+    $buy_staff                  = $_POST["form_buy_staff"];                 //仕入担当者 purchase assigned staff
+    $order_staff                = ($_POST["form_order_staff"] != null)? $_POST["form_order_staff"] : null; //仕入担当者 purchase assigned staff
+    $note                       = $_POST["form_note"];                      //備考 remarks
 
-    //発注ステータスチェック
+    //発注ステータスチェック purchase order status check
     if($order_id != null && $buy_get_flg == false){
         $sql  = "SELECT \n";
         $sql .= "   t_order_h.ps_stat \n";
@@ -1653,13 +1654,13 @@ if($buy_button_flg == true || $buy_comp_flg == true){
             $ps_stat = pg_fetch_result($result, 0,0);
         }
 
-        //発注の処理状況が完了の場合
+        //発注の処理状況が完了の場合 if the process status of the purchase order is done
         if($ps_stat == '3'){
             header("Location:./1-3-205.php?buy_id=0&input_flg=true&ps_stat=true");
         }
     }
 
-    //仕入先チェック
+    //仕入先チェック check the purchase client
     $sql  = "SELECT";
     $sql .= "   COUNT(client_id) ";
     $sql .= "FROM";
@@ -1675,46 +1676,46 @@ if($buy_button_flg == true || $buy_comp_flg == true){
     $result = Db_Query($db_con, $sql);
     $client_num = pg_fetch_result($result, 0, 0);
 
-    //仕入先コードが不正な場合
+    //仕入先コードが不正な場合 if the purchase client code is invalid
     if($client_num != 1){
         $form->setElementError("form_client", "仕入先情報取得前に 発注確認画面へボタン <br>が押されました。操作をやり直してください。");
 
-    //仕入先コードが正当な場合
+    //仕入先コードが正当な場合 if the purchase client code is valid
     }elseif($client_cd1 != null && $client_cd2 != null){
  
         //aoyama-n 2009-09-01
-        //値引商品選択時の取引区分チェック（値引・返品は使用不可）
+        //値引商品選択時の取引区分チェック（値引・返品は使用不可） trade classification check when the discounted price is selected (discount and returns are not usable)
         if(($trade == '23' || $trade == '24' || $trade == '73' || $trade == '74') && (in_array('t', $_POST[hdn_discount_flg]))){
             $form->setElementError("form_trade", "値引商品を選択した場合、使用できる取引区分は「掛仕入、割賦仕入、現金仕入」のみです。");
             #2009-09-15 hashimoto-y
             $trade_err = true;
         }
 
-        //データチェックに渡す引数生成
+        //データチェックに渡す引数生成 create the argument that will be passed in the data check
         $check_ary = array($db_con, $order_id, $_POST["hdn_ord_enter_day"], $get_buy_id);
 
-        //データチェック
+        //データチェック data check
         $check_data = Row_Data_Check(
-                                $_POST[hdn_goods_id],       //商品ID
-                                $_POST[form_goods_cd],      //商品コード
-                                $_POST[form_goods_name],    //商品名
-                                $_POST[form_buy_num],       //仕入数
-                                $_POST[form_buy_price],     //仕入単価
-                                $_POST[form_buy_amount],    //仕入金額
-                                $_POST[hdn_tax_div],        //課税区分
-                                $del_history,               //削除履歴
-                                $max_row,                   //最大行数
-                                "buy",                      //区分
+                                $_POST[hdn_goods_id],       //商品ID product ID
+                                $_POST[form_goods_cd],      //商品コード product code
+                                $_POST[form_goods_name],    //商品名 product name
+                                $_POST[form_buy_num],       //仕入数 purchase number
+                                $_POST[form_buy_price],     //仕入単価 purchase price per unit
+                                $_POST[form_buy_amount],    //仕入金額 purchase amount
+                                $_POST[hdn_tax_div],        //課税区分 trade classification
+                                $del_history,               //削除履歴 delete history 
+                                $max_row,                   //最大行数 max row number
+                                "buy",                      //区分 classification
                                 $db_con,
-                                $_POST[form_order_num],     //発注数
-                                $_POST[hdn_royalty],        //ロイヤリティ
-                                $_POST[hdn_order_d_id],     //発注データID
+                                $_POST[form_order_num],     //発注数 purchase order number
+                                $_POST[hdn_royalty],        //ロイヤリティ royalty
+                                $_POST[hdn_order_d_id],     //発注データID purchase order data ID
                                 //aoyama-n 2009-09-01
                                 #$check_ary
                                 $check_ary,
-                                $_POST[hdn_discount_flg]    //値引フラグ
+                                $_POST[hdn_discount_flg]    //値引フラグ discounted flag
                                 );
-        //変数初期化
+        //変数初期化 variable initialization
         $goods_id   = null;
         $goods_cd   = null;
         $goods_name = null;
@@ -1726,24 +1727,24 @@ if($buy_button_flg == true || $buy_comp_flg == true){
         $royalty    = null;
         $order_d_id = null;
 
-        //エラーがあった場合
+        //エラーがあった場合 if there is an error
         if($check_data[0] === true){
-            //商品が一つも選択されていない場合
+            //商品が一つも選択されていない場合 when a product is not selected even once
             $form->setElementError("form_buy_no",$check_data[1]);
     
-            //正しい商品コードが入力されていない場合
+            //正しい商品コードが入力されていない場合 if the right product code is not inputted
             $goods_err = $check_data[2];
 
-            //発注数と仕入単価に入力があるか
+            //発注数と仕入単価に入力があるか is there an input in the number of units to be purchased and purchase price per unit?
             $price_num_err = $check_data[3];
 
-            //発注数半角数字チェック
+            //発注数半角数字チェック half width number check for number of units to be purchsaed
             $num_err = $check_data[4];
 
-            //単価半角チェック
+            //単価半角チェック check half width for price per unit
             $price_err = $check_data[5];
 
-            //発注数を仕入数が超えた場合
+            //発注数を仕入数が超えた場合 if the units to be purchase exceeds the purchase number
             $ord_num_err = $check_data[6];
 
             if($check_data[1] != null || $goods_err != null || $price_num_err != null || $num_err != null || $price_err != null){
@@ -1754,12 +1755,12 @@ if($buy_button_flg == true || $buy_comp_flg == true){
 
         #2009-09-15 hashimoto-y
         }elseif($trade_err === true){
-        //取引区分がエラーの場合  何もしない
+        //取引区分がエラーの場合  何もしない if the trade classification is error. dont do anything
 
         }else{
-        //エラーがなかった場合
+        //エラーがなかった場合 if there is no error
 
-            //登録対象データを変数にセット
+            //登録対象データを変数にセット set the registration data to variable
             $goods_id   = $check_data[1][goods_id];
             $goods_cd   = $check_data[1][goods_cd];
             $goods_name = $check_data[1][goods_name];
@@ -1773,7 +1774,7 @@ if($buy_button_flg == true || $buy_comp_flg == true){
             $def_line   = $check_data[1][def_line];
 
 
-            //発注数を仕入数が超えた場合
+            //発注数を仕入数が超えた場合 if the units to be purchase exceeds the purchase number
             $ord_num_err = $check_data[2];
         }
     }
@@ -1784,55 +1785,55 @@ if($buy_button_flg == true || $buy_comp_flg == true){
 
     $data = Total_Amount($buy_amount, $tax_div, $coax, $tax_franct, $tax_rate, $client_id, $db_con);
 
-    //フォームに値セット
+    //フォームに値セット set the value to form
     $set_data["form_buy_money"]     = number_format($data[0]);
     $set_data["form_tax_money"]     = number_format($data[1]);
     $set_data["form_total_money"]   = number_format($data[2]);
     $form->setConstants($set_data);
 
     /******************************/
-    //ルール作成
+    //ルール作成 create rule
     /******************************/
-    //入荷日
-    //●日付妥当性チェック
+    //入荷日 delivery date
+    //●日付妥当性チェック check the validity of the date
     if(!checkdate((int)$arrival_day["m"], (int)$arrival_day["d"], (int)$arrival_day["y"])){
         $form->setElementError("form_arrival_day", "入荷日の日付は妥当ではありません。");
     }else{
-        //月次更新
+        //月次更新 monthly update
         if(Check_Monthly_Renew($db_con, $client_id, '2', $arrival_day["y"], $arrival_day["m"], $arrival_day["d"]) === false){
             $form->setElementError("form_arrival_day", "入荷日に月次更新日以前の日付は登録できません。");
         }
 
-        //システム開始日チェック
+        //システム開始日チェック check the system starting date
         $arrival_day_err   = Sys_Start_Date_Chk($arrival_day["y"], $arrival_day["m"], $arrival_day["d"], "入荷日");
         if($arrival_day_err != Null){
             $form->setElementError("form_arrival_day", $arrival_day_err);
         }       
     }
 
-    //仕入日
-    //●日付妥当性チェック
+    //仕入日 purchase date
+    //●日付妥当性チェック check the validty of date
     if(!checkdate((int)$buy_day["m"], (int)$buy_day["d"], (int)$buy_day["y"])){
         $form->setElementError("form_buy_day", "仕入日の日付は妥当ではありません。");
     }else{
-        //月次更新
+        //月次更新 monthly update
         if(Check_Monthly_Renew($db_con, $client_id, '2', $buy_day["y"], $buy_day["m"], $buy_day["d"]) === false){
             $form->setElementError("form_buy_day", "仕入日に月次更新日以前の日付は登録できません。");
         }
 
-        //仕入締日チェック
+        //仕入締日チェック check the closing date for purchase
         if(Check_Payment_Close_Day($db_con, $client_id, $buy_day["y"], $buy_day["m"], $buy_day["d"]) === false){
             $form->setElementError("form_buy_day", "仕入日に仕入締日以前の日付は登録できません。");
         }
 
-        //システム開始日チェック
+        //システム開始日チェック system starting date check
         $buy_day_err   = Sys_Start_Date_Chk($buy_day["y"], $buy_day["m"], $buy_day["d"], "仕入日");
         if($buy_day_err != Null){
             $form->setElementError("form_buy_day", $buy_day_err);
         }       
     }
 
-    //更新処理実施日チェック
+    //更新処理実施日チェック  check update process execution date 
     $buy_day["m"] = str_pad($buy_day["m"], 2, 0, STR_PAD_LEFT);
     $buy_day["d"] = str_pad($buy_day["d"], 2, 0, STR_PAD_LEFT);
 
@@ -1840,8 +1841,8 @@ if($buy_button_flg == true || $buy_comp_flg == true){
 
 /*
     for($i = 0; $i < count($goods_id); $i++){
-        //商品チェック
-        //商品重複チェック
+        //商品チェック product check
+        //商品重複チェック product duplication check
         for($j = 0; $j < count($goods_id); $j++){
             if($goods_id[$i] != null && $goods_id[$j] != null && $i != $j && $goods_id[$i] == $goods_id[$j]){
                 //$form->setElementError("form_buy_no", "同じ商品が２度選択されています。");
@@ -1850,27 +1851,27 @@ if($buy_button_flg == true || $buy_comp_flg == true){
         }
     }
 */
-    //商品チェック
-    //商品重複チェック
+    //商品チェック product check
+    //商品重複チェック product duplication check
     $goods_count = count($goods_id);
     for($i = 0; $i < $goods_count; $i++){
 
-        //既にチェック済みの商品の場合はｽｷｯﾌﾟ
+        //既にチェック済みの商品の場合はｽｷｯﾌﾟ skip the products that are already checked
         if(@in_array($goods_id[$i], $checked_goods_id)){
             continue;
         }
 
-        //チェック対象となる商品
+        //チェック対象となる商品 produts that will be checked
         $err_goods_cd = $goods_cd[$i];
         $mst_line = $def_line[$i];
 
         for($j = $i+1; $j < $goods_count; $j++){
-            //商品が同じ場合
+            //商品が同じ場合 if the product is the same
             if($goods_id[$i] == $goods_id[$j]) {
                 $duplicate_line .= ", ".($def_line[$j]);
             }
         }
-        $checked_goods_id[] = $goods_id[$i];    //チェック済み商品
+        $checked_goods_id[] = $goods_id[$i];    //チェック済み商品 products already checked
 
         if($duplicate_line != null){
             $duplicate_goods_err[] =  "商品コード：".$err_goods_cd."の商品が複数選択されています。(".$mst_line.$duplicate_line."行目)";
@@ -1882,42 +1883,42 @@ if($buy_button_flg == true || $buy_comp_flg == true){
     }
 
     /*****************************/
-    //値検証
+    //値検証 validate value
     /*****************************/
     if($form->validate()){
 
         /*******************************/
-        //登録処理
+        //登録処理 registration process
         /*******************************/
-        //仕入完了ボタンフラグがtrueの場合
+        //仕入完了ボタンフラグがtrueの場合 if the purchase compoletion button is true
         if($buy_comp_flg == true){
 
             $total_amount_data = Total_Amount($buy_amount, $tax_div, $coax, $tax_franct, $tax_rate, $client_id, $db_con);
 
-            //日付を結合
-            $arrival_date   = $arrival_day["y"]."-".$arrival_day["m"]."-".$arrival_day["d"];  //入荷日
+            //日付を結合 combine the dates
+            $arrival_date   = $arrival_day["y"]."-".$arrival_day["m"]."-".$arrival_day["d"];  //入荷日 delivery date
 
             Db_Query($db_con, "BEGIN");
 
-            //仕入変更入力の場合
+            //仕入変更入力の場合 if the purchase edit is inputted
             if($update_flg == true){
 
-                //仕入が削除されていないか確認
+                //仕入が削除されていないか確認 check if the purchase is not deleted
                 $update_check_flg = Update_Check($db_con, "t_buy_h", "buy_id", $get_buy_id, $_POST["hdn_buy_enter_day"]);
-                //既に削除されていた場合
+                //既に削除されていた場合 if it was already deleted
                 if($update_check_flg === false){
                     header("Location:./1-3-205.php?buy_id=$get_buy_id&input_flg=true&del_buy_flg=true");
                     exit;
                 }
                 if($order_id != null){
-                    //発注が変更されていないか確認
+                    //発注が変更されていないか確認 check if the purchase order is not edited
                     $update_data_check_flg = Update_Data_Check($db_con, "t_order_h", "ord_id", $order_id, $_POST["hdn_ord_change_day"]);
                     if($update_data_check_flg === false){
                         header("Location:./1-3-205.php?buy_id=0&input_flg=true&change_ord_flg=true");
                         exit;
                     }
                 }
-                //支払ヘッダをとりあえず削除
+                //支払ヘッダをとりあえず削除 delete the payment header for now
                 $sql  = "DELETE FROM t_payout_h WHERE buy_id = $get_buy_id";
 
                 $result = Db_Query($db_con, $sql);
@@ -1926,7 +1927,7 @@ if($buy_button_flg == true || $buy_comp_flg == true){
                     exit;
                 }
 
-                //「仕入ヘッダテーブル」の下記の情報を更新
+                //「仕入ヘッダテーブル」の下記の情報を更新 update the information of (purchase header table) below
                 $sql  = "UPDATE\n";
                 $sql .= "    t_buy_h\n";
                 $sql .= " SET\n";
@@ -1962,13 +1963,13 @@ if($buy_button_flg == true || $buy_comp_flg == true){
 
                 $result = Db_Query($db_con, $sql);
 
-                //失敗した場合はロールバック
+                //失敗した場合はロールバック if it fails then rollback
                 if($result === false){
                     Db_Query($db_con, "ROLLBACK");
                     exit;
                 }
 
-                //「仕入データテーブル」からGETで取得した仕入IDとマッチするデータを削除
+                //「仕入データテーブル」からGETで取得した仕入IDとマッチするデータを削除 delete the data that matches the purchase ID that was GET from purchase data table
                 $sql  = "DELETE FROM";
                 $sql .= "    t_buy_d";
                 $sql .= " WHERE";
@@ -1976,13 +1977,13 @@ if($buy_button_flg == true || $buy_comp_flg == true){
                 $sql .= ";";
                
                 $result = Db_Query($db_con, $sql);
-                //失敗した場合はロールバック
+                //失敗した場合はロールバック if it fails then roll back
                 if($result === false){
                     Db_Query($db_con, "ROLLBACK");
                     exit;
                 }
 
-                //分割テーブルに登録されているデータを削除
+                //分割テーブルに登録されているデータを削除 delete the data that is registered in the division table
                 $sql  = "DELETE FROM\n";
                 $sql .= "   t_amortization\n";
                 $sql .= " WHERE\n";
@@ -1990,13 +1991,13 @@ if($buy_button_flg == true || $buy_comp_flg == true){
                 $sql .= ";";
 
                 $result = Db_Query($db_con, $sql);
-                //失敗した場合はロールバック
+                //失敗した場合はロールバック rollback if you fail
                 if($result === false){
                     Db_Query($db_con, $sql);
                     exit;
                 }
 
-                //発注から起こしている場合には一度強制完了していない発注に対して発注残フラグをtrueにする
+                //発注から起こしている場合には一度強制完了していない発注に対して発注残フラグをtrueにする make the outstanding purchase flag of purchase order that are not forcefully completed to true if it is being recorded from the purchase order
                 if($order_flg == true){
                     $sql  = "UPDATE";
                     $sql .= "   t_order_d \n";
@@ -2015,19 +2016,19 @@ if($buy_button_flg == true || $buy_comp_flg == true){
                     }
                 }
 
-            //新規仕入入力の場合
+            //新規仕入入力の場合 if it is a new record input
             }else{
                 if($order_flg == true){
-                    //発注が削除されていないかを確認
+                    //発注が削除されていないかを確認 check if the purchase order is not deleted
                     $update_check_flg = Update_Check($db_con, "t_order_h", "ord_id", $order_id, $_POST["hdn_ord_enter_day"]);
 
-                    //既に削除されていた場合
+                    //既に削除されていた場合 if it was deleted
                     if($update_check_flg === false){
                         header("Location:./1-3-205.php?buy_id=0&input_flg=true&del_ord_flg=true");
                         exit;
                     }
 
-                    //発注が変更されていないか確認
+                    //発注が変更されていないか確認 check if the purchase order is not changed
                     $update_data_check_flg = Update_Data_Check($db_con, "t_order_h", "ord_id", $order_id, $_POST["hdn_ord_change_day"]);
                     if($update_data_check_flg === false){
                         header("Location:./1-3-205.php?buy_id=0&input_flg=true&change_ord_flg=true");
@@ -2035,88 +2036,88 @@ if($buy_button_flg == true || $buy_comp_flg == true){
                     }
                 }
                 $sql  = "INSERT INTO t_buy_h (\n";
-                $sql .= "    buy_id,\n";                                                            //仕入先ID
-                $sql .= "    buy_no,\n";                                                            //仕入番号
+                $sql .= "    buy_id,\n";                                                            //仕入先ID purhcase ID
+                $sql .= "    buy_no,\n";                                                            //仕入番号 purchase number
                 if($order_flg == true){
-                    $sql .= "    ord_id,\n";                                                        //発注ID
+                    $sql .= "    ord_id,\n";                                                        //発注ID purhase order ID
                 }
-                $sql .= "    buy_day,\n";                                                           //仕入日
-                $sql .= "    arrival_day,\n";                                                       //入荷日
-                $sql .= "    client_id,\n";                                                         //得意先ID
+                $sql .= "    buy_day,\n";                                                           //仕入日 purchase date
+                $sql .= "    arrival_day,\n";                                                       //入荷日 delivery date
+                $sql .= "    client_id,\n";                                                         //得意先ID customer ID
                 if($direct != null){
-                    $sql .= "    direct_id,\n";                                                     //直送先ID
+                    $sql .= "    direct_id,\n";                                                     //直送先ID direct destination ID
                 }
-                $sql .= "    trade_id,\n";                                                          //取引先CD
-                $sql .= "    note,\n";                                                              //備考
-                $sql .= "    c_staff_id,\n";                                                        //仕入担当者ID
-                $sql .= "    ware_id,\n";                                                           //倉庫ID
-                $sql .= "    e_staff_id,\n";                                                        //入力者ID
-                $sql .= "    shop_id,\n";                                                           //ショップID
-                $sql .= "    net_amount,\n";                                                        //仕入金額（税抜き）
-                $sql .= "    tax_amount,\n";                                                        //消費税額
-                $sql .= ($order_staff != null) ? " oc_staff_id,\n" : null;                          //発注担当者ID
-                $sql .= "    total_split_num, \n";                                                  //分割回数
-                $sql .= "    client_cd1, ";                                                         //得意先コード１
-                $sql .= "    client_cd2, ";                                                         //得意先コード２
-                $sql .= "    client_name, ";                                                        //得意先名１
-                $sql .= "    client_name2, ";                                                       //得意先名２
-                $sql .= ($direct != null) ? " direct_name, " : null;                                //直送先名１
-                $sql .= ($direct != null) ? " direct_name2, " : null;                               //直送先名２
-                $sql .= "    ware_name, ";                                                          //倉庫名
-                $sql .= "    c_staff_name, ";                                                       //仕入担当者名
-                $sql .= ($order_staff != null) ? " oc_staff_name, " : null;                         //発注担当者名
-                $sql .= "    e_staff_name, ";                                                       //入力者名
-                $sql .= "    client_cname, ";                                                       //略称
-                $sql .= "    buy_div ";                                                             //仕入区分
+                $sql .= "    trade_id,\n";                                                          //取引先CD trade partner CD
+                $sql .= "    note,\n";                                                              //備考 remarks
+                $sql .= "    c_staff_id,\n";                                                        //仕入担当者ID purchase assigned staff ID
+                $sql .= "    ware_id,\n";                                                           //倉庫ID warehouse ID
+                $sql .= "    e_staff_id,\n";                                                        //入力者ID input person ID
+                $sql .= "    shop_id,\n";                                                           //ショップID shop ID
+                $sql .= "    net_amount,\n";                                                        //仕入金額（税抜き） purchase amount without tax
+                $sql .= "    tax_amount,\n";                                                        //消費税額 tax amount
+                $sql .= ($order_staff != null) ? " oc_staff_id,\n" : null;                          //発注担当者ID purchase order assigned staff ID
+                $sql .= "    total_split_num, \n";                                                  //分割回数 division times
+                $sql .= "    client_cd1, ";                                                         //得意先コード１ customer code 1
+                $sql .= "    client_cd2, ";                                                         //得意先コード２ customer code 2
+                $sql .= "    client_name, ";                                                        //得意先名１customer name 1
+                $sql .= "    client_name2, ";                                                       //得意先名２ customer name 2
+                $sql .= ($direct != null) ? " direct_name, " : null;                                //直送先名１ direct destination name 1 
+                $sql .= ($direct != null) ? " direct_name2, " : null;                               //直送先名２ direct destination name 2
+                $sql .= "    ware_name, ";                                                          //倉庫名 warehouse name
+                $sql .= "    c_staff_name, ";                                                       //仕入担当者名 purcahse order assigned staff name
+                $sql .= ($order_staff != null) ? " oc_staff_name, " : null;                         //発注担当者名 purchase order assigned staff name
+                $sql .= "    e_staff_name, ";                                                       //入力者名 inputter name
+                $sql .= "    client_cname, ";                                                       //略称 abbrevation
+                $sql .= "    buy_div ";                                                             //仕入区分 purchase classification
                 $sql .= ")VALUES(\n";
-                $sql .= "    (SELECT COALESCE(MAX(buy_id), 0)+1 FROM t_buy_h),\n";                  //仕入先ID
-                $sql .= "    '$buy_no',\n";                                                         //仕入番号
+                $sql .= "    (SELECT COALESCE(MAX(buy_id), 0)+1 FROM t_buy_h),\n";                  //仕入先ID purchase client ID
+                $sql .= "    '$buy_no',\n";                                                         //仕入番号 purchase number
                 if($order_flg == true){
-                    $sql .= "    $order_id,\n";                                                     //発注ID
+                    $sql .= "    $order_id,\n";                                                     //発注ID purchase order ID
                 }
-                $sql .= "    '$buy_date',\n";                                                       //仕入日
-                $sql .= "    '$arrival_date',\n";                                                   //入荷予定日
-                $sql .= "    $client_id,\n";                                                        //得意先ID
+                $sql .= "    '$buy_date',\n";                                                       //仕入日 purchase date
+                $sql .= "    '$arrival_date',\n";                                                   //入荷予定日 delivery date
+                $sql .= "    $client_id,\n";                                                        //得意先ID customer ID
                 if($direct != null){
-                    $sql .= "    $direct,\n";                                                       //直送先ID
+                    $sql .= "    $direct,\n";                                                       //直送先ID direct destination ID
                 }
-                $sql .= "    '$trade',\n";                                                          //取引先ID
-                $sql .= "    '$note',\n";                                                           //備考
-                $sql .= "    $buy_staff,\n";                                                        //仕入担当者ID
-                $sql .= "    $ware,\n";                                                             //倉庫ID
-                $sql .= "    $staff_id,\n";                                                         //入力者ID
-                $sql .= "    $shop_id,\n";                                                          //ショップID
-                $sql .= "    $total_amount_data[0],\n";                                             //仕入金額（税抜き）
-                $sql .= "    $total_amount_data[1],\n";                                             //消費税額
-                $sql .= ($order_staff != null) ? " $order_staff,\n" : null;                         //発注担当者
-                $sql .= ($trade == 25) ? "   2, \n" : "   1, \n";                                   //分割支払回数
-                $sql .= "    (SELECT client_cd1 FROM t_client WHERE client_id = $client_id), ";     //得意先コード１
-                $sql .= "    (SELECT client_cd2 FROM t_client WHERE client_id = $client_id), ";     //得意先コード２
-                $sql .= "    (SELECT client_name FROM t_client WHERE client_id = $client_id), ";    //得意先名
-                $sql .= "    (SELECT client_name2 FROM t_client WHERE client_id = $client_id), ";   //得意先名２
-                $sql .= ($direct != null) ? " (SELECT direct_name FROM t_direct WHERE direct_id = $direct), " : null;   //直送先名１
-                $sql .= ($direct != null) ? " (SELECT direct_name2 FROM t_direct WHERE direct_id = $direct), " : null;  //直送先名２
-                $sql .= "    (SELECT ware_name FROM t_ware WHERE ware_id = $ware), ";               //倉庫名
-                $sql .= "    (SELECT staff_name FROM t_staff WHERE staff_id = $buy_staff), ";       //仕入担当者名
+                $sql .= "    '$trade',\n";                                                          //取引先ID trade partner ID
+                $sql .= "    '$note',\n";                                                           //備考 remarks
+                $sql .= "    $buy_staff,\n";                                                        //仕入担当者ID purchase assigned staff ID
+                $sql .= "    $ware,\n";                                                             //倉庫ID warehouse ID
+                $sql .= "    $staff_id,\n";                                                         //入力者ID inputter ID
+                $sql .= "    $shop_id,\n";                                                          //ショップID shop ID
+                $sql .= "    $total_amount_data[0],\n";                                             //仕入金額（税抜き） purchase amount no tax
+                $sql .= "    $total_amount_data[1],\n";                                             //消費税額 tax amount
+                $sql .= ($order_staff != null) ? " $order_staff,\n" : null;                         //発注担当者 purchase order assigned staff
+                $sql .= ($trade == 25) ? "   2, \n" : "   1, \n";                                   //分割支払回数 number of installment times
+                $sql .= "    (SELECT client_cd1 FROM t_client WHERE client_id = $client_id), ";     //得意先コード１ customer code 1
+                $sql .= "    (SELECT client_cd2 FROM t_client WHERE client_id = $client_id), ";     //得意先コード２ customer code 2
+                $sql .= "    (SELECT client_name FROM t_client WHERE client_id = $client_id), ";    //得意先名 customer name
+                $sql .= "    (SELECT client_name2 FROM t_client WHERE client_id = $client_id), ";   //得意先名２ customer name 2
+                $sql .= ($direct != null) ? " (SELECT direct_name FROM t_direct WHERE direct_id = $direct), " : null;   //直送先名１ direct destination 1
+                $sql .= ($direct != null) ? " (SELECT direct_name2 FROM t_direct WHERE direct_id = $direct), " : null;  //直送先名２ direct destination 2
+                $sql .= "    (SELECT ware_name FROM t_ware WHERE ware_id = $ware), ";               //倉庫名 warehouse name
+                $sql .= "    (SELECT staff_name FROM t_staff WHERE staff_id = $buy_staff), ";       //仕入担当者名 purchase assigned staff name
                 $sql .= ($order_staff != null) ? " (SELECT staff_name FROM t_staff WHERE staff_id = $order_staff), " : null;//発注担当者名
-                $sql .= "    (SELECT staff_name FROM t_staff WHERE staff_id = $staff_id), ";        //入力者名
-                $sql .= "    (SELECT client_cname FROM t_client WHERE client_id = $client_id),\n";  //得意先名略称
-                $sql .= "   '2'\n";                                                                 //仕入区分
+                $sql .= "    (SELECT staff_name FROM t_staff WHERE staff_id = $staff_id), ";        //入力者名 inputter name
+                $sql .= "    (SELECT client_cname FROM t_client WHERE client_id = $client_id),\n";  //得意先名略称 custoemr name abbreviated
+                $sql .= "   '2'\n";                                                                 //仕入区分 purchase classification
                 $sql .= ");\n";
 
                 $result = Db_Query($db_con, $sql);
 
-                //失敗した場合はロールバック
+                //失敗した場合はロールバック rollback if fails
                 if($result === false){
                     $err_message = pg_last_error();
                     $err_format = "t_buy_h_buy_no_key";
                     Db_Query($db_con, "ROLLBACK");
 
-                    //発注NOが重複した場合
+                    //発注NOが重複した場合 if the purchase order number is overlapping
                     if(strstr($err_message,$err_format) !== false){
                         $error = "同時に仕入を行ったため、伝票番号が重複しました。もう一度仕入を行ってください。";
 
-                        //再度発注NOを取得する
+                        //再度発注NOを取得する acquire the purchase order number again
                         $sql  = "SELECT ";
                         $sql .= "   MAX(buy_no)";
                         $sql .= " FROM";
@@ -2140,7 +2141,7 @@ if($buy_button_flg == true || $buy_comp_flg == true){
             }
             if($duplicate_err != true){
 
-                //仕入IDを抽出
+                //仕入IDを抽出 extract the purchase order ID
                 $sql  = "SELECT";
                 $sql .= "   buy_id";
                 $sql .= " FROM";
@@ -2153,7 +2154,7 @@ if($buy_button_flg == true || $buy_comp_flg == true){
                 $result = Db_Query($db_con, $sql);
                 $buy_id = pg_fetch_result($result,0,0);
 
-                //割賦支払テーブルに登録
+                //割賦支払テーブルに登録 register in the installment payment table
                 if($trade == "25"){
                     $division_array = Division_Price($db_con, $client_id, ($total_amount_data[0] + $total_amount_data[1]), $buy_day["y"], $buy_day["m"], 2);
                     for($k=0;$k<2;$k++){
@@ -2178,11 +2179,11 @@ if($buy_button_flg == true || $buy_comp_flg == true){
                 }
 
                 for($i = 0; $i < count($goods_id); $i++){
-                    //行
+                    //行 row
                     $line = $i + 1;
 
-                    //仕入金額税抜き、消費税額、消費税合計を算出
-                    $price = $buy_price[$i]["i"].".".$buy_price[$i]["d"];   //仕入金額
+                    //仕入金額税抜き、消費税額、消費税合計を算出 compute the purchase amount without tax, tax amount, and total tax amount
+                    $price = $buy_price[$i]["i"].".".$buy_price[$i]["d"];   //仕入金額 purchase amount
                     $buy_amount = bcmul($price, $buy_num[$i],3);
                     $buy_amount = Coax_Col($coax, $buy_amount);
 
@@ -2215,13 +2216,13 @@ if($buy_button_flg == true || $buy_comp_flg == true){
                     $sql .= ");\n";
 
                     $result = Db_Query($db_con, $sql);
-                    //失敗した場合はロールバック
+                    //失敗した場合はロールバック rollback if fails
                     if($result === false){
                         Db_Query($db_con, "ROLLBACK");
                         exit;
                     }
 
-                    //仕入データIDを抽出
+                    //仕入データIDを抽出 extract the purchase Id
                     $sql  = "SELECT";
                     $sql .= "   buy_d_id";
                     $sql .= " FROM";
@@ -2234,16 +2235,16 @@ if($buy_button_flg == true || $buy_comp_flg == true){
                     $result = Db_Query($db_con, $sql);
                     $buy_d_id = pg_fetch_result($result,0,0);
 
-                    //直送先が選択されていなければ処理開始
+                    //直送先が選択されていなければ処理開始 if the direct destination is not selected then start the process
 //                    if($direct == null){
 
-                    //在庫数テーブル
-                    //１　発注ID<>NULLの場合
+                    //在庫数テーブル inventory number table
+                    //１　発注ID<>NULLの場合 if the purchase order ID is NULL
                     if($order_id != NULL){
 
                         if($order_d_id[$i] != "NULL"){
-                            //在庫受け払いテーブル
-                            //発注残削除
+                            //在庫受け払いテーブル balance of stores table
+                            //発注残削除 delete outstanding purchase order
                             $sql  = "INSERT INTO t_stock_hand (\n";
                             $sql .= "    goods_id,\n";
                             $sql .= "    enter_day,\n";
@@ -2268,11 +2269,11 @@ if($buy_button_flg == true || $buy_comp_flg == true){
                             $sql .= "    '2',\n";
 //                        $sql .= "    $order_num[$i] - $buy_num[$i],";
 
-                            //発注残打消し可能数を抽出
+                            //発注残打消し可能数を抽出 extract the possible number of outstanding purchase order that can be deleted
                             $deny_num = Get_Deny_Num($db_con, $order_d_id[$i], $buy_id);
 //print "仕入数：".$buy_num[$i] ."<br>";
 //print "発注残打消可能数：".$deny_num ."<br>";
-                            //仕入数が発注残打消可能数を超えた場合
+                            //仕入数が発注残打消可能数を超えた場合 if the purchase number exceeds the possible number of ooutstanding purchase order to be deleted
                             if($buy_num[$i] > $deny_num){
                                 $del_num = $deny_num;
                             }else{
@@ -2289,7 +2290,7 @@ if($buy_button_flg == true || $buy_comp_flg == true){
                             $sql .= ");\n";
 
                             $result = Db_Query($db_con, $sql);
-                            //失敗した場合はロールバック
+                            //失敗した場合はロールバック rollback if it fails
                             if($result === false){
                                 Db_Query($db_con,"ROLLBACK");
                                 exit;
@@ -2297,7 +2298,7 @@ if($buy_button_flg == true || $buy_comp_flg == true){
 
                         }
 
-                        //仕入発生
+                        //仕入発生 purcahse has occured
                         $sql  = "INSERT INTO t_stock_hand (";
                         $sql .= "    goods_id,";
                         $sql .= "    enter_day,";
@@ -2329,19 +2330,18 @@ if($buy_button_flg == true || $buy_comp_flg == true){
                         $sql .= ");";
 
                         $result = Db_Query($db_con, $sql);
-                        //失敗した場合はロールバック
+                        //失敗した場合はロールバック rollback if it fails
                         if($result === false){
                             Db_Query($db_con, "ROLLBACK");
                             exit;
                         }
 
-                    //２　発注ID＝NULL　AND　取引区分＝２１（掛仕入）・７１（現金仕入）の場合
+                    //２　発注ID＝NULL　AND　取引区分＝２１（掛仕入）・７１（現金仕入）の場合 purchase order ID =NULL AND trade classification = 21 (credit purchase)・71(cash purchase)
                     }elseif($order_id == NULL && ($trade == '21' || $trade == '71' || $trade == '25')){
 
                         $result = Db_Query($db_con, $sql);
                         $num = pg_num_rows($result);
-   
-                        //在庫受け払いテーブル（仕入発生）
+                        //在庫受け払いテーブル（仕入発生）stock balance table (purchase happens) *
                         $sql  = "INSERT INTO t_stock_hand (";
                         $sql .= "    goods_id,";
                         $sql .= "    enter_day,";
@@ -2373,15 +2373,15 @@ if($buy_button_flg == true || $buy_comp_flg == true){
                         $sql .= ");";
 
                         $result = Db_Query($db_con, $sql);
-                        //失敗した場合はロールバック
+                        //失敗した場合はロールバックrolback if it fails
                         if($result === false){
                             Db_Query($db_con,"ROLLBACK");
                             exit;
                         }
-                    //３　発注ID＝NULL　AND　取引区分＝２２（掛返品）・７２（現金返品）の場合
+                    //３　発注ID＝NULL　AND　取引区分＝２２（掛返品）・７２（現金返品）の場合 purchase order ID = NULL AND if it is trade classification = 22 (returnable)・(return on cash)
                     }elseif($order_id == NULL && ($trade == '23' || $trade == '73')){
 
-                        //在庫受け払い（仕入発生）
+                        //在庫受け払い（仕入発生）stocks balance (purchase happened)
                         $sql  = "INSERT INTO t_stock_hand (";
                         $sql .= "    goods_id,";
                         $sql .= "    enter_day,";
@@ -2413,7 +2413,7 @@ if($buy_button_flg == true || $buy_comp_flg == true){
                         $sql .= ");";
 
                         $result = Db_Query($db_con, $sql);
-                        //失敗した場合はロールバック
+                        //失敗した場合はロールバック if it fails rollback
                         if($result === false){
                             Db_Query($db_con,"ROLLBACK");
                             exit;
@@ -2421,14 +2421,14 @@ if($buy_button_flg == true || $buy_comp_flg == true){
 //                        }
                     }
 
-                    //発注を起こしいているものは処理開始
+                    //発注を起こしいているものは処理開始 start process for those that are recorded from purchase order
                     if($order_id != NULL){
-                        //新たに商品を追加された場合
+                        //新たに商品を追加された場合 if new products are added
                         if($order_d_id[$i] == null){
                             $order_d_id[$i] = "null";
                         }
 
-                        //発注ヘッダテーブル（処理状況更新処理）
+                        //発注ヘッダテーブル（処理状況更新処理）purchase order header table (update process of process status)
                         $sql  = "UPDATE\n";
                         $sql .=     " t_order_d\n";
                         $sql .= " SET\n";
@@ -2450,14 +2450,14 @@ if($buy_button_flg == true || $buy_comp_flg == true){
                         $sql .= ";\n";
 
                         $result = Db_Query($db_con, $sql);
-                        //失敗した場合はロールバック
+                        //失敗した場合はロールバック if it fails rollback
                         if($result === false){
                             Db_Query($db_con, "ROLLBACK");
                             exit;
                         }
 
-                        //今回仕入た数が、発注数を超えていないか確認
-                        //仕入可能件数を抽出
+                        //今回仕入た数が、発注数を超えていないか確認  check if the purchase number did not exceed the purchase order
+                        //仕入可能件数を抽出 extract the possible items of purchases
                         $sql  = "SELECT\n";
                         $sql .= "    t_order_h.num - COALESCE(t_buy_h.num, 0) AS num \n";
                         $sql .= "FROM\n";
@@ -2493,7 +2493,7 @@ if($buy_button_flg == true || $buy_comp_flg == true){
                             $buy_ord_num = pg_fetch_result($result,0,0);
                         }
 
-                        //仕入数が発注数を上回っている場合
+                        //仕入数が発注数を上回っている場合 if the purchase number exceeds the purchase order number 
                         if($buy_ord_num < 0){
                             Db_Query($db_con, "ROLLBACK;");
                             $rollback_flg = true;
@@ -2504,9 +2504,9 @@ if($buy_button_flg == true || $buy_comp_flg == true){
                 }
 
                 if($rollback_flg != true){
-                    //発注を起こしているものは処理開始
+                    //発注を起こしているものは処理開始 start the process for those that are caused from purchase order
                     if($order_id != NULL){
-                        //処理状況更新処理
+                        //処理状況更新処理  purchase order header table (update process of process status)
                         $ary_order_d_id = implode(",",$order_d_id);
 
                         $sql  = "SELECT";
@@ -2523,7 +2523,7 @@ if($buy_button_flg == true || $buy_comp_flg == true){
                             $rest_data[] = pg_fetch_result($result,$i,0);
                         }
 
-                        //発注残がある場合
+                        //発注残がある場合 if there is an outstanding order
                         if(in_array('t',$rest_data)){
                             $sql  = "UPDATE";
                             $sql .= "    t_order_h";
@@ -2532,7 +2532,7 @@ if($buy_button_flg == true || $buy_comp_flg == true){
                             $sql .= " WHERE";
                             $sql .= "    ord_id = $order_id";
                             $sql .= ";";
-                        //発注した全ての商品の発注残フラグ＝fの場合
+                        //発注した全ての商品の発注残フラグ＝fの場合 if all the outstanding order flag =f for all the products that were purchase ordered 
                         }else{
                             $sql  = "UPDATE";
                             $sql .= "    t_order_h";
@@ -2544,7 +2544,7 @@ if($buy_button_flg == true || $buy_comp_flg == true){
                         }
 
                         $result = Db_Query($db_con, $sql);
-                        //失敗した場合はロールバック
+                        //失敗した場合はロールバック if it fails rollback
                         if($result === false){
                             Db_Query($db_con, "ROLLBACK");
                             exit;
@@ -2552,8 +2552,8 @@ if($buy_button_flg == true || $buy_comp_flg == true){
 
                     }
 
-                    //現金取引の自動支払処理
-                    //取引区分＝７１（現金仕入）・７3（現金値引）・７4（現金返品）の場合のみ処理する
+                    //現金取引の自動支払処理 automatic payment process for cash transaction
+                    //取引区分＝７１（現金仕入）・７3（現金値引）・７4（現金返品）の場合のみ処理する trade classification = 71 (cash purchase)・73 (cash discount)・74 (cash return)
                     if($trade == '71' || $trade == '73' || $trade == '74'){
 
                         $sql  = "SELECT";
@@ -2570,22 +2570,22 @@ if($buy_button_flg == true || $buy_comp_flg == true){
                         $pay_no = str_pad($pay_no, 8, 0, STR_PAD_LEFT);
 
                         $sql  = "INSERT INTO t_payout_h(\n";
-                        $sql .= "   pay_id,\n";               //支払ID
-                        $sql .= "   pay_no,\n";               //支払番号
-                        $sql .= "   pay_day,\n";              //支払日
-                        $sql .= "   client_id,\n";            //仕入先ID
-                        $sql .= "   client_name,\n";          //仕入先名
-                        $sql .= "   client_name2,\n";         //仕入先名２
-                        $sql .= "   client_cname,\n";         //仕入先（略称）
-                        $sql .= "   client_cd1,\n";           //仕入先コード
-                        $sql .= "   client_cd2,\n";           //仕入先コード
-                        $sql .= "   e_staff_id,\n";           //入力者ID
-                        $sql .= "   e_staff_name,\n";         //入力者名
-                        $sql .= "   c_staff_id,\n";           //担当者ID
-                        $sql .= "   c_staff_name,\n";         //担当者名
-                        $sql .= "   input_day,\n";            //入力日
-                        $sql .= "   buy_id,\n";               //仕入ID
-                        $sql .= "   shop_id\n";               //ショップID
+                        $sql .= "   pay_id,\n";               //支払ID payment ID
+                        $sql .= "   pay_no,\n";               //支払番号 payment number
+                        $sql .= "   pay_day,\n";              //支払日 payment date
+                        $sql .= "   client_id,\n";            //仕入先ID purchase client ID
+                        $sql .= "   client_name,\n";          //仕入先名 purchase client name
+                        $sql .= "   client_name2,\n";         //仕入先名２ purchase client name 2
+                        $sql .= "   client_cname,\n";         //仕入先（略称）purchase client (abbreviation)
+                        $sql .= "   client_cd1,\n";           //仕入先コード purchase client code 
+                        $sql .= "   client_cd2,\n";           //仕入先コード purchase client code
+                        $sql .= "   e_staff_id,\n";           //入力者ID inputter name ID
+                        $sql .= "   e_staff_name,\n";         //入力者名 inputter name 
+                        $sql .= "   c_staff_id,\n";           //担当者ID assigned staff ID
+                        $sql .= "   c_staff_name,\n";         //担当者名 asigned staff name
+                        $sql .= "   input_day,\n";            //入力日 input day
+                        $sql .= "   buy_id,\n";               //仕入ID purchase ID
+                        $sql .= "   shop_id\n";               //ショップID shop ID
                         $sql .= ")VALUES(\n";
                         $sql .= "   (SELECT COALESCE(MAX(pay_id), 0)+1 FROM t_payout_h),\n";
                         $sql .= "   '$pay_no',\n";
@@ -2607,14 +2607,14 @@ if($buy_button_flg == true || $buy_comp_flg == true){
 
                         $result = Db_Query($db_con, $sql);
 
-                        //失敗した場合はロールバック
+                        //失敗した場合はロールバック if it fails rollback
                         if($result === false){
                             $err_message = pg_last_error();
                             $err_format = "t_payout_h_pay_no_key";
                             $err_flg = true;
                             Db_Query($db_con, "ROLLBACK;");
 
-                            //重複した場合
+                            //重複した場合 when it overlaps
                             if(strstr($err_message, $err_format) != false){
                                 $duplicate_msg = "支払が同時に行なわれたため、伝票番号の付番に失敗しました。";
                                 $duplicate_flg = true;
@@ -2624,7 +2624,7 @@ if($buy_button_flg == true || $buy_comp_flg == true){
                         }
 
                         if($duplicate_flg != true){
-                            //登録した支払ヘッダIDを抽出
+                            //登録した支払ヘッダIDを抽出 extract the payment header ID that was registered 
                             $sql  = "SELECT";
                             $sql .= "   pay_id ";
                             $sql .= "FROM";
@@ -2638,7 +2638,7 @@ if($buy_button_flg == true || $buy_comp_flg == true){
                             $result = Db_Query($db_con, $sql);
                             $pay_id = pg_fetch_result($result, 0,0);
 
-                            //支払いデータテーブルへ登録
+                            //支払いデータテーブルへ登録 register payment data table 
                             $sql  = "INSERT INTO t_payout_d (";
                             $sql .= "   pay_d_id,";
                             $sql .= "   pay_id,";
@@ -2648,10 +2648,10 @@ if($buy_button_flg == true || $buy_comp_flg == true){
                             $sql .= "   (SELECT COALESCE(MAX(pay_d_id),0)+1 FROM t_payout_d),";
                             $sql .= "   $pay_id,";
                             $sql .= "   '49',";
-                            //取引区分が７１現金支払の場合
+                            //取引区分が７１現金支払の場合 if trade classification is 71 cash payment 
                             if($trade == '71'){
                                 $sql .= "   $total_amount_data[2]";
-                            //取引区分が７３・７４の場合
+                            //取引区分が７３・７４の場合 if trade classification is 73 and 74
                             }else{
                                 $sql .= "   $total_amount_data[2]*-1";
                             }
@@ -2670,23 +2670,23 @@ if($buy_button_flg == true || $buy_comp_flg == true){
                 }
             }
 
-        //発注確認へボタン押下フラグがtrueの場合
+        //発注確認へボタン押下フラグがtrueの場合 if "go to purchase order confirmation" button flag is true
         }elseif($buy_button_flg == true){
-            //フォームを固めるためのフリーズフラグ
+            //フォームを固めるためのフリーズフラグ freeze flag to solidify form
             $freeze_flg = true;
         }
     }
 }
 
 /****************************/
-//動的に増減するフォーム作成
+//動的に増減するフォーム作成 create form that will go up and down dynamically 
 /****************************/
-//行番号カウンタ
+//行番号カウンタ row number counter
 $row_num = 1;
 
 for($i = 0; $i < $max_row; $i++){
 
-    //仕入先が選択されていないか仕入登録確認の場合はフリーズ
+    //仕入先が選択されていないか仕入登録確認の場合はフリーズ freeze if a purchase client check is done to see if purchase client is selected or not
     if($select_flg == false 
         || 
     //aoyama-n 2009-09-15
@@ -2714,7 +2714,7 @@ for($i = 0; $i < $max_row; $i++){
     }
 
     //aoyama-n 2009-09-15
-    //値引商品及び取引区分が値引・返品の場合は赤字で表示
+    //値引商品及び取引区分が値引・返品の場合は赤字で表示 display in red if the trade classification or discounted product are in discount or returns
     $font_color = "";
     $form_trade       = $form->getElementValue("form_trade");
     $hdn_discount_flg = $form->getElementValue("hdn_discount_flg[$i]");
@@ -2727,17 +2727,18 @@ for($i = 0; $i < $max_row; $i++){
     }
 
 
-    //表示行判定
+    //表示行判定 decision on display row
+
     if(!in_array("$i", $del_history)){
         $del_data = $del_row.",".$i;
 
-        //発注ID
+        //発注ID purchase order ID
         $form->addElement("hidden","hdn_order_d_id[$i]");
 
-        //商品ID
+        //商品ID product ID
         $form->addElement("hidden","hdn_goods_id[$i]");
 
-        //商品コード
+        //商品コード product code
         //aoyama-n 2009-09-15
         if($select_flg == true){
             $form->addElement(
@@ -2757,7 +2758,7 @@ for($i = 0; $i < $max_row; $i++){
             );
         }
 
-        //商品名
+        //商品名 product name
         //aoyama-n 20009-09-15
         #if($name_change[$i] == '2'){
         #    $form->addElement(
@@ -2796,7 +2797,7 @@ for($i = 0; $i < $max_row; $i++){
         $form->addElement("hidden","hdn_name_change[$i]","","");
         $form->addElement("hidden","hdn_stock_manage[$i]","","");
 
-        //入数
+        //入数 quantity
         //aoyama-n 2009-09-15
         $form->addElement("text","form_in_num[$i]","",
             "size=\"11\" maxLength=\"9\" 
@@ -2807,7 +2808,7 @@ for($i = 0; $i < $max_row; $i++){
             readonly"
         );
 
-        //注文入数
+        //注文入数 order quantity
         //aoyama-n 2009-09-15
         if($freeze_flg == true){
             $form->addElement("text","form_order_in_num[$i]","",
@@ -2831,7 +2832,7 @@ for($i = 0; $i < $max_row; $i++){
             );
         }
 
-        //現在庫数
+        //現在庫数 current inventory number
         //aoyama-n 2009-09-15
         $form->addElement(
             "text","form_stock_num[$i]","",
@@ -2842,7 +2843,7 @@ for($i = 0; $i < $max_row; $i++){
             readonly"
         );
 
-        //発注残
+        //発注残 outstanding order
         //aoyama-n 2009-09-15
         $form->addElement(
             "hidden","form_order_num[$i]","",
@@ -2853,7 +2854,7 @@ for($i = 0; $i < $max_row; $i++){
             text-align: right \"readonly"
         );
 
-        //仕入済数
+        //仕入済数 already purchase number
         $form->addElement(
             "text","form_rbuy_num[$i]","",
             'size="11" maxLength=\"9\" 
@@ -2863,7 +2864,7 @@ for($i = 0; $i < $max_row; $i++){
             text-align: right" readonly'
         );
 
-        //仕入数
+        //仕入数 purchase number
         //aoyama-n 2009-09-15
         if($freeze_flg == true){
             $form->addElement("text","form_buy_num[$i]","",
@@ -2887,7 +2888,7 @@ for($i = 0; $i < $max_row; $i++){
             );
         }
 
-        //仕入単価
+        //仕入単価 purchase price per unit
         //aoyama-n 2009-09-15
         if($select_flg == false){
             $form_buy_price[$i][] =& $form->createElement(
@@ -2940,7 +2941,7 @@ for($i = 0; $i < $max_row; $i++){
         }
         $form->addGroup($form_buy_price[$i], "form_buy_price[$i]", "");
 
-        //課税区分
+        //課税区分 tax classification
         $form->addElement(
             "text","form_tax_div[$i]","",
             "size=\"11\" maxLength=\"9\" 
@@ -2951,7 +2952,7 @@ for($i = 0; $i < $max_row; $i++){
         );
         $form->addElement("hidden","hdn_tax_div[$i]","","");
 
-        //金額(税抜き)
+        //金額(税抜き) amount (with no tax)
         //aoyama-n 2009-09-15
         $form->addElement(
             "text","form_buy_amount[$i]","",
@@ -2962,7 +2963,7 @@ for($i = 0; $i < $max_row; $i++){
             text-align: right\" readonly"
         );
 
-        //発注残
+        //発注残 outstanding order
         //aoyama-n 2009-09-15
         $form->addElement(
             "text","form_rorder_num[$i]","",
@@ -2973,7 +2974,7 @@ for($i = 0; $i < $max_row; $i++){
             text-align: right\" readonly'"
         );
 
-        //検索リンク
+        //検索リンク search link
         $form->addElement(
             "link","form_search[$i]","","#","検索",
             "TABINDEX=-1
@@ -2981,10 +2982,10 @@ for($i = 0; $i < $max_row; $i++){
             );
 
 
-        //登録確認画面の場合は非表示
+        //登録確認画面の場合は非表示 if its in the registration confirmation screen then do not displayed
         if($select_flg === true ){
-            //削除リンク
-            //最終行を削除する場合、削除した後の最終行に合わせる
+            //削除リンク delete link
+            //最終行を削除する場合、削除した後の最終行に合わせる if you will delete the last row then match with the next last row
             if($row_num == $max_row-$del_num){
                 $form->addElement(
                     "link","form_del_row[$i]","","#",
@@ -2992,7 +2993,7 @@ for($i = 0; $i < $max_row; $i++){
                     "TABINDEX=-1 
                     onClick=\"javascript:Dialogue_3('削除します。', '$del_data', 'del_row' ,$row_num-1);return false;\""
                 );
-            //最終行以外を削除する場合、削除する行と同じNOの行に合わせる
+            //最終行以外を削除する場合、削除する行と同じNOの行に合わせる if you will delete other than the last row, then match it with the row number of the row that will be deleted 
             }else{
                 $form->addElement(
                     "link","form_del_row[$i]","","#",
@@ -3003,7 +3004,7 @@ for($i = 0; $i < $max_row; $i++){
             }
         }
 
-        //フリーズフラグがtrueの場合
+        //フリーズフラグがtrueの場合 if freeze flag is true
         //aoyama-n 2009-09-15
         /********************
         if($freeze_flg == true){
@@ -3012,16 +3013,16 @@ for($i = 0; $i < $max_row; $i++){
         ********************/
 
         /****************************/
-        //表示用HTML作成
+        //表示用HTML作成 create html to be displayed
         /****************************/
         $html .= "<tr class=\"Result1\">";
         $html .=    "<A NAME=$row_num><td align=\"right\">$row_num</td></A>";
         $html .=    "<td align=\"left\">";
         $html .=        $form->_elements[$form->_elementIndex["form_goods_cd[$i]"]]->toHtml();
-        //倉庫、仕入先が選択されていて、確認画面の表示でない場合
+        //倉庫、仕入先が選択されていて、確認画面の表示でない場合 if warehouse and purchase client is selected and if its not the confirmation screen
         if($select_flg === true && $freeze_flg != true 
                && 
-        //発注データIDがnullの場合
+        //発注データIDがnullの場合 if the purchase order data ID is null
         ($order_d_id[$i] == null)
         ){
             $html .=    "（";
@@ -3054,7 +3055,7 @@ for($i = 0; $i < $max_row; $i++){
         $html .=        $form->_elements[$form->_elementIndex["form_buy_amount[$i]"]]->toHtml();
         $html .=    "</td>";
 
-        //倉庫、仕入先を選択済みOR確認画面以外
+        //倉庫、仕入先を選択済みOR確認画面以外 warehouse and puchase client is selected OR if its other than confirmation screen
         if($freeze_flg === true || $select_flg === false){
             $show_del_subject_flg = false;
         }elseif($select_flg === true && $freeze_flg != true && $order_d_id[$i] == null){
@@ -3070,12 +3071,12 @@ for($i = 0; $i < $max_row; $i++){
             $show_del_subject_flg = true;
         } 
        $html .= "</tr>";
-        //行番号を＋1
+        //行番号を＋1 +1 to row number
         $row_num = $row_num+1;
     }
 }
 
-//登録確認画面では、以下のボタンを表示しない
+//登録確認画面では、以下のボタンを表示しない In registration confirmation screen, do not display the next buttons 
 if($select_flg == true && $freeze_flg !== true){
     //button
     $form->addElement("submit","form_buy_button","仕入確認画面へ", $disabled);
@@ -3083,11 +3084,11 @@ if($select_flg == true && $freeze_flg !== true){
             "onClick=\"javascript:Button_Submit('hdn_sum_button_flg','#foot','t', this)\""
     );
 
-    //発注から仕入を起こしている場合は表示しない
-    //行追加ボタン
+    //発注から仕入を起こしている場合は表示しない if purchase is being recorded from the purchase order then do not display
+    //行追加ボタン add row buton
     if($order_flg != true){
         if($update_flg != true){
-            //仕入先リンク
+            //仕入先リンク purchase client link
 /*
             $form->addElement("link","form_client_link","","./1-3-201.php","仕入先","
                 onClick=\"return Open_SubWin('../dialog/1-0-208.php',Array('form_client[cd]','form_client[name]', 'hdn_client_search_flg'),500,450,5,1);\""
@@ -3107,25 +3108,25 @@ if($select_flg == true && $freeze_flg !== true){
             "onClick=\"javascript:Button_Submit('add_row_flg','./1-3-207.php#foot','true', this)\""
         );
     if($update_flg != true){    
-        //表示ボタン
+        //表示ボタン display button 
         $form->addElement("button","form_show_button","表　示",
             "onClick=\"javascript:Button_Submit('hdn_show_button_flg','#','t', this)\""
         );
     }
 }elseif($freeze_flg == true){
-    //登録確認画面では以下のボタンを表示
-    //戻る  
+    //登録確認画面では以下のボタンを表示 display the following button in the registration confirmation screen
+    //戻る  back
     $form->addElement("button","form_back_button","戻　る","onClick=\"javascript:history.back()\"");
     
     //OK    
     $form->addElement("submit","form_comp_button","仕入完了", $disabled);
 
-    //発注先
+    //発注先 purchase order client
     $form->addElement("static","form_client_link","","発注先"); 
 
     $form->freeze();
 }else{
-    //表示ボタン
+    //表示ボタン display button
     $form->addElement("button","form_show_button","表　示",
         "onClick=\"javascript:Button_Submit('hdn_show_button_flg','#','t', this)\""
     );
@@ -3133,7 +3134,7 @@ if($select_flg == true && $freeze_flg !== true){
     $form->addElement("button","form_sum_button","合　計",
             "onClick=\"javascript:Button_Submit('hdn_sum_button_flg','#foot','t', this)\""
     );
-    //仕入先リンク
+    //仕入先リンク purchase link
 /*
     $form->addElement("link","form_client_link","","./1-3-201.php","仕入先","
         onClick=\"return Open_SubWin('../dialog/1-0-208.php',Array('form_client[cd]','form_client[name]', 'hdn_client_search_flg'),500,450,5,1);\""
@@ -3145,7 +3146,7 @@ if($select_flg == true && $freeze_flg !== true){
 }
 
 /**
- *　仕入可能数を抽出する関数
+ *　仕入可能数を抽出する関数 function that will extract possible purchase number
  *
  *
  *
@@ -3153,7 +3154,7 @@ if($select_flg == true && $freeze_flg !== true){
 **/
 function Get_Deny_Num($db_con, $ord_d_id, $buy_id){
 
-    //仕入可能件数を抽出
+    //仕入可能件数を抽出 extract the possible purchae number
     $sql  = "SELECT\n";
     $sql .= "    t_order_h.num - COALESCE(t_buy_h.num, 0) AS num \n";
     $sql .= "FROM\n";
@@ -3193,7 +3194,7 @@ function Get_Deny_Num($db_con, $ord_d_id, $buy_id){
 
 
 
-//ロット数を計算する
+//ロット数を計算する compute the lot number
 $js  = " function in_num(num,id,order_num,price_i,price_d,amount,coax){\n";
 $js .= "    var in_num = \"form_in_num\"+\"[\"+num+\"]\";\n";
 $js .= "    var ord_in_num = \"form_order_in_num\"+\"[\"+num+\"]\";\n";
@@ -3210,7 +3211,7 @@ $js .= "    document.dateForm.elements[ord_num].value = v_num;\n";
 $js .= "    Mult(id,order_num,price_i,price_d,amount,coax);\n";
 $js .= "}\n";
 
-//注文ロット数を計算する
+//注文ロット数を計算する compute the order lot number
 $js .= "function ord_in_num(num){\n";
 $js .= "    var in_num = \"form_in_num\"+\"[\"+num+\"]\";\n";
 $js .= "    var ord_in_num = \"form_order_in_num\"+\"[\"+num+\"]\";\n";
@@ -3228,41 +3229,41 @@ $js .= "    }\n";
 $js .= "}\n";
 
 /****************************/
-// 仕入先の状態取得
+// 仕入先の状態取得 acquire the condition of purchase client
 /****************************/
 $client_state_print = Get_Client_State($db_con, $client_id);
 
 
 /****************************/
-//HTMLヘッダ
+//HTMLヘッダ html header
 /****************************/
 $html_header = Html_Header($page_title);
 
 /****************************/
-//HTMLフッタ
+//HTMLフッタ html footer
 /****************************/
 $html_footer = Html_Footer();
 
 /****************************/
-//メニュー作成
+//メニュー作成 create menu
 /****************************/
 $page_menu = Create_Menu_h('buy','2');
 
 /****************************/
-//画面ヘッダー作成
+//画面ヘッダー作成 create screen header
 /****************************/
 $page_title .= "　".$form->_elements[$form->_elementIndex[change_button]]->toHtml();
 $page_title .= "　".$form->_elements[$form->_elementIndex[new_button]]->toHtml();
 $page_header = Create_Header($page_title);
 
-// Render関連の設定
+// Render関連の設定 render related setting
 $renderer =& new HTML_QuickForm_Renderer_ArraySmarty($smarty);
 $form->accept($renderer);
 
-//form関連の変数をassign
+//form関連の変数をassign assing form related variable
 $smarty->assign('form',$renderer->toArray());
 
-//その他の変数をassign
+//その他の変数をassign assing other variables
 $smarty->assign('var',array(
 	'html_header'   => "$html_header",
 	'page_menu'     => "$page_menu",
@@ -3290,7 +3291,7 @@ $smarty->assign("price_err", $price_err);
 $smarty->assign("duplicate_goods_err", $duplicate_goods_err);
 $smarty->assign("ord_num_err", $ord_num_err);
 
-//テンプレートへ値を渡す
+//テンプレートへ値を渡す pass the value to template
 $smarty->display(basename($_SERVER[PHP_SELF] .".tpl"));
 
 ?>
