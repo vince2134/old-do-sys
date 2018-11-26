@@ -23,41 +23,41 @@
 
 $page_title = "在庫移動入力";
 
-//環境設定ファイル
+//環境設定ファイル environment setting file
 require_once("ENV_local.php");
 
-//HTML_QuickFormを作成
+//HTML_QuickFormを作成 create
 $form =& new HTML_QuickForm("dateForm", "POST", "$_SERVER[PHP_SELF]");
 
-//DB接続
+//DB接続 connect
 $db_con = Db_Connect();
 
-// 権限チェック
+// 権限チェック auth check
 $auth       = Auth_Check($db_con);
-// ボタンDisabled
+// ボタンDisabled button
 $disabled   = ($auth[0] == "r") ? "disabled" : null;
 
 /****************************/
-//外部変数取得
+//外部変数取得 acquire external variable
 /****************************/
-$shop_id     = $_SESSION["client_id"];   //取引先ID
-$staff_id    = $_SESSION["staff_id"];    //スタッフID
-$insert_flg  = $_GET["insert"];          //登録確認メッセージ表示フラグ
+$shop_id     = $_SESSION["client_id"];   //取引先ID trade partner ID
+$staff_id    = $_SESSION["staff_id"];    //スタッフID staff ID
+$insert_flg  = $_GET["insert"];          //登録確認メッセージ表示フラグ register confirmatiom message display flag
 
 /****************************/
-//初期設定
+//初期設定 initial setting
 /****************************/
-//表示行数
+//表示行数 display row number
 if($_POST["max_row"] != NULL){
     $max_row = $_POST["max_row"];
 }else{
     $max_row = 5;
 }
 
-//削除行数
+//削除行数 delete number of rows
 $del_history[] = NULL; 
 
-//在庫移動後に自画面に遷移した場合、メッセージ表示
+//在庫移動後に自画面に遷移した場合、メッセージ表示 if the screen transitioned from the goods movement to the next screen
 if ($_POST["hdn_first"] == null && $insert_flg == true){
     $insert_msg = "移動しました。";
     $form->addElement("hidden", "hdn_first", "1");
@@ -67,49 +67,49 @@ if ($_POST["hdn_first"] == null && $insert_flg == true){
 
 
 /****************************/
-//行数追加処理
+//行数追加処理 row addition process
 /****************************/
 if($_POST["add_row_flg"] == "true"){
 	if($_POST["max_row"] == NULL){
-		//初期値はPOSTが無い為、
+		//初期値はPOSTが無い為、 because the initial value has no POST
 		$max_row = 6;
 	}else{
-		//最大行に＋１する
+		//最大行に＋１する +1 to the maximum row
     	$max_row = $_POST["max_row"]+5;
 	}
-    //行数追加フラグをクリア
+    //行数追加フラグをクリア clear the row addition flag
     $add_row_data["add_row_flg"] = "";
     $form->setConstants($add_row_data);
 }
 
 /****************************/
-//行削除処理
+//行削除処理 row deletion process
 /****************************/
 if($_POST["del_row"] != ""){
 
-    //削除リストを取得
+    //削除リストを取得 acquire the deletion list
     $del_row = $_POST["del_row"];
 
-    //削除履歴を配列にする。
+    //削除履歴を配列にする。make array of the deletion history
     $del_history = explode(",", $del_row);
 
 
-    //削除した行数
+    //削除した行数 row number deleted
     $del_num     = count($del_history)-1;
 
 }
 
 //***************************/
-//最大行数をhiddenにセット
+//最大行数をhiddenにセット set the max row number to hidden
 /****************************/
 $max_row_data["max_row"] = $max_row;
 
 $form->setConstants($max_row_data);
 
 /****************************/
-//部品作成(固定)
+//部品作成(固定) create parts (fixed)
 /****************************/
-//在庫移動日
+//在庫移動日 goods movement date
 $text[] =& $form->createElement("text", "y", "",
         "size=\"4\" maxLength=\"4\" style=\"$g_form_style\"
          onkeyup=\"changeText(this.form,'form_move_day_day[y]', 'form_move_day[m]',4)\"
@@ -129,42 +129,42 @@ $text[] =& $form->createElement("text", "d", "",
 );
 $form->addGroup($text, "form_move_day", "", " - ");
 
-//移動元倉庫(一覧表示)
+//移動元倉庫(一覧表示) warehouse where the goods come from (list)
 $select_value = Select_Get($db_con,'ware');
 $form->addElement('select', 'form_org_move', 'セレクトボックス', $select_value,$g_form_option_select);
-//移動先倉庫(一覧表示)
+//移動先倉庫(一覧表示) warehouse where the goods go to (list)
 $form->addElement('select', 'form_move', 'セレクトボックス', $select_value,$g_form_option_select);
 
-//移動元倉庫の商品を全て表示
+//移動元倉庫の商品を全て表示 display all the products of the warehouse where the goods will come from
 $form->addElement("submit","form_show_button","移動元倉庫の商品を全て表示");
-//倉庫一括設定
+//倉庫一括設定 set warehouse at once
 $form->addElement("submit","form_set_button","倉庫一括設定");
-//移動(遷移先1-4-107-1.php)
+//移動(遷移先1-4-107-1.php) move (page to go to 1-4-107-1.php)
 $form->addElement("button","form_move_button","移　動","onClick=\"javascript:Button_Submit('move_button_flg','#','true', this)\" $disabled");
 
-//行追加リンク
+//行追加リンク row addition link
 $form->addElement("link","add_row_link","","#","追加","
     onClick=\"javascript:Button_Submit_1('add_row_flg', '#foot', 'true', this);\""
 );
 
 //hidden
-$form->addElement("hidden", "del_row");             //削除行
-$form->addElement("hidden", "add_row_flg");         //追加行フラグ
-$form->addElement("hidden", "max_row");             //最大行数
-$form->addElement("hidden", "goods_search_row");    //商品コード入力行
-$form->addElement("hidden", "ware_select_row1");    //移動元倉庫プルダウン選択フラグ
-$form->addElement("hidden", "ware_select_row2");    //移動先倉庫プルダウン選択フラグ
-$form->addElement("hidden", "move_button_flg");     //移動ボタン押下判定
-// エラーメッセージセット専用hidden
-$form->addElement("text", "err_illegal_verify");    // 不正POST
+$form->addElement("hidden", "del_row");             //削除行 row deletion
+$form->addElement("hidden", "add_row_flg");         //追加行フラグ row addition flag
+$form->addElement("hidden", "max_row");             //最大行数 max row number
+$form->addElement("hidden", "goods_search_row");    //商品コード入力行 product code input row
+$form->addElement("hidden", "ware_select_row1");    //移動元倉庫プルダウン選択フラグ pull down seletion flag of the warehouse where the goods will come from
+$form->addElement("hidden", "ware_select_row2");    //移動先倉庫プルダウン選択フラグ pull down seletion flag of the warehouse where the goods will go to
+$form->addElement("hidden", "move_button_flg");     //移動ボタン押下判定 determine if move button is pressed
+// エラーメッセージセット専用hidden hidden for error message set
+$form->addElement("text", "err_illegal_verify");    // 不正POST invalid POST
 
 
 /****************************/
-//商品コード入力
+//商品コード入力 input product code
 /****************************/
 if($_POST["goods_search_row"] != null){
 
-	//商品データを取得する行
+	//商品データを取得する行 row that will acquire product data 
 	$search_row = $_POST["goods_search_row"];
 
 	$sql  = "SELECT \n";
@@ -209,17 +209,17 @@ if($_POST["goods_search_row"] != null){
     $result = Db_Query($db_con, $sql);
     $data_num = pg_num_rows($result);
 
-	//データが存在した場合、フォームにデータを表示
+	//データが存在した場合、フォームにデータを表示 if there is a data, display the data in form
 	if($data_num == 1){
     	$goods_data = pg_fetch_array($result);
 
-		$set_goods_data["hdn_goods_id"][$search_row]         = $goods_data[0];   //商品ID
-		$goods_id                                            = $goods_data[0];   //POSTする前に倉庫処理で使用する為
-		$set_goods_data["form_goods_cd"][$search_row]        = $goods_data[1];   //商品CD
-		$set_goods_data["form_goods_cname"][$search_row]     = $goods_data[2];   //商品名
-		$set_goods_data["form_unit"][$search_row]            = $goods_data[3];   //単位
+		$set_goods_data["hdn_goods_id"][$search_row]         = $goods_data[0];   //商品ID product ID
+		$goods_id                                            = $goods_data[0];   //POSTする前に倉庫処理で使用する為 because it will be used in warehouse process before POST
+		$set_goods_data["form_goods_cd"][$search_row]        = $goods_data[1];   //商品CD product code
+		$set_goods_data["form_goods_cname"][$search_row]     = $goods_data[2];   //商品名 product name
+		$set_goods_data["form_unit"][$search_row]            = $goods_data[3];   //単位 unit
 	}else{
-		//データが無い場合は、初期化
+		//データが無い場合は、初期化 initialize if there is no data
 		$set_goods_data["hdn_goods_id"][$search_row]         = "";
 		$set_goods_data["form_goods_cd"][$search_row]        = "";
 		$set_goods_data["form_goods_cname"][$search_row]     = "";
@@ -234,25 +234,25 @@ if($_POST["goods_search_row"] != null){
 }
 
 /****************************/
-//倉庫選択処理
+//倉庫選択処理 warehouse selection process
 /****************************/
-//商品コードが入力された場合でも処理を行う
+//商品コードが入力された場合でも処理を行う conduct process even if the product code is inputted
 if($_POST["ware_select_row1"] != null || $_POST["ware_select_row2"] != null || $_POST["goods_search_row"] != null){
-	//移動元・移動先の識別判定
+	//移動元・移動先の識別判定 determine which warehouse it comes from and it goes to
 	if($_POST["ware_select_row1"] != null){
-		//移動元倉庫
-		$wname       = "form_b_ware";                            //移動元の倉庫名
-		$sname       = "form_bstock_num";                        //移動元の在庫数名
-		$rname       = "form_brstock_num";                       //移動元の引当数名
-		$search_row  = $_POST["ware_select_row1"];               //在庫数を取得する行
+		//移動元倉庫 "from" warehouse
+		$wname       = "form_b_ware";                            //移動元の倉庫名 name of the "from" warehouse 
+		$sname       = "form_bstock_num";                        //移動元の在庫数名 number of units existing in the "from" warehouse
+		$rname       = "form_brstock_num";                       //移動元の引当数名 number of units reserved in the "from" warehouse
+		$search_row  = $_POST["ware_select_row1"];               //在庫数を取得する行 row that will acquire inventory number
 
-		$all_ware_id = $_POST["form_org_move"];                  //移動元倉庫（一覧表示）
+		$all_ware_id = $_POST["form_org_move"];                  //移動元倉庫（一覧表示） "from" warehouse (list)
 	}else if($_POST["ware_select_row2"] != null){
-		//移動先倉庫
-		$wname       = "form_a_ware";                            //移動先の倉庫名
-		$sname       = "form_astock_num";                        //移動先の在庫数名
-		$rname       = "form_arstock_num";                       //移動先の引当数名
-		$search_row  = $_POST["ware_select_row2"];               //在庫数を取得する行
+		//移動先倉庫 "to" warehouse
+		$wname       = "form_a_ware";                            //移動先の倉庫名 "to" warehouse name
+		$sname       = "form_astock_num";                        //移動先の在庫数名 number of units existing in the "to" warehouse
+		$rname       = "form_arstock_num";                       //移動先の引当数名 number of units reserved in the "to" warehouse
+		$search_row  = $_POST["ware_select_row2"];               //在庫数を取得する行 row that will acquire inventory number
 
 		$all_ware_id = $_POST["form_move"];                      //移動先倉庫（一覧表示）
 	}
