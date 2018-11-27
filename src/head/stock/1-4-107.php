@@ -254,45 +254,45 @@ if($_POST["ware_select_row1"] != null || $_POST["ware_select_row2"] != null || $
 		$rname       = "form_arstock_num";                       //移動先の引当数名 number of units reserved in the "to" warehouse
 		$search_row  = $_POST["ware_select_row2"];               //在庫数を取得する行 row that will acquire inventory number
 
-		$all_ware_id = $_POST["form_move"];                      //移動先倉庫（一覧表示）
+		$all_ware_id = $_POST["form_move"];                      //移動先倉庫（一覧表示）"to" warehouse (list)
 	}
 
-	//倉庫が選択された後に、商品コードを入力した場合、商品コードの行数を使用
+	//倉庫が選択された後に、商品コードを入力した場合、商品コードの行数を使用 use the row number of the product code if the product code wsa inputted after the warehouse was selected
 	if($_POST["goods_search_row"] != null){
-		$search_row = $_POST["goods_search_row"];                //在庫数を取得する行
-		//移動元の存在判定
+		$search_row = $_POST["goods_search_row"];                //在庫数を取得する行 row that will acquire the number of units in the warehouse
+		//移動元の存在判定 determine the "from" warheouse
 		if($_POST["form_b_ware"][$search_row] != NULL){
-			$wname       = "form_b_ware";                            //移動元の倉庫名
-			$sname       = "form_bstock_num";                        //移動元の在庫数名
-			$rname       = "form_brstock_num";                       //移動元の引当数名
-			$all_ware_id = $_POST["form_org_move"];                  //移動元倉庫（一覧表示）
-			$b_ware_flg  = true;                                     //移動元・移動先が両方入力されているか判定フラグ
+			$wname       = "form_b_ware";                            //移動元の倉庫名  name of the "from" warehouse 
+			$sname       = "form_bstock_num";                        //移動元の在庫数名 number of units existing in the "from" warehouse
+			$rname       = "form_brstock_num";                       //移動元の引当数名 number of units reserved in the "from" warehouse
+			$all_ware_id = $_POST["form_org_move"];                  //移動元倉庫（一覧表示）"from" warehouse (list)
+			$b_ware_flg  = true;                                     //移動元・移動先が両方入力されているか判定フラグ flag to see if both "from" and "to" warehouse are inputted
 		}
-		//移動先の存在判定
+		//移動先の存在判定 determine the "to" warehosue
 		if($_POST["form_a_ware"][$search_row] != NULL){
-			$wname       = "form_a_ware";                            //移動先の倉庫名
-			$sname       = "form_astock_num";                        //移動先の在庫数名
-			$rname       = "form_arstock_num";                       //移動先の引当数名
-			$all_ware_id = $_POST["form_move"];                      //移動先倉庫（一覧表示）
-			$a_ware_flg  = true;                                     //移動元・移動先が両方入力されているか判定フラグ
+			$wname       = "form_a_ware";                            //移動先の倉庫名 name of the "from" warehouse
+			$sname       = "form_astock_num";                        //移動先の在庫数名 number of units existing in the "to" warehouse
+			$rname       = "form_arstock_num";                       //移動先の引当数名 number of units reserved in the "to" warehouse
+			$all_ware_id = $_POST["form_move"];                      //移動先倉庫（一覧表示）to" warehouse (list)
+			$a_ware_flg  = true;                                     //移動元・移動先が両方入力されているか判定フラグ flag to see if both "from" and "to" warehouse are inputted
 		}	
 
 	}else{
-		//商品コードを入力した後に、倉庫を選択した場合
-		$goods_id   = $_POST["hdn_goods_id"][$search_row];           //商品ID
+		//商品コードを入力した後に、倉庫を選択した場合 if the warehouse was selected after the product was inputted
+		$goods_id   = $_POST["hdn_goods_id"][$search_row];           //商品ID product Id
 	}
-    $ware_id    = $_POST["$wname"][$search_row];                     //倉庫ID
+    $ware_id    = $_POST["$wname"][$search_row];                     //倉庫ID warehouse ID
 /*
-	//一覧表示で選択した倉庫とデータで選択した倉庫が違うか判定
+	//一覧表示で選択した倉庫とデータで選択した倉庫が違うか判定 check if the warehouse selected in the list was different from the warehouse selected in the data
 	if($all_ware_id != $ware_id){
-		//違う場合は、一覧の倉庫を初期化
+		//違う場合は、一覧の倉庫を初期化 if its different then initialize the list of warehouse
 		$set_data["form_org_move"]                      = "";
 		$set_data["form_move"]                          = "";
 	}
 */
 
 
-	//商品と倉庫が選択されていれば処理開始
+	//商品と倉庫が選択されていれば処理開始 start the process if the product and warehouse is selected
 	if($goods_id != NULL && $ware_id != NULL){
 	    $sql  = "SELECT \n";
 	    $sql .= "   stock_num, \n";
@@ -308,34 +308,34 @@ if($_POST["ware_select_row1"] != null || $_POST["ware_select_row2"] != null || $
 	    $sql .= ";";
 	    $result = Db_Query($db_con, $sql);
 
-		//該当する商品に在庫があるか
+		//該当する商品に在庫があるか are there units existing for the product selected
 	    if(pg_num_rows($result) != 0){
 	        $stock_num  = pg_fetch_result($result,0,0);
 			$rstock_num = pg_fetch_result($result,0,1);
 	    }
-	    $set_data["$sname"][$search_row] = ($stock_num != NULL)? $stock_num : 0;      //現在個数
-		$set_data["$rname"][$search_row] = ($rstock_num != NULL)? $rstock_num : 0;    //引当数
+	    $set_data["$sname"][$search_row] = ($stock_num != NULL)? $stock_num : 0;      //現在個数 current number of units
+		$set_data["$rname"][$search_row] = ($rstock_num != NULL)? $rstock_num : 0;    //引当数 reserved number of units
 
         //aoyama 2009-07-08
-        //変数の初期化
+        //変数の初期化 initialize the variable
         $stock_num = "";
         $rstock_num = "";
 
 	}else{
-		//選択されていない場合は、初期化
+		//選択されていない場合は、初期化 if it is not selected then initialize it
 		$set_data["$sname"][$search_row] = "";                 
 		$set_data["$rname"][$search_row] = "";   
 	}
 
-	//移動元・移動先が両方入力されている場合、移動先しか在庫数を取得していない為、移動元も取得する
+	//移動元・移動先が両方入力されている場合、移動先しか在庫数を取得していない為、移動元も取得する acquire the number of units for the "from" warehouse too when the "from" and "to"" warehouse is inputted
 	if($b_ware_flg == true && $a_ware_flg == true){
 
-		$wname       = "form_b_ware";                            //移動元の倉庫名
-		$sname       = "form_bstock_num";                        //移動元の在庫数名
-		$rname       = "form_brstock_num";                       //移動元の引当数名
-		$ware_id     = $_POST["$wname"][$search_row];            //倉庫ID
+		$wname       = "form_b_ware";                            //移動元の倉庫名 name of the "from" warehouse 
+		$sname       = "form_bstock_num";                        //移動元の在庫数名 number of units existing in the "to" warehouse
+		$rname       = "form_brstock_num";                       //移動元の引当数名 number of units reserved in the "from" warehouse
+		$ware_id     = $_POST["$wname"][$search_row];            //倉庫ID warehouse ID
 
-		//商品と倉庫が選択されていれば処理開始
+		//商品と倉庫が選択されていれば処理開始 start the process if the product and warehouse is both selected
 		if($goods_id != NULL && $ware_id != NULL){
 		    $sql  = "SELECT \n";
 		    $sql .= "   stock_num, \n";
@@ -351,15 +351,15 @@ if($_POST["ware_select_row1"] != null || $_POST["ware_select_row2"] != null || $
 		    $sql .= ";";
 		    $result = Db_Query($db_con, $sql);
 
-			//該当する商品に在庫があるか
+			//該当する商品に在庫があるか  are there units existing for the product selected
 		    if(pg_num_rows($result) != 0){
 		        $stock_num  = pg_fetch_result($result,0,0);
 				$rstock_num = pg_fetch_result($result,0,1);
 		    }
-		    $set_data["$sname"][$search_row] = ($stock_num != NULL)? $stock_num : 0;      //現在個数
-			$set_data["$rname"][$search_row] = ($rstock_num != NULL)? $rstock_num : 0;    //引当数
+		    $set_data["$sname"][$search_row] = ($stock_num != NULL)? $stock_num : 0;      //現在個数 current no of units
+			$set_data["$rname"][$search_row] = ($rstock_num != NULL)? $rstock_num : 0;    //引当数 reserved no of units
 		}else{
-			//選択されていない場合は、初期化
+			//選択されていない場合は、初期化 if its not selected then initialize
 			$set_data["$sname"][$search_row] = "";                 
 			$set_data["$rname"][$search_row] = "";   
 		}
@@ -373,15 +373,15 @@ if($_POST["ware_select_row1"] != null || $_POST["ware_select_row2"] != null || $
 }
 
 /****************************/
-//移動元倉庫の商品を全て表示ボタン押下処理
+//移動元倉庫の商品を全て表示ボタン押下処理 process for "display all products from the "from" warehouse" button
 /****************************/
 if($_POST["form_show_button"] == "移動元倉庫の商品を全て表示"){
-	$org_ware_id = $_POST["form_org_move"];                //移動元倉庫（一覧表示）
-	$ware_id     = $_POST["form_move"];                    //移動先倉庫（一覧表示）
+	$org_ware_id = $_POST["form_org_move"];                //移動元倉庫（一覧表示）"from" warehouse (list)
+	$ware_id     = $_POST["form_move"];                    //移動先倉庫（一覧表示） "to" warhoues (list)
 	
-	//移動元・移動先が選択されている場合のみ処理を行う
+	//移動元・移動先が選択されている場合のみ処理を行う only process when the "to" and "from" warehouse are selected
 	if($org_ware_id != NULL && $ware_id != NULL){
-		//対象の倉庫の全商品データを取得SQL
+		//対象の倉庫の全商品データを取得SQL SQL that acquires all the product data of the warehouse selected 
 		$sql  = "SELECT \n";
 	    $sql .= "   b_stock.goods_id, \n";
 		$sql .= "   b_stock.goods_cd, \n";
@@ -466,24 +466,24 @@ if($_POST["form_show_button"] == "移動元倉庫の商品を全て表示"){
 		$data_list = Get_Data($result, 2);
 
 		for($i=0;$i<count($data_list);$i++){
-			$set_data["hdn_goods_id"][$i]     = $data_list[$i][0];  //商品ID
-			$set_data["form_goods_cd"][$i]    = $data_list[$i][1];  //商品CD
-			$set_data["form_goods_cname"][$i] = $data_list[$i][2];  //商品名
-			$set_data["form_b_ware"][$i]      = $org_ware_id;       //移動元倉庫
-			$set_data["form_bstock_num"][$i]  = ($data_list[$i][4] != NULL)? $data_list[$i][4] : 0;  //現在個数（移動元）
-			$set_data["form_brstock_num"][$i] = ($data_list[$i][5] != NULL)? $data_list[$i][5] : 0;  //引当数（移動元）
-			$set_data["form_unit"][$i]        = $data_list[$i][6];  //単位
-			$set_data["form_a_ware"][$i]      = $ware_id;           //移動先倉庫
-			$set_data["form_astock_num"][$i]  = ($data_list[$i][8] != NULL)? $data_list[$i][8] : 0;  //現在個数（移動先）
-			$set_data["form_arstock_num"][$i] = ($data_list[$i][9] != NULL)? $data_list[$i][9] : 0;  //引当数（移動先）
+			$set_data["hdn_goods_id"][$i]     = $data_list[$i][0];  //商品ID Product ID
+			$set_data["form_goods_cd"][$i]    = $data_list[$i][1];  //商品CD product code
+			$set_data["form_goods_cname"][$i] = $data_list[$i][2];  //商品名 product name
+			$set_data["form_b_ware"][$i]      = $org_ware_id;       //移動元倉庫 "from" warehouse
+			$set_data["form_bstock_num"][$i]  = ($data_list[$i][4] != NULL)? $data_list[$i][4] : 0;  //現在個数（移動元） current no of units - "from" warheouse 
+			$set_data["form_brstock_num"][$i] = ($data_list[$i][5] != NULL)? $data_list[$i][5] : 0;  //引当数（移動元） reseserved no of units - "from" warehouse
+			$set_data["form_unit"][$i]        = $data_list[$i][6];  //単位 units
+			$set_data["form_a_ware"][$i]      = $ware_id;           //移動先倉庫 "to" warehouse
+			$set_data["form_astock_num"][$i]  = ($data_list[$i][8] != NULL)? $data_list[$i][8] : 0;  //現在個数（移動先）current no of units - "to" warehouse
+			$set_data["form_arstock_num"][$i] = ($data_list[$i][9] != NULL)? $data_list[$i][9] : 0;  //引当数（移動先） reserved no of units "to" warehouse
 		}
-		//全商品データ分の行数を取得
+		//全商品データ分の行数を取得 acquire the row numbers for all product data
 		$max_row = count($data_list);
-		$set_data["max_row"] = $max_row;                       //表示行数
+		$set_data["max_row"] = $max_row;                       //表示行数 display row number
 		$form->setConstants($set_data);
 
 	}else{
-		//移動元・移動先が選択されていない場合はエラー表示
+		//移動元・移動先が選択されていない場合はエラー表示 if the "to" and "from" warehouse are not selected then display error
 		if($org_ware_id == NULL){
 			$warning1 = "移動元倉庫を選択して下さい。";
 		}
@@ -494,35 +494,35 @@ if($_POST["form_show_button"] == "移動元倉庫の商品を全て表示"){
 
 
 /****************************/
-//一括設定ボタン押下処理
+//一括設定ボタン押下処理 set all at once button process
 /****************************/
 }elseif($_POST["form_set_button"] == "倉庫一括設定"){
 
-    //移動元倉庫
+    //移動元倉庫 "from" warehose
     $bfr_ware_id = ($_POST["form_org_move"] != null)? $_POST["form_org_move"] : "null";
 
-    //移動先倉庫
+    //移動先倉庫 "to" warehouse
     $aft_ware_id = ($_POST["form_move"] != null)? $_POST["form_move"] : "null";
 
-    //現在表示されている一覧に倉庫をセットする。
+    //現在表示されている一覧に倉庫をセットする。set the warehouse to the current list being disp[layed
     for($i = 0; $i < $max_row; $i++){
-        //表示行判定
+        //表示行判定 determine the displayed row
         if(!in_array("$i", $del_history)){
             $set_data["form_b_ware"][$i] = $bfr_ware_id;
             $set_data["form_a_ware"][$i] = $aft_ware_id;
 
-            //既に商品が入力されている場合
+            //既に商品が入力されている場合 if the product is already inputted
             if($_POST["hdn_goods_id"][$i] != null){
                 $bfr_data = Get_Stock_Num($db_con, $_POST["hdn_goods_id"][$i], $bfr_ware_id);
                 $atr_data = Get_Stock_Num($db_con, $_POST["hdn_goods_id"][$i], $aft_ware_id);
 
-                //移動元
-                $set_data["form_bstock_num"][$i]  = $bfr_data[0];    //在庫数
-                $set_data["form_brstock_num"][$i] = $bfr_data[1];    //引当数
+                //移動元 "from" warehouse
+                $set_data["form_bstock_num"][$i]  = $bfr_data[0];    //在庫数 no of units existing
+                $set_data["form_brstock_num"][$i] = $bfr_data[1];    //引当数 no of untis reserved
 
-                //移動先
-                $set_data["form_astock_num"][$i]  = $atr_data[0];    //在庫数
-                $set_data["form_arstock_num"][$i] = $atr_data[1];    //引当数
+                //移動先 "to" warehouse
+                $set_data["form_astock_num"][$i]  = $atr_data[0];    //在庫数 no of units existing 
+                $set_data["form_arstock_num"][$i] = $atr_data[1];    //引当数 no of units reserved
 
             }
         }
@@ -532,51 +532,51 @@ if($_POST["form_show_button"] == "移動元倉庫の商品を全て表示"){
 }
 
 /****************************/
-//移動ボタン押下処理
+//移動ボタン押下処理 move button process
 /****************************/
 if($_POST["move_button_flg"] == "true"){
 
     //hashimoto
-    //初期化漏れ
+    //初期化漏れ spill of initialization
     $goods_id = array();
 
 
-    // フラグをクリア
+    // フラグをクリア clear the flag
     $clear_hdn_data["move_button_flg"] = "";
     $form->setConstants($clear_hdn_data);
 
-	//データ情報取得
-	$move_day                     = $_POST["form_move_day"];         //移動日
+	//データ情報取得 acquire data info
+	$move_day                     = $_POST["form_move_day"];         //移動日 move date
     for($i=0, $j=0; $i<$max_row; $i++){
         if($_POST["form_goods_cd"][$i] != null){
-            $goods_id[$j]         = $_POST["hdn_goods_id"][$i];      //商品ID
-            $goods_cname[$j]      = $_POST["form_goods_cname"][$i];   //商品名
-			$b_ware[$j]           = $_POST["form_b_ware"][$i];       //移動元倉庫
-			$bstock_num[$j]       = $_POST["form_bstock_num"][$i];   //現在個数（移動元）
-			$brstock_num[$j]      = $_POST["form_brstock_num"][$i];  //引当数（移動元）
-			$move_num[$j]         = $_POST["form_move_num"][$i];     //移動数
-			$a_ware[$j]           = $_POST["form_a_ware"][$i];       //移動先倉庫
-			$astock_num[$j]       = $_POST["form_astock_num"][$i];   //現在個数（移動先）
-			$arstock_num[$j]      = $_POST["form_arstock_num"][$i];  //引当数（移動先）
+            $goods_id[$j]         = $_POST["hdn_goods_id"][$i];      //商品ID product ID
+            $goods_cname[$j]      = $_POST["form_goods_cname"][$i];   //商品名 product name
+			$b_ware[$j]           = $_POST["form_b_ware"][$i];       //移動元倉庫 "from" warehouse
+			$bstock_num[$j]       = $_POST["form_bstock_num"][$i];   //現在個数（移動元） current no of units "from"
+			$brstock_num[$j]      = $_POST["form_brstock_num"][$i];  //引当数（移動元）no of units reserved "from"
+			$move_num[$j]         = $_POST["form_move_num"][$i];     //移動数 moving no of units
+			$a_ware[$j]           = $_POST["form_a_ware"][$i];       //移動先倉庫 "to" warehouse
+			$astock_num[$j]       = $_POST["form_astock_num"][$i];   //現在個数（移動先） current no of units "to"
+			$arstock_num[$j]      = $_POST["form_arstock_num"][$i];  //引当数（移動先） reserved no of units "to"
             $j++;
         }
     }
 
 	/****************************/
-    //エラーチェック(PHP)
+    //エラーチェック(PHP) error check 
     /****************************/
-	$error_flg = false;                                         //エラー判定フラグ
+	$error_flg = false;                                         //エラー判定フラグ error deciding flag
 
-    // ■ 商品コードの編集中に移動ボタンが押下された場合の対処処理
-    // 移動ボタンが押された、かつ商品検索フラグがある場合
+    // ■ 商品コードの編集中に移動ボタンが押下された場合の対処処理 if the move button is pressed when the product code was still being edited
+    // 移動ボタンが押された、かつ商品検索フラグがある場合 if the move buttoon was pressed and the product search flag was pressed
     if ($_POST["move_button_flg"] == "true" && $_POST["goods_search_row"] != null){
 
-        // 検索した行数を取得
+        // 検索した行数を取得 acquire the row number being searched
         $search_row = $_POST["goods_search_row"];
 
-        // hiddenの商品ID配列の該当行に商品IDが格納されている場合
+        // hiddenの商品ID配列の該当行に商品IDが格納されている場合 if the product ID is being stored in the corresponding product ID array that is hidden
         if ($_POST["hdn_goods_id"][$search_row] != null){
-            // hiddenに格納されている商品IDとPOSTされた商品コードの整合性をチェック
+            // hiddenに格納されている商品IDとPOSTされた商品コードの整合性をチェック check the compatibility of the product code POST and the product ID that is stored in the hidden
             $sql  = "SELECT \n";
             $sql .= "   goods_id \n";
             $sql .= "FROM \n";
@@ -598,15 +598,15 @@ if($_POST["move_button_flg"] == "true"){
             $sql .= ";";
             $res  = Db_Query($db_con, $sql);
             $num  = pg_num_rows($res);
-            // 結果を不正POSTフラグに
+            // 結果を不正POSTフラグに send the result to invalid POST
             $illegal_verify_flg = ($num > 0) ? false : true; 
-        // hiddenの請求先ID配列の該当キーに請求先IDが格納されていない場合
+        // hiddenの請求先ID配列の該当キーに請求先IDが格納されていない場合 if the billing ID is not stored in the corresponding key stored in the hidden billing Id array
         }else{  
-            // 不正POSTフラグをtrueに
+            // 不正POSTフラグをtrueに turn the invalid POST flag true
             $illegal_verify_flg = true; 
         }
 
-        // 不正POSTフラグtrueの場合はエラーをセット
+        // 不正POSTフラグtrueの場合はエラーをセットif invalid POST flag is true then error
         if ($illegal_verify_flg == true){
             $form->setElementError("err_illegal_verify", "商品情報取得前に 移動ボタン が押されました。<br>操作をやり直してください。");
             $error_flg = true;
@@ -614,8 +614,8 @@ if($_POST["move_button_flg"] == "true"){
 
     }
 
-    //■移動日
-    //半角、必須チェック
+    //■移動日 movement data
+    //半角、必須チェック check if its half width
     $form->addGroupRule("form_move_day", array(
         "y"   => array(
                 array($err_message, "required"),
@@ -631,11 +631,11 @@ if($_POST["move_button_flg"] == "true"){
                 ),
     ));
 
-    //日付妥当性チェック
+    //日付妥当性チェック check validity of the date
     if(!checkdate((int)$move_day[m], (int)$move_day[d], (int)$move_day[y])){
         $form->setElementError("form_move_day","移動日の日付は妥当ではありません。");
     }else{
-        //月次更新
+        //月次更新 monthly update
         $sql  = "SELECT \n";
         $sql .= "   MAX(close_day) \n";
         $sql .= "FROM \n";
@@ -658,7 +658,7 @@ if($_POST["move_button_flg"] == "true"){
         }
     }
 
-	//商品選択チェック
+	//商品選択チェック product selecton check
     for($i = 0; $i < count($goods_id); $i++){
         if($goods_cname[$i] != null){
            $input_error_flg = true;
@@ -669,40 +669,40 @@ if($_POST["move_button_flg"] == "true"){
 		$error_flg = true;
     }
 
-    //移動元・移動数・移動先入力チェック
+    //移動元・移動数・移動先入力チェック check theinput of  "from", "to" and number of units being moved
     for($i = 0; $i < count($goods_id); $i++){
-		//必須チェック
+		//必須チェック required field check
         if($goods_id[$i] != null && ($move_num[$i] == null || $b_ware[$i] == null || $a_ware[$i] == null)){
 			$goods_error1 = "在庫移動入力に移動元倉庫名と移動数と移動先倉庫名は必須です。";
 			$error_flg = true;
         }
 
         //hashimoto
-        //在庫数が表示される前に移動を押した場合
+        //在庫数が表示される前に移動を押した場合 if the move button was pressed before the current no of units was shown
         if($bstock_num[$i] == null || $brstock_num[$i] == null || $astock_num[$i] == null || $arstock_num[$i] == null){
             $goods_error1 = "移動元倉庫もしくは移動先倉庫の在庫数が正しく表示された後に「移動」をクリックして下さい。";
             $error_flg = true;
         }
 
-        //移動数半角数字チェック
+        //移動数半角数字チェック check if the no of units being moved is half width
         if(!ereg("^[0-9]+$",$move_num[$i]) && $move_num[$i] != null){
 			$goods_error2 = "移動数は半角数字のみです。";
 			$error_flg = true;
         }
 
-		//移動元と移動先が同じか判定
+		//移動元と移動先が同じか判定 check if the "from" and "to" is same
 		if($b_ware[$i] == $a_ware[$i]){
 			$goods_error3 = "移動元倉庫と移動先倉庫が同じです。";
 			$error_flg = true;
 		}
     }
 
-	//エラーの場合はこれ以降の表示処理を行なわない
+	//エラーの場合はこれ以降の表示処理を行なわない do not do any display process furthermore if its an error
     if($error_flg == false && $form->validate()){
 		Db_Query($db_con, "BEGIN");
 
 		for($i = 0; $i < count($goods_id); $i++){
-			//受払テーブル登録（移動元）
+			//受払テーブル登録（移動元）register in stock balance table for "from" table
             $sql  = "INSERT INTO \n";
             $sql .= "   t_stock_hand \n";
             $sql .= "( \n";
@@ -729,7 +729,7 @@ if($_POST["move_button_flg"] == "true"){
             $sql .= "   $move_num[$i], \n";
             $sql .= "   $staff_id, \n";
             //aoyama-n 2009-07-10
-            //移動先倉庫名を残す
+            //移動先倉庫名を残す retain the "to" warehouse name
             $sql .= "   (SELECT ware_name FROM t_ware WHERE ware_id = $a_ware[$i]),";
             $sql .= "   $shop_id \n";
             $sql .= ") \n";
@@ -740,7 +740,7 @@ if($_POST["move_button_flg"] == "true"){
                 exit;
             }
 
-			//受払テーブル登録（移動先）
+			//受払テーブル登録（移動先）register in stock balance table for "to" table
             $sql  = "INSERT INTO \n";
             $sql .= "   t_stock_hand \n";
             $sql .= "( \n";
@@ -767,7 +767,7 @@ if($_POST["move_button_flg"] == "true"){
             $sql .= "   $move_num[$i], \n";
             $sql .= "   $staff_id, \n";
             //aoyama-n 2009-07-10
-            //移動元倉庫名を残す
+            //移動元倉庫名を残す retain the "from" warehouse name
             $sql .= "   (SELECT ware_name FROM t_ware WHERE ware_id = $b_ware[$i]),";
             $sql .= "   $shop_id \n";
             $sql .= ") \n";
@@ -785,24 +785,24 @@ if($_POST["move_button_flg"] == "true"){
 }
 
 /****************************/
-//部品作成（可変）
+//部品作成（可変） create parts (dynamic)
 /****************************/
-//行番号カウンタ
+//行番号カウンタ row number counter
 $row_num = 1;
 $select_value = Select_Get($db_con,'ware');
 for($i = 0; $i < $max_row; $i++){
-    //表示行判定
+    //表示行判定 determine the display row
     if(!in_array("$i", $del_history)){
         $del_data = $del_row.",".$i;
 
-		//商品コード      
+		//商品コード       product code
 	    $form->addElement(
 	        "text","form_goods_cd[$i]","","size=\"10\" maxLength=\"8\"
 	        style=\"$g_form_style\" $g_form_option
 	        onChange=\"goods_search_2(this.form, 'form_goods_cd', 'goods_search_row', $i, $row_num)\""
 	    );
 
-		//商品名
+		//商品名 product name
 		$form->addElement(
 	        "text","form_goods_cname[$i]","",
 	        "size=\"34\"  
@@ -812,12 +812,12 @@ for($i = 0; $i < $max_row; $i++){
 	        text-align: left\" readonly'"
 	    );
 
-		//移動元倉庫
+		//移動元倉庫 "from" warehouse
 		$form->addElement('select', "form_b_ware[$i]", 'セレクトボックス', $select_value,
 			"onKeyDown=\"chgKeycode();\" onChange =\"goods_search_2(this.form, 'form_goods_cd', 'ware_select_row1', $i, $row_num);window.focus();\""
 		);
 
-        //倉庫が選択されている場合はそのまま、選択されていない場合は、一括設定で選択した倉庫をセット
+        //倉庫が選択されている場合はそのまま、選択されていない場合は、一括設定で選択した倉庫をセット if the warheouse is selected then go on, if not, then set the warehouse selected in all at once
         if($_POST["form_b_ware"][$i] != null){
             $set_data["form_b_ware"][$i] = $_POST["form_b_ware"][$i];   
         }elseif($_POST["add_row_flg"] == "true" && $i > $max_row-6){
@@ -825,7 +825,7 @@ for($i = 0; $i < $max_row; $i++){
         }    
         $form->setConstants($set_data);
 
-		//在庫数(移動元)
+		//在庫数(移動元) current no of units (from)
 		$form->addElement(
 	        "text","form_bstock_num[$i]","",
 	        "size=\"11\"  
@@ -835,7 +835,7 @@ for($i = 0; $i < $max_row; $i++){
 	        text-align: right\" readonly'"
 	    );
 
-		//引当数(移動元)
+		//引当数(移動元) reserved no of units ("from")
 		$form->addElement(
 	        "text","form_brstock_num[$i]","",
 	        "size=\"11\"  
@@ -845,14 +845,14 @@ for($i = 0; $i < $max_row; $i++){
 	        text-align: right\" readonly'"
 	    );
 
-		//移動数
+		//移動数 no of units moved
 	    $form->addElement(
 	        "text","form_move_num[$i]","",
 	        "class=\"money\" size=\"11\" maxLength=\"5\" 
 	        style=\"$g_form_style\" $g_form_option"
 	    );
 
-		//単位
+		//単位 units
 		$form->addElement(
 	        "text","form_unit[$i]","",
 	        "size=\"11\"  
@@ -862,12 +862,12 @@ for($i = 0; $i < $max_row; $i++){
 	        text-align: left\" readonly'"
 	    );
 
-		//移動先倉庫
+		//移動先倉庫 "to" warehouse
 		$form->addElement('select', "form_a_ware[$i]", 'セレクトボックス', $select_value,
 			"onKeyDown=\"chgKeycode();\" onChange =\"goods_search_2(this.form, 'form_goods_cd', 'ware_select_row2', $i, $row_num);window.focus();\""
 		);
 
-        //倉庫が選択されている場合はそのまま、選択されていない場合は、一括設定で選択した倉庫をセット
+        //倉庫が選択されている場合はそのまま、選択されていない場合は、一括設定で選択した倉庫をセット if the warheouse is selected then go on, if not, then set the warehouse selected in all at once
         if($_POST["form_a_ware"][$i] != null){
             $set_data["form_a_ware"][$i] = $_POST["form_a_ware"][$i];   
         }elseif($_POST["add_row_flg"] == "true" && $i > $max_row-6){
@@ -875,7 +875,7 @@ for($i = 0; $i < $max_row; $i++){
         }    
         $form->setConstants($set_data);
 
-		//在庫数(移動先)
+		//在庫数(移動先) no of units existing ("to")
 		$form->addElement(
 	        "text","form_astock_num[$i]","",
 	        "size=\"11\"  
@@ -885,7 +885,7 @@ for($i = 0; $i < $max_row; $i++){
 	        text-align: right\" readonly'"
 	    );
 
-		//引当数(移動先)
+		//引当数(移動先) reserved no of units ("to")
 		$form->addElement(
 	        "text","form_arstock_num[$i]","",
 	        "size=\"11\"  
@@ -895,21 +895,21 @@ for($i = 0; $i < $max_row; $i++){
 	        text-align: right\" readonly'"
 	    );
 
-		//検索リンク
+		//検索リンク search link
 		$form->addElement(
 		    "link","form_search[$i]","","#","検索",
 		    "TABINDEX=-1 onClick=\"return Open_SubWin_2('../dialog/1-0-210.php', Array('form_goods_cd[$i]','goods_search_row'), 500, 450,'true',1,$i, $row_num);\""
 		);
 
 /*
-		//削除リンク
+		//削除リンク delete link
 		$form->addElement(
 		    "link","form_del_row[$i]","",
 		    "#","削除","onClick=\"return Dialogue_1('削除します。', '$del_data', 'del_row');\""
 		); 
 */
-        //削除リンク
-        //最終行を削除する場合、削除した後の最終行に合わせる
+        //削除リンク delete link
+        //最終行を削除する場合、削除した後の最終行に合わせる if the last row will be delted, then match it with the row next to the deleted row
         if($row_num == $max_row-$del_num){
             $form->addElement(
                 "link","form_del_row[$i]","",
@@ -917,7 +917,7 @@ for($i = 0; $i < $max_row; $i++){
                 "TABINDEX=-1 
                 onClick=\"javascript:Dialogue_3('削除します。', '$del_data', 'del_row' ,$row_num-1);return false;\"");
 
-        //最終行以外を削除する場合、削除する行と同じNOの行に合わせる
+        //最終行以外を削除する場合、削除する行と同じNOの行に合わせる if the row other than the last row will be delted, then match it the row number with the row number of the row being delted
         }else{  
             $form->addElement(
                 "link","form_del_row[$i]","","#",
@@ -928,11 +928,11 @@ for($i = 0; $i < $max_row; $i++){
         }       
 
 
-		//商品ID
+		//商品ID product ID
 	    $form->addElement("hidden","hdn_goods_id[$i]");
 
 		/****************************/
-        //表示用HTML作成
+        //表示用HTML作成 create HTMl for display
         /****************************/
         $html .= "<tr class=\"Result1\">";
         $html .=    "  <A NAME=$row_num><td align=\"right\">$row_num</td>";
@@ -971,7 +971,7 @@ for($i = 0; $i < $max_row; $i++){
         $html .= "  </td>";
         $html .= "</tr>";
 
-        //行番号を＋１
+        //行番号を＋１ row number +1
         $row_num = $row_num+1;
     }
 }
@@ -979,17 +979,17 @@ for($i = 0; $i < $max_row; $i++){
 
 
 /****************************/
-//HTMLヘッダ
+//HTMLヘッダ html header
 /****************************/
 $html_header = Html_Header($page_title);
 
 /****************************/
-//HTMLフッタ
+//HTMLフッタ html footer
 /****************************/
 $html_footer = Html_Footer();
 
 /****************************/
-//画面ヘッダー作成
+//画面ヘッダー作成 create screen header
 /****************************/
 $page_header = Create_Header($page_title);
 /*
@@ -997,14 +997,14 @@ print "<pre>";
 print_r ($_POST);
 print "</pre>";
 */
-// Render関連の設定
+// Render関連の設定 render related settings
 $renderer =& new HTML_QuickForm_Renderer_ArraySmarty($smarty);
 $form->accept($renderer);
 
-//form関連の変数をassign
+//form関連の変数をassign assign form related variable
 $smarty->assign('form',$renderer->toArray());
 
-//その他の変数をassign
+//その他の変数をassign assign other variables
 $smarty->assign('var',array(
 	'html_header'   => "$html_header",
 	'page_header'   => "$page_header",
@@ -1019,13 +1019,13 @@ $smarty->assign('var',array(
 	'insert_msg'    => "$insert_msg",
 ));
 
-//テンプレートへ値を渡す
+//テンプレートへ値を渡す pass the value to template
 $smarty->display(basename($_SERVER[PHP_SELF] .".tpl"));
 
 
 
 
-//商品の倉庫ごとの在庫数と引当数を抽出
+//商品の倉庫ごとの在庫数と引当数を抽出 extract the current and reserved no of units per warehouse of a product
 function Get_Stock_Num($db_con, $goods_id, $ware_id){
 
 	$sql  = "SELECT \n";
