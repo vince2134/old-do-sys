@@ -33,26 +33,26 @@
 
 $page_title = "FC・取引先マスタ";
 
-//環境設定ファイル
+//環境設定ファイル env setting file
 require_once("ENV_local.php");
 
-//HTML_QuickFormを作成
+//HTML_QuickFormを作成 create
 $form =& new HTML_QuickForm("dateForm", "POST", "$_SERVER[PHP_SELF]","","onSubmit=return confirm(true)");
 
-// DBに接続
+// DBに接続 connect to 
 $conn = Db_Connect();
 
-// 権限チェック
+// 権限チェック auth check
 $auth       = Auth_Check($conn);
-// 入力・変更権限無しメッセージ
+// 入力・変更権限無しメッセージ no input/edit auth message
 $auth_r_msg = ($auth[0] == "r") ? $auth[3] : null;
-// ボタンDisabled
+// ボタンDisabled button
 $disabled   = ($auth[0] == "r") ? "disabled" : null;
-// 削除ボタンDisabled
+// 削除ボタンDisabled delete button
 $del_disabled = ($auth[1] == "f") ? "disabled" : null;
 
 /****************************/
-//新規判別
+//新規判別 distinguish if new or not
 /****************************/
 $shop_id = $_SESSION[client_id];
 $staff_id = $_SESSION[staff_id];
@@ -63,14 +63,14 @@ if(isset($_GET["client_id"])){
     $new_flg = true;
 }
 
-/* GETしたIDの正当性チェック */
+/* GETしたIDの正当性チェック check the validty of the ID that is GET */ 
 if ($_GET["client_id"] != null && Get_Id_Check_Db($conn, $_GET["client_id"], "client_id", "t_client", "num", null) != true){
     header("Location: ../top.php");
     exit;
 }
 
 /****************************/
-//初期値(radio)
+//初期値(radio) initial value(radio)
 /****************************/
 $def_fdata = array(
     "form_claim_num"	=> "1",
@@ -93,113 +93,113 @@ $def_fdata = array(
 $form->setDefaults($def_fdata);
 
 /****************************/
-//初期設定（GETがある場合）
+//初期設定（GETがある場合）initial value(if there is GET)
 /****************************/
 if($new_flg == false){
     $select_sql  = "SELECT\n";
-    $select_sql .= "    t_client.rank_cd,";             //FCグループ
-    $select_sql .= "    t_client.state,";               //状態
-    $select_sql .= "    t_client.shop_div,";            //本社・支社区分
-    $select_sql .= "    t_client.client_cd1,";          //ショップコード1
-    $select_sql .= "    t_client.client_cd2,";          //ショップコード2
-    $select_sql .= "    t_client.client_name,";         //ショップ名
-    $select_sql .= "    t_client.client_read,";         //ショップ名(フリガナ)
-    $select_sql .= "    t_client.client_cname,";        //略称
-    $select_sql .= "    t_client.shop_name,";           //社名
-    $select_sql .= "    t_client.shop_read,";           //社名(フリガナ)
-    $select_sql .= "    t_client.post_no1,";            //郵便番号
-    $select_sql .= "    t_client.post_no2,";            //郵便番号
-    $select_sql .= "    t_client.address1,";            //住所1
-    $select_sql .= "    t_client.address2,";            //住所2
-    $select_sql .= "    t_client.address_read,";        //住所(フリガナ)
-    $select_sql .= "    t_client.area_id,";             //地区
-    $select_sql .= "    t_client.tel,";                 //TEL
+    $select_sql .= "    t_client.rank_cd,";             //FCグループ FC group
+    $select_sql .= "    t_client.state,";               //状態 status
+    $select_sql .= "    t_client.shop_div,";            //本社・支社区分 main company/branch classification
+    $select_sql .= "    t_client.client_cd1,";          //ショップコード1 shop code 1
+    $select_sql .= "    t_client.client_cd2,";          //ショップコード2 shop code 2
+    $select_sql .= "    t_client.client_name,";         //ショップ名 shop name
+    $select_sql .= "    t_client.client_read,";         //ショップ名(フリガナ) shop name (katakana)
+    $select_sql .= "    t_client.client_cname,";        //略称 abbreviation
+    $select_sql .= "    t_client.shop_name,";           //社名 company name
+    $select_sql .= "    t_client.shop_read,";           //社名(フリガナ) company name (katakana)
+    $select_sql .= "    t_client.post_no1,";            //郵便番号 postal code1
+    $select_sql .= "    t_client.post_no2,";            //郵便番号postal code2
+    $select_sql .= "    t_client.address1,";            //住所1 address1
+    $select_sql .= "    t_client.address2,";            //住所2 address2
+    $select_sql .= "    t_client.address_read,";        //住所(フリガナ) address(katakana)
+    $select_sql .= "    t_client.area_id,";             //地区 district
+    $select_sql .= "    t_client.tel,";                 //TEL 
     $select_sql .= "    t_client.fax,";                 //FAX
     $select_sql .= "    t_client.url,";                 //URL
-    $select_sql .= "    t_client_claim.client_cd1,";    //請求先コード1
-    $select_sql .= "    t_client_claim.client_cd2,";    //請求先コード2
-    $select_sql .= "    t_client_claim.client_name,";   //請求先名
+    $select_sql .= "    t_client_claim.client_cd1,";    //請求先コード1 billing code 1
+    $select_sql .= "    t_client_claim.client_cd2,";    //請求先コード2 billing code 2
+    $select_sql .= "    t_client_claim.client_name,";   //請求先名 billing name
     $select_sql .= "    t_client.sv_staff_id,";         //SV
-    $select_sql .= "    t_client.b_staff_id1,";         //担当１
-    $select_sql .= "    t_client.b_staff_id2,";         //担当２
-    $select_sql .= "    t_client.b_staff_id3,";         //担当３
-    $select_sql .= "    t_client.b_staff_id4,";         //担当４
-    $select_sql .= "    t_client.rep_name,";            //代表者氏名
-    $select_sql .= "    t_client.represe,";             //代表者役職
-    $select_sql .= "    t_client.rep_htel,";            //代表者携帯
-    $select_sql .= "    t_client.charger_name,";        //連絡担当者氏名
-    $select_sql .= "    t_client.charger,";             //連絡担当者役職
-    $select_sql .= "    t_client.cha_htel,";            //連絡担当者携帯
-    $select_sql .= "    t_client.surety_name1,";        //保証人１
-    $select_sql .= "    t_client.surety_addr1,";        //保証人１住所
-    $select_sql .= "    t_client.surety_name2,";        //保証人２
-    $select_sql .= "    t_client.surety_addr2,";        //保証人２住所
-    $select_sql .= "    t_client.trade_base,";          //営業拠点
-    $select_sql .= "    t_client.holiday,";             //休日
-    $select_sql .= "    t_client.trade_area,";          //商圏
-    $select_sql .= "    t_client.join_money,";          //加盟金
-    $select_sql .= "    t_client.guarant_money,";       //保証金
-    $select_sql .= "    t_client.royalty_rate,";        //ロイヤリティ
-    $select_sql .= "    t_client.cutoff_month,";        //決算月
-    $select_sql .= "    t_client.col_terms,";           //回収条件
-    $select_sql .= "    t_client.credit_limit,";        //与信限度
-    $select_sql .= "    t_client.capital,";             //資本金
-    $select_sql .= "    t_client.trade_id,";            //取引区分
-    $select_sql .= "    t_client.close_day,";           //締日
-    $select_sql .= "    t_client.pay_m,";               //集金日(月)
-    $select_sql .= "    t_client.pay_d,";               //集金日(日)
-    $select_sql .= "    t_client.pay_way,";             //集金方法
-    $select_sql .= "    t_client.pay_name,";            //振込名義
-    $select_sql .= "    t_client.account_name,";        //口座名義
-//    $select_sql .= "    t_client.bank_id,";             //振込銀行
-    $select_sql .= "    t_client.account_id,";             //口座ID
-    $select_sql .= "    t_client.c_compa_name,";        //契約会社名
-    $select_sql .= "    t_client.c_compa_rep,";         //契約代表名
-    $select_sql .= "    t_client.cont_sday,";           //契約年月日
-    $select_sql .= "    t_client.cont_eday,";           //契約終了日
-    $select_sql .= "    t_client.cont_peri,";           //契約期間
-    $select_sql .= "    t_client.cont_rday,";           //契約更新日
-    $select_sql .= "    t_client.establish_day,";       //創業日
-    $select_sql .= "    t_client.regist_day,";          //法人登記日
-    $select_sql .= "    t_client.slip_out,";            //伝票発行
-    $select_sql .= "    t_client.deliver_note,";        //納品書コメント
-    $select_sql .= "    t_client.claim_out,";           //請求書発行
-    $select_sql .= "    t_client.coax,";                //まるめ区分
-    $select_sql .= "    t_client.tax_div,";             //課税単位
-    $select_sql .= "    t_client.tax_franct,";          //端数区分
-    $select_sql .= "    t_client.license,";             //取得資格・得意分野
-    $select_sql .= "    t_client.s_contract,";          //特約
-    $select_sql .= "    t_client.other,";               //その他
-    $select_sql .= "    t_client.sbtype_id,";           //業種
-    $select_sql .= "    t_client.inst_id,";             //施設
-    $select_sql .= "    t_client.b_struct,";            //業態
-    $select_sql .= "    t_client.accountant_name,";     //会計担当者氏名
-    $select_sql .= "    t_client.client_cread,";        //略称(フリガナ)
+    $select_sql .= "    t_client.b_staff_id1,";         //担当１ staff 1
+    $select_sql .= "    t_client.b_staff_id2,";         //担当２ staff 2
+    $select_sql .= "    t_client.b_staff_id3,";         //担当３ staff 3
+    $select_sql .= "    t_client.b_staff_id4,";         //担当４ staff 4
+    $select_sql .= "    t_client.rep_name,";            //代表者氏名 name of the representative
+    $select_sql .= "    t_client.represe,";             //代表者役職 position of the rep
+    $select_sql .= "    t_client.rep_htel,";            //代表者携帯 TEL of the rep
+    $select_sql .= "    t_client.charger_name,";        //連絡担当者氏名 name of the contact in person
+    $select_sql .= "    t_client.charger,";             //連絡担当者役職 position of the contact in person
+    $select_sql .= "    t_client.cha_htel,";            //連絡担当者携帯 TEL of the contact in person
+    $select_sql .= "    t_client.surety_name1,";        //保証人１ guarantor 1
+    $select_sql .= "    t_client.surety_addr1,";        //保証人１住所 guarantor1 address
+    $select_sql .= "    t_client.surety_name2,";        //保証人２ guarantor 2 
+    $select_sql .= "    t_client.surety_addr2,";        //保証人２住所 guarantor 2 address
+    $select_sql .= "    t_client.trade_base,";          //営業拠点 base where sale is conducted
+    $select_sql .= "    t_client.holiday,";             //休日 holdiay
+    $select_sql .= "    t_client.trade_area,";          //商圏 trade area
+    $select_sql .= "    t_client.join_money,";          //加盟金 joining fee
+    $select_sql .= "    t_client.guarant_money,";       //保証金 security deposit
+    $select_sql .= "    t_client.royalty_rate,";        //ロイヤリティ royalty
+    $select_sql .= "    t_client.cutoff_month,";        //決算月 cutoff month for accounting
+    $select_sql .= "    t_client.col_terms,";           //回収条件 collection terms
+    $select_sql .= "    t_client.credit_limit,";        //与信限度 credit limit
+    $select_sql .= "    t_client.capital,";             //資本金 capital
+    $select_sql .= "    t_client.trade_id,";            //取引区分 trade classification
+    $select_sql .= "    t_client.close_day,";           //締日 close day
+    $select_sql .= "    t_client.pay_m,";               //集金日(月) collection date (month)
+    $select_sql .= "    t_client.pay_d,";               //集金日(日) collection date (day) 
+    $select_sql .= "    t_client.pay_way,";             //集金方法   collection method
+    $select_sql .= "    t_client.pay_name,";            //振込名義   deposit name
+    $select_sql .= "    t_client.account_name,";        //口座名義   account name
+//    $select_sql .= "    t_client.bank_id,";             //振込銀行 deposit bank
+    $select_sql .= "    t_client.account_id,";             //口座ID  account ID
+    $select_sql .= "    t_client.c_compa_name,";        //契約会社名 contracted company name
+    $select_sql .= "    t_client.c_compa_rep,";         //契約代表名 contracted representative name
+    $select_sql .= "    t_client.cont_sday,";           //契約年月日 contract start date
+    $select_sql .= "    t_client.cont_eday,";           //契約終了日 contract end date
+    $select_sql .= "    t_client.cont_peri,";           //契約期間   contract period
+    $select_sql .= "    t_client.cont_rday,";           //契約更新日 contract update date
+    $select_sql .= "    t_client.establish_day,";       //創業日     establishment date
+    $select_sql .= "    t_client.regist_day,";          //法人登記日 date of registration
+    $select_sql .= "    t_client.slip_out,";            //伝票発行   issue slip
+    $select_sql .= "    t_client.deliver_note,";        //納品書コメント delivery note comment
+    $select_sql .= "    t_client.claim_out,";           //請求書発行 issue billing statement
+    $select_sql .= "    t_client.coax,";                //まるめ区分 round up/down
+    $select_sql .= "    t_client.tax_div,";             //課税単位   tax unit
+    $select_sql .= "    t_client.tax_franct,";          //端数区分   round up/off
+    $select_sql .= "    t_client.license,";             //取得資格・得意分野 acquired license/field of expertise
+    $select_sql .= "    t_client.s_contract,";          //特約 special clause
+    $select_sql .= "    t_client.other,";               //その他 others
+    $select_sql .= "    t_client.sbtype_id,";           //業種 industry type
+    $select_sql .= "    t_client.inst_id,";             //施設 facility
+    $select_sql .= "    t_client.b_struct,";            //業態 business type
+    $select_sql .= "    t_client.accountant_name,";     //会計担当者氏名 accounting reprsentative name
+    $select_sql .= "    t_client.client_cread,";        //略称(フリガナ) abbreviation (katakana)
     $select_sql .= "    t_client.email,";               //Email
-    $select_sql .= "    t_client.direct_tel,";          //直通TEL
-    $select_sql .= "    t_client.deal_history,";        //取引履歴
-    $select_sql .= "    t_client.importance,";          //重要事項
-    $select_sql .= "    t_client.deliver_effect,";      //納品書コメント(効果)
-    $select_sql .= "    t_client.claim_send,";          //請求書送付(郵送)
-    $select_sql .= "    t_client.cutoff_day,";          //決算日
-    $select_sql .= "    t_client.shop_name2,";          //社名
-    $select_sql .= "    t_client.shop_read2,";          //社名(フリガナ)
-    $select_sql .= "    t_client.address3,";            //住所2
-    $select_sql .= "    t_client.account_tel,";         //会計担当者
-    $select_sql .= "    t_client.compellation,";        //敬称
-    //$select_sql .= "    t_client.claim_scope,";         //請求範囲
-    $select_sql .= "    t_client.c_pattern_id,";         //請求書様式
-    $select_sql .= "    t_client.c_tax_div,";            //課税区分
-    $select_sql .= "    t_account.b_bank_id,";           //支店ID
-    $select_sql .= "    t_b_bank.bank_id,";                //銀行ID
-    $select_sql .= "    t_client.bank_name,";           //口座名義
-    $select_sql .= "    t_client.b_bank_name,";         //口座名義略称
-    $select_sql .= "    t_client.payout_m,";            //支払日（月）
-    $select_sql .= "    t_client.payout_d,";             //支払日（日）
-    $select_sql .= "    t_client.buy_trade_id,";        //取引区分
+    $select_sql .= "    t_client.direct_tel,";          //直通TEL direct TEL
+    $select_sql .= "    t_client.deal_history,";        //取引履歴 trade history
+    $select_sql .= "    t_client.importance,";          //重要事項 important items 
+    $select_sql .= "    t_client.deliver_effect,";      //納品書コメント(効果) delivery note comment (effect)
+    $select_sql .= "    t_client.claim_send,";          //請求書送付(郵送) billing statement send (delivery)
+    $select_sql .= "    t_client.cutoff_day,";          //決算日 cutoff day
+    $select_sql .= "    t_client.shop_name2,";          //社名 company name
+    $select_sql .= "    t_client.shop_read2,";          //社名(フリガナ) company name (katakana)
+    $select_sql .= "    t_client.address3,";            //住所2 address 2
+    $select_sql .= "    t_client.account_tel,";         //会計担当者 accounting representative name
+    $select_sql .= "    t_client.compellation,";        //敬称 compellation
+    //$select_sql .= "    t_client.claim_scope,";         //請求範囲 billing scope
+    $select_sql .= "    t_client.c_pattern_id,";         //請求書様式 billing format
+    $select_sql .= "    t_client.c_tax_div,";            //課税区分 tax classification
+    $select_sql .= "    t_account.b_bank_id,";           //支店ID branch bank ID
+    $select_sql .= "    t_b_bank.bank_id,";                //銀行ID bank ID
+    $select_sql .= "    t_client.bank_name,";           //口座名義 account name
+    $select_sql .= "    t_client.b_bank_name,";         //口座名義略称 account name abbreviation
+    $select_sql .= "    t_client.payout_m,";            //支払日（月） payment date (month)
+    $select_sql .= "    t_client.payout_d,";             //支払日（日）payment date (day)
+    $select_sql .= "    t_client.buy_trade_id,";        //取引区分 trade classification 
 
     #2010-05-01 hashimoto-y
-    //請求書宛先フォント
+    //請求書宛先フォント billing address font
     $select_sql .= "    t_client.bill_address_font ";
 
     $select_sql .= " FROM";
@@ -228,71 +228,71 @@ if($new_flg == false){
     $select_sql .= "    AND";
     $select_sql .= "    t_client.client_div = '3'";
     $select_sql .= ";";
-    //クエリ発行
+    //クエリ発行 issue query
     $result = Db_Query($conn, $select_sql);
     Get_Id_Check($result);
-    //データ取得
+    //データ取得 acquire data
     $fc_data = @pg_fetch_array ($result, 0);
 
-    //初期値データ
-    $defa_data["form_shop_gr_1"]              = $fc_data[0];         //FCグループ
-    $defa_data["form_state"]                  = $fc_data[1];         //状態
-    $defa_data["form_head_fc"]                = $fc_data[2];         //本社・支社区分
-    $defa_data["form_shop_cd"]["cd1"]         = $fc_data[3];         //ショップコード1
-    $defa_data["form_shop_cd"]["cd2"]         = $fc_data[4];         //ショップコード2
-    $defa_data["form_shop_name"]              = $fc_data[5];         //ショップ名
-    $defa_data["form_shop_read"]              = $fc_data[6];         //ショップ名(フリガナ)
-    $defa_data["form_shop_cname"]             = $fc_data[7];         //略称
-    $defa_data["form_comp_name"]              = $fc_data[8];         //社名
-    $defa_data["form_comp_read"]              = $fc_data[9];         //社名(フリガナ)
-    $defa_data["form_post"]["no1"]            = $fc_data[10];        //郵便番号
-    $defa_data["form_post"]["no2"]            = $fc_data[11];        //郵便番号
-    $defa_data["form_address1"]               = $fc_data[12];        //住所1
-    $defa_data["form_address2"]               = $fc_data[13];        //住所2
-    $defa_data["form_address_read"]           = $fc_data[14];        //住所(フリガナ)
-    $defa_data["form_area_1"]                 = $fc_data[15];        //地区
-    $defa_data["form_tel"]                    = $fc_data[16];        //TEL
+    //初期値データ initial value data 
+    $defa_data["form_shop_gr_1"]              = $fc_data[0];         //FCグループ FC group
+    $defa_data["form_state"]                  = $fc_data[1];         //状態 status
+    $defa_data["form_head_fc"]                = $fc_data[2];         //本社・支社区分 main company/branch classification
+    $defa_data["form_shop_cd"]["cd1"]         = $fc_data[3];         //ショップコード1 shop code 1
+    $defa_data["form_shop_cd"]["cd2"]         = $fc_data[4];         //ショップコード2 shop code 2
+    $defa_data["form_shop_name"]              = $fc_data[5];         //ショップ名shop name
+    $defa_data["form_shop_read"]              = $fc_data[6];         //ショップ名(フリガナ) shop name (katakana)
+    $defa_data["form_shop_cname"]             = $fc_data[7];         //略称 abbreviation
+    $defa_data["form_comp_name"]              = $fc_data[8];         //社名 company name
+    $defa_data["form_comp_read"]              = $fc_data[9];         //社名(フリガナ) company name (katakana)
+    $defa_data["form_post"]["no1"]            = $fc_data[10];        //郵便番号 postal code 1
+    $defa_data["form_post"]["no2"]            = $fc_data[11];        //郵便番号　postal code 2
+    $defa_data["form_address1"]               = $fc_data[12];        //住所1 address 1
+    $defa_data["form_address2"]               = $fc_data[13];        //住所2 address 2
+    $defa_data["form_address_read"]           = $fc_data[14];        //住所(フリガナ) address (katakana)
+    $defa_data["form_area_1"]                 = $fc_data[15];        //地区 district
+    $defa_data["form_tel"]                    = $fc_data[16];        //TEL 
     $defa_data["form_fax"]                    = $fc_data[17];        //FAX
     $defa_data["form_url"]                    = $fc_data[18];        //URL
-    $defa_data["form_claim"]["cd1"]           = $fc_data[19];        //請求先コード1
-    $defa_data["form_claim"]["cd2"]           = $fc_data[20];        //請求先コード2
-    $defa_data["form_claim"]["name"]          = $fc_data[21];        //請求先名
+    $defa_data["form_claim"]["cd1"]           = $fc_data[19];        //請求先コード1 billing code 1
+    $defa_data["form_claim"]["cd2"]           = $fc_data[20];        //請求先コード2 billing code 2
+    $defa_data["form_claim"]["name"]          = $fc_data[21];        //請求先名 billing name
     $defa_data["form_staff_1"]                = $fc_data[22];        //SV
-    $defa_data["form_staff_2"]                = $fc_data[23];        //担当１
-    $defa_data["form_staff_3"]                = $fc_data[24];        //担当２
-    $defa_data["form_staff_4"]                = $fc_data[25];        //担当３
-    $defa_data["form_staff_5"]                = $fc_data[26];        //担当４
-    $defa_data["form_represent_name"]         = $fc_data[27];        //代表者氏名
-    $defa_data["form_represent_position"]     = $fc_data[28];        //代表者役職
-    $defa_data["form_represent_cell"]         = $fc_data[29];        //代表者携帯
-    $defa_data["form_contact_name"]           = $fc_data[30];        //連絡担当者氏名
-    $defa_data["form_contact_position"]       = $fc_data[31];        //連絡担当者役職
-    $defa_data["form_contact_cell"]           = $fc_data[32];        //連絡担当者携帯
-    $defa_data["form_guarantor1"]             = $fc_data[33];        //保証人１
-    $defa_data["form_guarantor1_address"]     = $fc_data[34];        //保証人１住所
-    $defa_data["form_guarantor2"]             = $fc_data[35];        //保証人２
-    $defa_data["form_guarantor2_address"]     = $fc_data[36];        //保証人２住所
-    $defa_data["form_position"]               = $fc_data[37];        //営業拠点
-    $defa_data["form_holiday"]                = $fc_data[38];        //休日
-    $defa_data["form_business_limit"]         = $fc_data[39];        //商圏
-    $defa_data["form_join_money"]             = $fc_data[40];        //加盟金
-    $defa_data["form_assure_money"]           = $fc_data[41];        //保証金
-    $defa_data["form_royalty"]                = $fc_data[42];        //ロイヤリティ
-    $defa_data["form_accounts_month"]         = $fc_data[43];        //決算月
-    $defa_data["form_collect_terms"]          = $fc_data[44];        //回収条件
-    $defa_data["form_limit_money"]            = $fc_data[45];        //与信限度
-    $defa_data["form_capital_money"]          = $fc_data[46];        //資本金
-    $defa_data["trade_aord_1"]                = $fc_data[47];        //取引区分
-    $defa_data["form_close_1"]                = $fc_data[48];        //締日
-    $defa_data["form_pay_month"]              = $fc_data[49];        //集金日(月)
-    $defa_data["form_pay_day"]                = $fc_data[50];        //集金日(日)
-    $defa_data["form_pay_way"]                = $fc_data[51];        //集金方法
-    $defa_data["form_transfer_name"]          = $fc_data[52];        //振込名義
-    $defa_data["form_account_name"]           = $fc_data[53];        //口座名義
-//    $defa_data["form_bank_1"]                 = $fc_data[54];        //振込銀行
-    $defa_data["form_bank_1"][2]                 = $fc_data[54];        //振込銀行
-    $defa_data["form_contract_name"]          = $fc_data[55];        //契約会社名
-    $defa_data["form_represent_contract"]     = $fc_data[56];        //契約代表名
+    $defa_data["form_staff_2"]                = $fc_data[23];        //担当１staff 1
+    $defa_data["form_staff_3"]                = $fc_data[24];        //担当２ staff 2
+    $defa_data["form_staff_4"]                = $fc_data[25];        //担当３ staff 3
+    $defa_data["form_staff_5"]                = $fc_data[26];        //担当４ staff 4
+    $defa_data["form_represent_name"]         = $fc_data[27];        //代表者氏名 name of the representative
+    $defa_data["form_represent_position"]     = $fc_data[28];        //代表者役職 position of the rep
+    $defa_data["form_represent_cell"]         = $fc_data[29];        //代表者携帯 TEL of the rep
+    $defa_data["form_contact_name"]           = $fc_data[30];        //連絡担当者氏名 name of the contact in person
+    $defa_data["form_contact_position"]       = $fc_data[31];        //連絡担当者役職 position of the contact in person
+    $defa_data["form_contact_cell"]           = $fc_data[32];        //連絡担当者携帯 TEL of the contact in person
+    $defa_data["form_guarantor1"]             = $fc_data[33];        //保証人１ guarantor 1
+    $defa_data["form_guarantor1_address"]     = $fc_data[34];        //保証人１住所 guarantor1 address
+    $defa_data["form_guarantor2"]             = $fc_data[35];        //保証人２ guarantor 2 
+    $defa_data["form_guarantor2_address"]     = $fc_data[36];        //保証人２住所 guarantor 2 address
+    $defa_data["form_position"]               = $fc_data[37];        //営業拠点 base where sale is conducted
+    $defa_data["form_holiday"]                = $fc_data[38];        //休日 holdiay
+    $defa_data["form_business_limit"]         = $fc_data[39];        //商圏 trade area
+    $defa_data["form_join_money"]             = $fc_data[40];        //加盟金 joining fee
+    $defa_data["form_assure_money"]           = $fc_data[41];        //保証金 security deposit
+    $defa_data["form_royalty"]                = $fc_data[42];        //ロイヤリティ royalty
+    $defa_data["form_accounts_month"]         = $fc_data[43];        //決算月 cutoff month for accounting
+    $defa_data["form_collect_terms"]          = $fc_data[44];        //回収条件  collection terms
+    $["form_limit_money"]            = $fc_data[45];        //与信限度 credit limit
+    $defa_data["form_capital_money"]          = $fc_data[46];        //資本金 capital
+    $defa_data["trade_aord_1"]                = $fc_data[47];        //取引区分 trade classification
+    $defa_data["form_close_1"]                = $fc_data[48];        //締日 close day
+    $defa_data["form_pay_month"]              = $fc_data[49];        //集金日(月) collection date (month)
+    $defa_data["form_pay_day"]                = $fc_data[50];        //集金日(日) collection date (day) 
+    $defa_data["form_pay_way"]                = $fc_data[51];        //集金方法 collection method
+    $defa_data["form_transfer_name"]          = $fc_data[52];        //振込名義  deposit name
+    $defa_data["form_account_name"]           = $fc_data[53];        //口座名義 account name
+//    $defa_data["form_bank_1"]                 = $fc_data[54];        //振込銀行 deposit bank
+    $defa_data["form_bank_1"][2]                 = $fc_data[54];        //振込銀行 deposit bank
+    $defa_data["form_contract_name"]          = $fc_data[55];        //契約会社名 contracted company name
+    $defa_data["form_represent_contract"]     = $fc_data[56];        //契約代表名 contracted representative name
     $cont_s_day[y]    = substr($fc_data[57],0,4);
     $cont_s_day[m]    = substr($fc_data[57],5,2);
     $cont_s_day[d]    = substr($fc_data[57],8,2);
@@ -308,56 +308,56 @@ if($new_flg == false){
     $corpo_day[y]     = substr($fc_data[62],0,4);
     $corpo_day[m]     = substr($fc_data[62],5,2);
     $corpo_day[d]     = substr($fc_data[62],8,2);
-    $defa_data["form_cont_s_day"]["y"]        = $cont_s_day[y];      //契約年月日(年)
-    $defa_data["form_cont_s_day"]["m"]        = $cont_s_day[m];      //契約年月日(月)
-    $defa_data["form_cont_s_day"]["d"]        = $cont_s_day[d];      //契約年月日(日)
-    $defa_data["form_cont_e_day"]["y"]        = $cont_e_day[y];      //契約終了日(年)
-    $defa_data["form_cont_e_day"]["m"]        = $cont_e_day[m];      //契約終了日(月)
-    $defa_data["form_cont_e_day"]["d"]        = $cont_e_day[d];      //契約終了日(日)
-    $defa_data["form_cont_peri"]              = $fc_data[59];        //契約期間
-    $defa_data["form_cont_r_day"]["y"]        = $cont_r_day[y];      //契約更新日(年)
-    $defa_data["form_cont_r_day"]["m"]        = $cont_r_day[m];      //契約更新日(月)
-    $defa_data["form_cont_r_day"]["d"]        = $cont_r_day[d];      //契約更新日(日)
-    $defa_data["form_establish_day"]["y"]     = $establish_day[y];   //創業日
+    $defa_data["form_cont_s_day"]["y"]        = $cont_s_day[y];      //契約年月日(年) contract start date (year)
+    $defa_data["form_cont_s_day"]["m"]        = $cont_s_day[m];      //契約年月日(月) contract start date (month)
+    $defa_data["form_cont_s_day"]["d"]        = $cont_s_day[d];      //契約年月日(日) contract start date (day)
+    $defa_data["form_cont_e_day"]["y"]        = $cont_e_day[y];      //契約終了日(年) contract end date (year)
+    $defa_data["form_cont_e_day"]["m"]        = $cont_e_day[m];      //契約終了日(月) contract end date (month)
+    $defa_data["form_cont_e_day"]["d"]        = $cont_e_day[d];      //契約終了日(日) contract end date (day)
+    $defa_data["form_cont_peri"]              = $fc_data[59];        //契約期間 contract period
+    $defa_data["form_cont_r_day"]["y"]        = $cont_r_day[y];      //契約更新日(年) contract update date (year)
+    $defa_data["form_cont_r_day"]["m"]        = $cont_r_day[m];      //契約更新日(月) contract update date (month)
+    $defa_data["form_cont_r_day"]["d"]        = $cont_r_day[d];      //契約更新日(日) contract update date (day)
+    $defa_data["form_establish_day"]["y"]     = $establish_day[y];   //創業日 establishment date
     $defa_data["form_establish_day"]["m"]     = $establish_day[m];
     $defa_data["form_establish_day"]["d"]     = $establish_day[d];
-    $defa_data["form_corpo_day"]["y"]         = $corpo_day[y];       //法人登記日(年)
-    $defa_data["form_corpo_day"]["m"]         = $corpo_day[m];       //法人登記日(月)
-    $defa_data["form_corpo_day"]["d"]         = $corpo_day[d];       //法人登記日(日)
-    $defa_data["form_slip_issue"]             = $fc_data[63];        //伝票発行
-    $defa_data["form_deli_comment"]           = $fc_data[64];        //納品書コメント
-    $defa_data["form_claim_issue"]            = $fc_data[65];        //請求書発行
-    $defa_data["form_coax"]                   = $fc_data[66];        //まるめ区分
-    $defa_data["form_tax_unit"]               = $fc_data[67];        //課税単位
-    $defa_data["from_fraction_div"]           = $fc_data[68];        //端数区分
-    $defa_data["form_qualify_pride"]          = $fc_data[69];        //取得資格・得意分野
-    $defa_data["form_special_contract"]       = $fc_data[70];        //特約
-    $defa_data["form_other"]                  = $fc_data[71];        //その他
-    $defa_data["form_btype"]                  = $fc_data[72];        //業種
-    $defa_data["form_inst"]                   = $fc_data[73];        //施設
-    $defa_data["form_bstruct"]                = $fc_data[74];        //業態
-    $defa_data["form_accountant_name"]        = $fc_data[75];        //会計担当者氏名
-    $defa_data["form_cname_read"]             = $fc_data[76];        //略称(フリガナ)
+    $defa_data["form_corpo_day"]["y"]         = $corpo_day[y];       //法人登記日(年) registration date (year)
+    $defa_data["form_corpo_day"]["m"]         = $corpo_day[m];       //法人登記日(月) registration date (month)
+    $defa_data["form_corpo_day"]["d"]         = $corpo_day[d];       //法人登記日(日) registration date (day)
+    $defa_data["form_slip_issue"]             = $fc_data[63];        //伝票発行 issue slip
+    $defa_data["form_deli_comment"]           = $fc_data[64];        //納品書コメント delivery note comment
+    $defa_data["form_claim_issue"]            = $fc_data[65];        //請求書発行 issue billing statement
+    $defa_data["form_coax"]                   = $fc_data[66];        //まるめ区分 round up/down
+    $defa_data["form_tax_unit"]               = $fc_data[67];        //課税単位 tax unit
+    $defa_data["from_fraction_div"]           = $fc_data[68];        //端数区分 round up/off
+    $defa_data["form_qualify_pride"]          = $fc_data[69];        //取得資格・得意分野 acquired license/field of expertise
+    $defa_data["form_special_contract"]       = $fc_data[70];        //特約 special clause
+    $defa_data["form_other"]                  = $fc_data[71];        //その他 others
+    $defa_data["form_btype"]                  = $fc_data[72];        //業種 industry type
+    $defa_data["form_inst"]                   = $fc_data[73];        //施設 facility
+    $defa_data["form_bstruct"]                = $fc_data[74];        //業態 business type
+    $defa_data["form_accountant_name"]        = $fc_data[75];        //会計担当者氏名 accounting reprsentative name
+    $defa_data["form_cname_read"]             = $fc_data[76];        //略称(フリガナ) abbreviation (katakana)
     $defa_data["form_email"]                  = $fc_data[77];        //Email
-    $defa_data["form_direct_tel"]             = $fc_data[78];        //直通TEL
-    $defa_data["form_record"]                 = $fc_data[79];        //取引履歴
-    $defa_data["form_important"]              = $fc_data[80];        //重要事項
-    $defa_data["form_deliver_radio"]          = $fc_data[81];        //納品書コメント(効果)
-    $defa_data["form_claim_send"]             = $fc_data[82];        //請求書送付
-    $defa_data["form_accounts_day"]           = $fc_data[83];        //決算日
-    $defa_data["form_comp_name2"]             = $fc_data[84];        //社名2
-    $defa_data["form_comp_read2"]             = $fc_data[85];        //社名(フリガナ)2
-    $defa_data["form_address3"]               = $fc_data[86];        //住所3
-    $defa_data["form_account_tel"]            = $fc_data[87];        //会計担当者携帯
-    $defa_data["form_prefix"]                 = $fc_data[88];        //敬称
-    //$defa_data["form_claim_scope"]            = $fc_data[89];        //請求範囲
-    $defa_data["claim_pattern"]               = $fc_data[89];        //請求書様式
-    $defa_data["form_rank"]                   = $fc_data[0];        //顧客区分
-    $defa_data["form_c_tax_div"]              = $fc_data["c_tax_div"];//課税区分
-    $defa_data["form_bank_1"][1]              = $fc_data["b_bank_id"];  //支店ID
-    $defa_data["form_bank_1"][0]              = $fc_data["bank_id"];    //銀行ID
-    $defa_data["form_bank_name"]              = $fc_data["bank_name"];  //振込口座名義
-    $defa_data["form_b_bank_name"]            = $fc_data["b_bank_name"]; //振込口座名略称
+    $defa_data["form_direct_tel"]             = $fc_data[78];        //直通TEL direct TEL
+    $defa_data["form_record"]                 = $fc_data[79];        //取引履歴 trade history
+    $defa_data["form_important"]              = $fc_data[80];        //重要事項 important items 
+    $defa_data["form_deliver_radio"]          = $fc_data[81];        //納品書コメント(効果) delivery note comment (effect)
+    $defa_data["form_claim_send"]             = $fc_data[82];        //請求書送付 billing statement send (delivery)
+    $defa_data["form_accounts_day"]           = $fc_data[83];        //決算日 cutoff day
+    $defa_data["form_comp_name2"]             = $fc_data[84];        //社名2  company name 2
+    $defa_data["form_comp_read2"]             = $fc_data[85];        //社名(フリガナ)2 company name (katakana) 2
+    $defa_data["form_address3"]               = $fc_data[86];        //住所3 address 2
+    $defa_data["form_account_tel"]            = $fc_data[87];        //会計担当者携帯 accounting representative TEL
+    $defa_data["form_prefix"]                 = $fc_data[88];        //敬称 compellation
+    //$defa_data["form_claim_scope"]            = $fc_data[89];        //請求範囲 billing scope
+    $defa_data["claim_pattern"]               = $fc_data[89];        //請求書様式 billing format
+    $defa_data["form_rank"]                   = $fc_data[0];        //顧客区分 customer classification
+    $defa_data["form_c_tax_div"]              = $fc_data["c_tax_div"];//課税区分 tax classificaiton
+    $defa_data["form_bank_1"][1]              = $fc_data["b_bank_id"];  //支店ID branch bank ID
+    $defa_data["form_bank_1"][0]              = $fc_data["bank_id"];    //銀行ID bank ID
+    $defa_data["form_bank_name"]              = $fc_data["bank_name"];  //振込口座名義 deposit account name
+    $defa_data["form_b_bank_name"]            = $fc_data["b_bank_name"]; //振込口座名略称 deposit acct abbreviation
     $defa_data["form_payout_day"]               = $fc_data["payout_d"];
     $defa_data["form_payout_month"]               = $fc_data["payout_m"];
     $defa_data["trade_buy_1"]                = $fc_data["buy_trade_id"];
@@ -365,14 +365,14 @@ if($new_flg == false){
     #2010-05-01 hashimoto-y
     $defa_data["form_bill_address_font"]      = ($fc_data["bill_address_font"] == 't')? 1 : 0;
 
-    //初期値設定                                         
+    //初期値設定 initial value setting                                         
     $form->setDefaults($defa_data);
 
     $id_data = Make_Get_Id($conn, "shop", $fc_data[3].",".$fc_data[4]);
     $next_id = $id_data[0];
     $back_id = $id_data[1];
 
-    //自分が他のFCの請求先として登録されているか
+    //自分が他のFCの請求先として登録されているか If you are registered as a billing clinet in other FC
     $sql  = "SELECT";
     $sql .= "   count(client_id)";
     $sql .= " FROM";
@@ -386,14 +386,14 @@ if($new_flg == false){
     $result = Db_Query($conn, $sql);
     $claim_num = pg_fetch_result($result,0,0);
 
-    //変更可能判定
+    //変更可能判定 determine if editable
     if($claim_num > 0){
         $change_flg = true;
     }else{
         $change_flg = false;
     }
 
-    //変更するショップのグループの種別を抽出
+    //変更するショップのグループの種別を抽出 extract the group type of the shop that will be edited
     $sql  = "SELECT";
     $sql .= "   group_kind";
     $sql .= " FROM";
@@ -407,7 +407,7 @@ if($new_flg == false){
 
 
 }else{
-    //自動採番のショップコード取得
+    //自動採番のショップコード取得 acquire the autoincrement shopcode
 	$sql  = "SELECT";
 	$sql .= "   MAX(client_cd1)";
 	$sql .= " FROM";
@@ -419,7 +419,7 @@ if($new_flg == false){
 	$sql .= ";";
 	$result = Db_Query($conn, $sql);
 	$client_cd1 = pg_fetch_result($result, 0 ,0);
-	//コードの限界値の場合は自動採番しない
+	//コードの限界値の場合は自動採番しない if its the max limit of the code then do not auto increment
 	if($client_cd1 != '999999'){
 		$client_cd1 = $client_cd1 +1;
 		$client_cd1 = str_pad($client_cd1, 6, 0, STR_PAD_LEFT);
@@ -462,8 +462,8 @@ if($_POST["shop_gr_flg"]==true && $_POST["form_shop_gr_1"]!=null  || $new_flg ==
 /****************************/
 //フォーム生成
 /****************************/
-//FC・取引先区分
-//新規登録
+//FC・取引先区分 FC trade classification
+//新規登録 new registration
 if($new_flg == true){
     $sql  = "SELECT";
     $sql .= "   rank_cd,";
@@ -476,7 +476,7 @@ if($new_flg == true){
     $sql .= "   group_kind != '2'";
     $sql .= " ORDER BY rank_cd";
     $sql .= ";";
-//直営
+//直営 directly managed store (HQ's FC)
 }elseif($group_kind == '2'){
     $sql  = "SELECT";
     $sql .= "   rank_cd,";
@@ -489,9 +489,9 @@ if($new_flg == true){
     $sql .= "   group_kind = '2'";
     $sql .= " ORDER BY rank_cd";
     $sql .= ";";
-//その他FC
+//その他FC other FC
 }else{
-    //全商品について単価を設定しているか確認
+    //全商品について単価を設定しているか確認 check if all products have their price set
     $sql  = "SELECT\n";
     $sql .= "   COUNT(*)\n";
 //    $sql .= "   *\n";
@@ -528,7 +528,7 @@ if($new_flg == true){
 
     $set_goods_flg = ($set_goods_count == 0)? true : false;
 
-    //商品に単価を設定している場合
+    //商品に単価を設定している場合 if the products are set with their price
     if($set_goods_flg === true){
         $sql  = "SELECT";
         $sql .= "   rank_cd,";
@@ -541,7 +541,7 @@ if($new_flg == true){
         $sql .= "   group_kind <> '2'";
         $sql .= " ORDER BY rank_cd";
         $sql .= ";";
-    //商品に単価を設定していない場合
+    //商品に単価を設定していない場合 if they are not priced
     }else{
         $sql  = "SELECT";
         $sql .= "   rank_cd,";
@@ -564,14 +564,14 @@ for($i = 0; $i < $rank_num; $i++){
     $select_value["$rank_cd"] = $rank_cd."　：　".$rank_name;
 }
 
-//顧客区分コード
+//顧客区分コード customer classification code
 $freeze = $form->addElement(
 		"select","form_rank","", $select_value, $g_form_option_select);
 if($new_flg != true){
     $freeze->freeze();
 }
 
-//ショップコード
+//ショップコード shop code
 $form_shop_cd[] =& $form->createElement(
         "text","cd1","テキストフォーム","size=\"7\" maxLength=\"6\" style=\"$g_form_style\"
          onkeyup=\"changeText(this.form,'form_shop_cd[cd1]','form_shop_cd[cd2]',6)\" $g_form_option"
@@ -585,12 +585,12 @@ $form_shop_cd[] =& $form->createElement(
         );
 $form->addGroup($form_shop_cd, "form_shop_cd", "form_shop_cd");
 
-// 得意先コード空きコード検索リンク
+// 得意先コード空きコード検索リンク customer code blank code search link
 $form->addElement("link", "form_cd_search", "", "#", "空きコード検索", "tabindex=\"-1\" 
     onClick=\"javascript:return Open_SubWin('../dialog/1-0-103.php', Array('form_shop_cd[cd1]','form_shop_cd[cd2]'), 570, 650, 3, 1);\"
 ");
 
-//郵便番号
+//郵便番号 postal code
 $form_post[] =& $form->createElement(
         "text","no1","テキストフォーム","size=\"3\" maxLength=\"3\"  style=\"$g_form_style\" onkeyup=\"changeText(this.form,'form_post[no1]','form_post[no2]',3)\"".$g_form_option."\""
         );
@@ -603,7 +603,7 @@ $form_post[] =& $form->createElement(
         );
 $form->addGroup( $form_post, "form_post", "form_post");
 
-//請求先
+//請求先 billing address
 $form_claim[] =& $form->createElement(
         "text","cd1","","size=\"7\" maxLength=\"6\" style=\"$g_form_style\"
         onkeyup=\"javascript:client1('form_claim[cd1]','form_claim[cd2]','form_claim[name]')\"".$g_form_option."\""
@@ -624,7 +624,7 @@ if($change_flg == true){
     $freeze->freeze();
 }
 
-//契約年月日
+//契約年月日 contract date
 $form_cont_s_day[] =& $form->createElement(
         "text","y","","size=\"4\" maxLength=\"4\" style=\"$g_form_style\"
         onkeyup=\"changeText(this.form,'form_cont_s_day[y]','form_cont_s_day[m]',4)\" 
@@ -647,7 +647,7 @@ $form_cont_s_day[] =& $form->createElement(
         );
 $form->addGroup( $form_cont_s_day,"form_cont_s_day","");
 
-//契約終了日
+//契約終了日 contract end date
 $form_cont_e_day[] =& $form->createElement(
         "text","y","","size=\"4\" maxLength=\"4\" 
          style=\"$g_form_style\"
@@ -670,13 +670,13 @@ $form_cont_e_day[] =& $form->createElement(
         );
 $form->addGroup( $form_cont_e_day,"form_cont_e_day","");
 
-//契約期間
+//契約期間 contract period
 $form->addElement(
         "text","form_cont_peri","","size=\"2\" maxLength=\"2\" style=\"text-align: right; $g_form_style\"
         onkeyup=\"Contract(this.form)\" $g_form_option"
         );
 
-//契約更新日
+//契約更新日 contract update date
 $form_cont_r_day[] =& $form->createElement(
         "text","y","","size=\"4\" maxLength=\"4\" style=\"$g_form_style\"
         onkeyup=\"changeText(this.form,'form_cont_r_day[y]','form_cont_r_day[m]',4)\" 
@@ -699,7 +699,7 @@ $form_cont_r_day[] =& $form->createElement(
         );
 $form->addGroup( $form_cont_r_day,"form_cont_r_day","");
 
-//創業日
+//創業日 establishment date
 $form_establish_day[] =& $form->createElement(
         "text","y","テキストフォーム","size=\"4\" maxLength=\"4\" style=\"$g_form_style\"
         onkeyup=\"changeText(this.form,'form_establish_day[y]','form_establish_day[m]',4)\" 
@@ -722,7 +722,7 @@ $form_establish_day[] =& $form->createElement(
         );
 $form->addGroup( $form_establish_day,"form_establish_day","form_establish_day");
 
-//法人登記日
+//法人登記日 registration date
 $form_corpo_day[] =& $form->createElement(
         "text","y","テキストフォーム","size=\"4\" maxLength=\"4\" style=\"$g_form_style\"
         onkeyup=\"changeText(this.form,'form_corpo_day[y]','form_corpo_day[m]',4)\" 
@@ -745,76 +745,76 @@ $form_corpo_day[] =& $form->createElement(
         );
 $form->addGroup( $form_corpo_day,"form_corpo_day","form_corpo_day");
 
-//ショップ名
+//ショップ名 shop name
 $form->addElement(
         "text","form_shop_name","テキストフォーム","size=\"40\" maxLength=\"25\" 
         $g_form_option"
         );
 
-//ショップ名(フリガナ)
+//ショップ名(フリガナ) shop name (katakana)
 $form->addElement(
         "text","form_shop_read","テキストフォーム","size=\"40\" maxLength=\"50\" 
         $g_form_option"
         );
 
-//略称
+//略称 abbreviation
 $form->addElement(
         "text","form_shop_cname","テキストフォーム","size=\"40\" maxLength=\"20\" 
         $g_form_option"
         );
 
-//略称（フリガナ）
+//略称（フリガナ） abbreviation (katakana)
 $form->addElement(
         "text","form_cname_read","",'size="40" maxLength="40"'." $g_form_option"
         );
 
-//敬称
+//敬称 compellation
 $form_prefix_radio[] =& $form->createElement( "radio",NULL,NULL, "御中","1");
 $form_prefix_radio[] =& $form->createElement( "radio",NULL,NULL, "様","2");
 $form->addGroup($form_prefix_radio,"form_prefix","");
      
-//社名
+//社名 company name
 $form->addElement(
         "text","form_comp_name","テキストフォーム","size=\"40\" maxLength=\"25\" 
         $g_form_option"
         );
 
-//社名(フリガナ)
+//社名(フリガナ) company name (katakana)
 $form->addElement(
         "text","form_comp_read","テキストフォーム","size=\"40\" maxLength=\"50\" 
         $g_form_option"
         );
 
-//社名2
+//社名2 company name 2
 $form->addElement(
         "text","form_comp_name2","テキストフォーム","size=\"40\" maxLength=\"25\" 
         $g_form_option"
         );
 
-//社名2(フリガナ)
+//社名2(フリガナ) company name 2 (katakana)
 $form->addElement(
         "text","form_comp_read2","テキストフォーム","size=\"40\" maxLength=\"50\" 
         $g_form_option"
         );
 
-//住所1
+//住所1 address 1
 $form->addElement(
         "text","form_address1","テキストフォーム","size=\"40\" maxLength=\"25\" 
         $g_form_option"
         );
-
-//住所2
+ 
+//住所2 address 2 
 $form->addElement(
         "text","form_address2","テキストフォーム","size=\"40\" maxLength=\"25\" 
         $g_form_option"
         );
 
-//住所3
+//住所3 address 3
 $form->addElement(
         "text","form_address3","",'size="40" maxLength="30"'." $g_form_option"
         );
 
-//住所(フリガナ)
+//住所(フリガナ) address (katakana)
 $form->addElement(
         "text","form_address_read","テキストフォーム","size=\"40\" maxLength=\"50\" 
         $g_form_option"
@@ -841,152 +841,152 @@ $form->addElement(
         $g_form_option"
         );
 
-//代表者氏名
+//代表者氏名 representative name
 $form->addElement(
         "text","form_represent_name","テキストフォーム","size=\"34\" maxLength=\"15\" 
         $g_form_option"
         );
 
-//代表者役職
+//代表者役職 representative position
 $form->addElement(
         "text","form_represent_position","テキストフォーム","size=\"22\" maxLength=\"10\" 
         $g_form_option"
         );
 
-//直通TEL
+//直通TEL direct TEL
 $form->addElement(
         "text","form_direct_tel","","size=\"34\" maxLength=\"30\" style=\"$g_form_style\" $g_form_option"
         );
 
-//代表者携帯
+//代表者携帯 representative TEL
 $form->addElement(
         "text","form_represent_cell","","size=\"34\" maxLength=\"30\" style=\"$g_form_style\" 
         $g_form_option"
         );
 
-//連絡担当者氏名
+//連絡担当者氏名 contact in person name
 $form->addElement(
         "text","form_contact_name","テキストフォーム","size=\"34\" maxLength=\"15\" 
         $g_form_option"
         );
 
-//連絡担当者役職
+//連絡担当者役職 contact in person position
 $form->addElement(
         "text","form_contact_position","テキストフォーム","size=\"22\" maxLength=\"10\" 
         $g_form_option"
         );
 
-//連絡担当者携帯
+//連絡担当者携帯 contact in person TEL
 $form->addElement(
         "text","form_contact_cell","テキストフォーム","size=\"34\" maxLength=\"30\" style=\"$g_form_style\"
         $g_form_option"
         );
 
-//会計担当者氏名
+//会計担当者氏名 accountant staff name
 $form->addElement(
         "text","form_accountant_name","テキストフォーム","size=\"34\" maxLength=\"10\" 
         $g_form_option"
         );
-//会計担当者携帯
+//会計担当者携帯 accountant staff TEL
 $form->addElement(
         "text","form_account_tel","テキストフォーム","size=\"34\" maxLength=\"30\" style=\"$g_form_style\"
         $g_form_option"
         );
 
-//保証人１
+//保証人１ guarantor 1
 $form->addElement(
         "text","form_guarantor1","テキストフォーム","size=\"34\" maxLength=\"15\" 
         $g_form_option"
         );
 
-//保証人１住所
+//保証人１住所 guarantor1 address
 $form->addElement(
         "text","form_guarantor1_address","テキストフォーム","size=\"40\" maxLength=\"50\" 
         $g_form_option"
         );
 
-//保証人２
+//保証人２ guarantor 2 
 $form->addElement(
         "text","form_guarantor2","テキストフォーム","size=\"34\" maxLength=\"15\" 
         $g_form_option"
         );
 
-//保証人２住所
+//保証人２住所 guarantor 2 address
 $form->addElement(
         "text","form_guarantor2_address","テキストフォーム","size=\"40\" maxLength=\"50\" 
         $g_form_option"
         );
 
-//営業拠点
+//営業拠点 base where sale is conducted
 $form->addElement(
         "text","form_position","テキストフォーム","size=\"34\" maxLength=\"15\" 
         $g_form_option"
         );
 
-//休日
+//休日 holdiay
 $form->addElement(
         "text","form_holiday","テキストフォーム","size=\"22\" maxLength=\"10\" 
         $g_form_option"
         );
 
-//商圏
+//商圏 trade area
 $form->addElement(
         "text","form_business_limit","テキストフォーム","size=\"22\" maxLength=\"10\" 
         $g_form_option"
         );
 
-//加盟金
+//加盟金 joining fee
 $form->addElement(
         "text","form_join_money","テキストフォーム","class=\"money\" size=\"11\" maxLength=\"9\" 
          style=\"text-align: right; $g_form_style\" ".$g_form_option."\""
         );
 
-//保証金
+//保証金 security deposit
 $form->addElement(
         "text","form_assure_money","テキストフォーム","class=\"money\" size=\"11\" maxLength=\"9\" 
          style=\"text-align: right; $g_form_style\"".$g_form_option."\""
         );
 
-//ロイヤリティ
+//ロイヤリティ royalty
 $form->addElement(
         "text","form_royalty","テキストフォーム","size=\"3\" maxLength=\"3\" 
          style=\"text-align: right; $g_form_style\"".$g_form_option."\""
         );
 
-//決算月
+//決算月 cutoff month for accounting
 $form->addElement(
         "text","form_accounts_month","テキストフォーム","size=\"2\" maxLength=\"2\"  style=\"text-align: right; $g_form_style\"
         ".$g_form_option."\""
         );
 
-//決算日
+//決算日cutoff dayfor accounting
 $form->addElement(
         "text","form_accounts_day","テキストフォーム","size=\"2\" maxLength=\"2\"  style=\"text-align: right; $g_form_style\"
         ".$g_form_option."\""
         );
 
-//回収条件
+//回収条件 collection terms
 $form->addElement(
         "text","form_collect_terms","テキストフォーム","size=\"34\" maxLength=\"50\" 
         $g_form_option"
         );
 
-//与信限度
+//与信限度 credit limit
 $form->addElement(
         "text","form_limit_money","テキストフォーム","class=\"money\" size=\"11\" maxLength=\"9\" 
          style=\"text-align: right; $g_form_style\"".$g_form_option."\""
         );
 
-//資本金
+//資本金 capital
 $form->addElement(
         "text","form_capital_money","",
         "class=\"money\" size=\"11\" maxLength=\"9\" 
         style=\"text-align: right; $g_form_style\"".$g_form_option.""
         );
 
-//集金日
-//集金日
-//月
+//集金日 collection date
+//集金日 collection date
+//月 month
 $select_month[null] = null;
 for($i = 0; $i <= 12; $i++){
     if($i == 0){
@@ -999,7 +999,7 @@ for($i = 0; $i <= 12; $i++){
 }
 $form->addElement("select", "form_pay_month", "セレクトボックス", $select_month, $g_form_option_select);
 
-//日
+//日 day
 for($i = 0; $i <= 29; $i++){
     if($i == 29){
         $select_day[$i] = '月末';
@@ -1011,56 +1011,56 @@ for($i = 0; $i <= 29; $i++){
 }
 $form->addElement("select", "form_pay_day", "セレクトボックス", $select_day, $g_form_option_select);
 
-//集金方法
+//集金方法 collection method
 $select_value = Select_Get($conn,'pay_way');
 $form->addElement(
         "select","form_pay_way","", $select_value,$g_form_option_select
         );
 
-//振込名義
+//振込名義 deposit name
 $form->addElement(
         "text","form_transfer_name","テキストフォーム","size=\"34\" maxLength=\"50\" 
         $g_form_option"
         );
 
-//口座名義
+//口座名義 account name
 $form->addElement(
         "text","form_account_name","テキストフォーム","size=\"34\" maxLength=\"15\" 
         $g_form_option"
         );
 
-//契約会社名
+//契約会社名 contract company name
 $form->addElement(
         "text","form_contract_name","テキストフォーム","size=\"40\" maxLength=\"30\" 
         $g_form_option"
         );
 
-//契約代表者名
+//契約代表者名 contracted representative name
 $form->addElement(
         "text","form_represent_contract","テキストフォーム","size=\"34\" maxLength=\"15\" 
         $g_form_option"
         );
 
-//納品書コメント
-//ラヂオボタン
+//納品書コメント delivery note comment
+//ラヂオボタン radio button
 $form_deliver_radio[] =& $form->createElement( "radio",NULL,NULL, "コメント無効","1");
 $form_deliver_radio[] =& $form->createElement( "radio",NULL,NULL, "個別コメント有効","2");
 $form_deliver_radio[] =& $form->createElement( "radio",NULL,NULL, "全体コメント有効","3");
 $form->addGroup($form_deliver_radio, "form_deliver_radio", "");
-//テキスト
+//テキスト text
 $form->addElement("textarea","form_deli_comment","",' rows="5" cols="75"'." $g_form_option_area");
 
-//取引履歴
+//取引履歴 trade history
 $form->addElement("textarea","form_record","",' rows="3" cols="75"'." $g_form_option_area");
 
-//重要事項
+//重要事項 important items 
 $form->addElement("textarea","form_important","",' rows="3" cols="75"'." $g_form_option_area");
 
-//地区
+//地区 district
 $select_ary = Select_Get($conn,'area');
 $form->addElement('select', 'form_area_1',"", $select_ary,$g_form_option_select);
 
-//業種
+//業種 induistry type
 $sql  = "SELECT";
 $sql .= "   t_lbtype.lbtype_cd,";
 $sql .= "   t_lbtype.lbtype_name,";
@@ -1114,7 +1114,7 @@ while($data_list = @pg_fetch_array($result)){
 
 $form->addElement('select', 'form_btype',"", $select_value2,$g_form_option_select);
 
-//施設
+//施設 facility
 $sql  = "SELECT";
 $sql .= "   inst_id,";
 $sql .= "   inst_cd,";
@@ -1134,7 +1134,7 @@ while($data_list = @pg_fetch_array($result)){
 }
 $form->addElement('select', 'form_inst',"", $select_value3,$g_form_option_select);
 
-//業態
+//業態 business type
 $sql  = "SELECT";
 $sql .= "   bstruct_id,";
 $sql .= "   bstruct_cd,";
@@ -1154,21 +1154,21 @@ while($data_list = @pg_fetch_array($result)){
 }
 $form->addElement('select', 'form_bstruct',"", $select_value4,$g_form_option_select);
 
-//担当者
+//担当者 staff
 for($x=1;$x<=5;$x++){
 $select_value5 = Select_Get($conn,'staff');
 $form->addElement('select', 'form_staff_'.$x, 'セレクトボックス', $select_value5,$g_form_option_select);
 }
 
-//取引区分
+//取引区分 trade classification
 $select_value6 = Select_Get($conn,'trade_aord');
 $form->addElement('select', 'trade_aord_1', 'セレクトボックス', $select_value6, "onKeyDown=\"chgKeycode();\" onChange =\"window.focus();trade_close_day();\"");
 
-//取引区分
+//取引区分 trade classification
 $select_value6 = Select_Get($conn,'trade_ord');
 $form->addElement('select', 'trade_buy_1', 'セレクトボックス', $select_value6, "onKeyDown=\"chgKeycode();\" onChange =\"window.focus();trade_buy_close_day();\"");
 
-//締日
+//締日 closing date
 $select_value7 = Select_Get($conn,'close');
 $freeze = $form->addElement('select', 'form_close_1', 'セレクトボックス', $select_value7, 
         "onKeyDown=\"chgKeycode();\" 
@@ -1180,25 +1180,25 @@ $bank_select = $form->addElement('hierselect', 'form_bank_1', '',$g_form_option_
 $bank_select->setOptions(array($select_ary[0], $select_ary[1], $select_ary[2]));
 
 
-//状態
+//状態 status
 $text = null;
 $text[] =& $form->createElement( "radio",NULL,NULL, "取引中","1");
 $text[] =& $form->createElement( "radio",NULL,NULL, "解約・休止中","2");
 //$text[] =& $form->createElement( "radio",NULL,NULL, "解約","3");
 $form->addGroup($text, "form_state", "");
 
-//伝票番号
+//伝票番号 slip number
 $form_slip_issue[] =& $form->createElement("radio",NULL,NULL, "有","1");
 $form_slip_issue[] =& $form->createElement("radio",NULL,NULL, "指定","2");
 $form_slip_issue[] =& $form->createElement("radio",NULL,NULL, "無","3");
 $form->addGroup($form_slip_issue, "form_slip_issue", "伝票番号");
 
 #2010-05-01 hashimoto-y
-// 請求書宛先フォント大
+// 請求書宛先フォント大 billing address font large
 $form->addElement("checkbox", "form_bill_address_font", "");
 
 
-//請求書発行
+//請求書発行 issue billing slip
 $form_claim_issue[] =& $form->createElement("radio",NULL,NULL, "明細請求書","1");
 $form_claim_issue[] =& $form->createElement("radio",NULL,NULL, "合計請求書","2");
 $form_claim_issue[] =& $form->createElement("radio",NULL,NULL, "個別明細請求書","5");
@@ -1206,22 +1206,22 @@ $form_claim_issue[] =& $form->createElement("radio",NULL,NULL, "出力しない","3")
 $form_claim_issue[] =& $form->createElement("radio",NULL,NULL, "指定","4");
 $form->addGroup($form_claim_issue, "form_claim_issue", "請求書発行");
 /*
-//請求範囲
+//請求範囲 billing cope
 $form_claim_scope[] =& $form->createElement( "radio",NULL,NULL, "繰越額を含める","t");
 $form_claim_scope[] =& $form->createElement( "radio",NULL,NULL, "繰越額を含めない","f");
 $form->addGroup($form_claim_scope, "form_claim_scope", "");
 */
-//請求書送付
+//請求書送付 send billing slip
 $form_claim_send[] =& $form->createElement( "radio",NULL,NULL, "郵送","1");
 $form_claim_send[] =& $form->createElement( "radio",NULL,NULL, "メール","2");
 $form_claim_send[] =& $form->createElement( "radio",NULL,NULL, "両方","3");
 $form->addGroup($form_claim_send, "form_claim_send", "");
 
-//請求書様式
+//請求書様式 billing format
 $select_value = Select_Get($conn,'claim_pattern');
 $form->addElement("select","claim_pattern","",$select_value);
 
-//まるめ区分
+//まるめ区分 round up/down
 $form_coax[] =& $form->createElement(
          "radio",NULL,NULL, "切捨","1"
          );
@@ -1236,7 +1236,7 @@ $freeze = $form->addGroup($form_coax, "form_coax", "まるめ区分");
 //    $freeze->freeze();
 //}
 
-//課税区分
+//課税区分 tax classification
 $form_tax_division[] =& $form->createElement(
          "radio",NULL,NULL, "外税","1"
          );
@@ -1251,7 +1251,7 @@ $freeze = $form->addGroup($form_tax_division, "form_tax_div", "課税区分");
 //    $freeze->freeze();
 //}
 
-//課税単位
+//課税単位 tax unit
 $form_tax_unit[] =& $form->createElement(
          "radio",NULL,NULL, "締日単位","1"
          );
@@ -1263,7 +1263,7 @@ $freeze = $form->addGroup($form_tax_unit, "form_tax_unit", "課税単位");
 //    $freeze->freeze();
 //}
 
-//端数区分
+//端数区分 round up/down
 $from_fraction_div[] =& $form->createElement(
          "radio",NULL,NULL, "切捨","1"
          );
@@ -1278,7 +1278,7 @@ $freeze = $form->addGroup($from_fraction_div, "from_fraction_div", "端数区分");
 //    $freeze->freeze();
 //}
 
-//課税区分
+//課税区分 tax classification
 $form_c_tax_div[] =& $form->createElement(
          "radio",NULL,NULL, "外税","1"
          );
@@ -1299,28 +1299,28 @@ if($new_flg == false){
     $freeze->freeze();
 }
 
-//取得資格・得意分野
+//取得資格・得意分野 acquired license/field of expertise
 $form->addElement("textarea","form_qualify_pride","テキストフォーム"," rows=\"2\" cols=\"75\" $g_form_option_area");
 
-//特約
+//特約 special clause
 $form->addElement("textarea","form_special_contract","テキストフォーム"," rows=\"2\" cols=\"75\" $g_form_option_area");
 
-//その他
+//その他 others
 $form->addElement("textarea","form_other","テキストフォーム"," rows=\"2\" cols=\"75\" $g_form_option_area");
 
-//登録（ヘッダ）
+//登録（ヘッダ） registration (header)
 $form->addElement("button","new_button","登録画面",$g_button_color." onClick=\"location.href='$_SERVER[PHP_SELF]'\"");
 
-//変更・一覧
+//変更・一覧 edit/list
 $form->addElement("button","change_button","変更・一覧","onClick=\"javascript:Referer('1-1-101.php')\"");
 
 //hidden
 $form->addElement("hidden", "input_button_flg");
 
-//ショップを仕入先として扱う場合のフォーム
-//支払日
-//支払月
-//月
+//ショップを仕入先として扱う場合のフォーム form when the shop will be used as a supplier
+//支払日 payment day
+//支払月 payment month
+//月month
 $select_month[null] = null;
 for($i = 0; $i <= 12; $i++){
     if($i == 0){
@@ -1333,7 +1333,7 @@ for($i = 0; $i <= 12; $i++){
 }
 $form->addElement("select", "form_payout_month", "セレクトボックス", $select_month, $g_form_option_select);
 
-//日
+//日 day
 for($i = 0; $i <= 29; $i++){
     if($i == 29){
         $select_day[$i] = '月末';
@@ -1346,30 +1346,30 @@ for($i = 0; $i <= 29; $i++){
 //$form->addElement("select", "form_payout_day", "セレクトボックス", $select_month, $g_form_option_select);
 $form->addElement("select", "form_payout_day", "セレクトボックス", $select_day, $g_form_option_select);
 
-//銀行
+//銀行 bank
 $form->addElement('text', 'form_bank_name', '', "size=\"95\" maxLength=\"40\" $g_form_option");
 
-//支店名
+//支店名 branch bank name
 $form->addElement("text", "form_b_bank_name", "","size=\"47\" maxlength=\"20\" $g_form_option");
 
 
 /***************************/
-//ルール作成（QuickForm）
+//ルール作成（QuickForm）create rules
 /***************************/
 $form->registerRule("mb_maxlength", "function", "Mb_Maxlength");
 $form->registerRule("telfax","function","Chk_Telfax");
-//■FCグループ
-//●必須チェック
+//■FCグループ FC group
+//●必須チェック required field
 //$form->addRule("form_shop_gr_1", "FCグループを選択してください。","required");
 $form->addRule("form_rank", "FC・取引先区分を選択して下さい。","required");
 
-//■業種
-//●必須チェック
+//■業種 industry 
+//●必須チェック required field
 $form->addRule("form_btype", "業種を選択して下さい。","required");
 
-//■ショップコード
-//●必須チェック
-//●半角数字チェック
+//■ショップコード shop code
+//●必須チェック required field
+//●半角数字チェック hald width number check
 $form->addGroupRule('form_shop_cd', array(
         'cd1' => array(
                 array('ショップコードは半角数字のみです。', 'required'),
@@ -1381,25 +1381,25 @@ $form->addGroupRule('form_shop_cd', array(
         ),
 ));
 
-//■ショップ名
-//●必須チェック
+//■ショップ名 shop name
+//●必須チェック required field
 $form->addRule("form_shop_name", "ショップ名は1文字以上25文字以下です。","required");
 $form->registerRule("no_sp_name", "function", "No_Sp_Name");
 $form->addRule("form_shop_name", "ショップ名に スペースのみの登録はできません。", "no_sp_name");
 
-//■略称
-//●必須チェック
+//■略称 abbreviation
+//●必須チェック required field
 $form->addRule("form_shop_cname", "略称は1文字以上20文字以下です。","required");
 $form->addRule("form_shop_cname", "略称に スペースのみの登録はできません。", "no_sp_name");
 
-//■社名
-//●必須チェック
+//■社名 comopany name
+//●必須チェック required field
 $form->addRule("form_comp_name", "社名は1文字以上25文字以下です。","required");
 
-//■郵便番号
-//●必須チェック
-//●半角数字チェック
-//●文字数チェック
+//■郵便番号 postal code 
+//●必須チェック required field
+//●半角数字チェック half width number check
+//●文字数チェック check number of letters
 $form->addGroupRule('form_post', array(
         'no1' => array(
                 array('郵便番号は半角数字のみ7桁です。', 'required'),
@@ -1413,74 +1413,74 @@ $form->addGroupRule('form_post', array(
         ),
 ));
 
-//■住所１
-//●必須チェック
+//■住所１ address 1
+//●必須チェック required field
 $form->addRule("form_address1", "住所１は1文字以上25文字以下です。","required");
 
-//■地区
-//●必須チェック
+//■地区 map 
+//●必須チェック required field
 $form->addRule("form_area_1", "地区を選択して下さい。","required");
 
 //■TEL
-//●必須チェック
-//●半角数字チェック
+//●必須チェック required field
+//●半角数字チェック half width number check
 $form->addRule("form_tel", "TELは半角数字と｢-｣のみ30桁以内です。", "required");
 $form->addRule("form_tel","TELは半角数字と｢-｣のみ30桁以内です。","telfax");
 
-//■代表者氏名
-//●必須チェック
+//■代表者氏名 representative name
+//●必須チェック required field
 $form->addRule("form_represent_name", "代表者氏名は1文字以上15文字以下です。","required");
 
-//■加盟金
-//●半角数字チェック
+//■加盟金 joining fee
+//●半角数字チェック half width number check
 $form->addRule("form_join_money", "加盟金は半角数字のみです。","regex", "/^[0-9]+$/");
 
-//■保証金
-//●半角数字チェック
+//■保証金 security deposit
+//●半角数字チェック half width number check
 $form->addRule("form_assure_money", "保証金は半角数字のみです。","regex", "/^[0-9]+$/");
 
-//■ロイヤリティ
-//●必須チェック
-//●半角数字チェック
+//■ロイヤリティ royalty
+//●必須チェック required field
+//●半角数字チェック half width number check
 $form->addRule("form_royalty", "ロイヤリティは半角数字のみ1文字以上3文字以下です。","required");
 $form->addRule("form_royalty", "ロイヤリティは半角数字のみ1文字以上3文字以下です。","regex", "/^[0-9]+$/");
 
-//■決算月
-//●半角数字チェック
+//■決算月 cut off month
+//●半角数字チェック half width number check
 $form->addRule("form_accounts_month", "決算月は半角数字のみです。","regex", "/^[0-9]+$/");
 
-//■与信限度
-//●半角数字チェック
+//■与信限度 credit limit
+//●半角数字チェック half width number check
 $form->addRule("form_limit_money", "与信限度は半角数字のみです。","regex", "/^[0-9]+$/");
 
-//■資本金
-//●半角数字チェック
+//■資本金 capital 
+//●半角数字チェック half width number check
 $form->addRule("form_capital_money", "資本金は半角数字のみです。","regex", "/^[0-9]+$/");
 
-//■締日
-//●必須チェック
+//■締日 close day
+//●必須チェック required field
 $form->addRule("form_close_1", "締日を選択してください。","required");
 
-//■取引区分
-//●必須チェック
+//■取引区分 trade classifciation
+//●必須チェック required field
 $form->addRule("trade_aord_1", "得意先用の取引区分を選択してください。","required");
 
-//■取引区分
-//●必須チェック
+//■取引区分 trade classification
+//●必須チェック required field
 $form->addRule("trade_buy_1", "仕入先用の取引区分を選択してください。","required");
 
-//■集金日（月）
-//●必須チェック
-//●半角数字チェック
+//■集金日（月） collection date (month)
+//●必須チェック required field
+//●半角数字チェック half width number check
 $form->addRule("form_pay_month", "集金日（月）を選択して下さい。", "required");
 
-//■集金日（日）
-//●必須チェック
-//●半角数字チェック
+//■集金日（日）collection date (day)
+//●必須チェック required field
+//●半角数字チェック half width number check
 $form->addRule("form_pay_day", "集金日（日）を選択して下さい。", "required");
 
-//■契約年月日
-//●半角数字チェック
+//■契約年月日 contract date
+//●半角数字チェック half width number check
 $form->addGroupRule('form_cont_s_day', array(
         'y' => array(
                 array('契約年月日の日付は妥当ではありません。',"regex", "/^[0-9]+$/")
@@ -1492,12 +1492,12 @@ $form->addGroupRule('form_cont_s_day', array(
                 array('契約年月日の日付は妥当ではありません。',"regex", "/^[0-9]+$/")
         ),
 ));
-//■契約期間
-//●半角数字チェック
+//■契約期間 contract period 
+//●半角数字チェック half width number check
 $form->addRule("form_cont_peri", "契約期間は半角数字のみです。", "regex", "/^[0-9]+$/");
 
-//■契約更新日
-//●半角数字チェック
+//■契約更新日 contract update date
+//●半角数字チェック half width number check
 $form->addGroupRule('form_cont_r_day', array(
         'y' => array(
                 array('契約更新日の日付は妥当ではありません。',"regex", "/^[0-9]+$/")
@@ -1510,8 +1510,8 @@ $form->addGroupRule('form_cont_r_day', array(
         ),
 ));
 
-//■創業日
-//●半角数字チェック
+//■創業日 establishment date
+//●半角数字チェック half width number check
 $form->addGroupRule('form_establish_day', array(
         'y' => array(
                 array('創業日の日付は妥当ではありません。',"regex", "/^[0-9]+$/")
@@ -1524,8 +1524,8 @@ $form->addGroupRule('form_establish_day', array(
         ),
 ));
 
-//■法人登記日
-//●半角数字チェック
+//■法人登記日 registration date
+//●半角数字チェック half width number check
 $form->addGroupRule('form_corpo_day', array(
         'y' => array(
                 array('法人登記日の日付は妥当ではありません。',"regex", "/^[0-9]+$/")
@@ -1538,163 +1538,163 @@ $form->addGroupRule('form_corpo_day', array(
         ),
 ));
 
-//■納品書コメント
-//●文字数チェック
+//■納品書コメント delivery note comment
+//●文字数チェック number of letters check
 $form->addRule("form_deli_comment", "納品書コメントは50文字以内です。", "mb_maxlength",'50');
 
-//■集金日（月）
-//●必須チェック
-//●半角数字チェック
+//■集金日（月） collection date (month)
+//●必須チェック required fiedl
+//●半角数字チェック half width number check
 $form->addRule("form_payout_month", "支払日（月）を選択して下さい。", "required");
 
-//■集金日（日）
-//●必須チェック
-//●半角数字チェック
+//■集金日（日） collection date (day)
+//●必須チェック required field 
+//●半角数字チェック half width number check
 $form->addRule("form_payout_day", "支払日（日）を選択して下さい。", "required");
 /***************************/
-//ルール作成（PHP）
+//ルール作成（PHP） create rules PHP
 /***************************/
 if($_POST["button"]["entry_button"] == "登　録"){
 
     /****************************/
-    //POST取得
+    //POST取得 acquire POST
     /****************************/
-    $rank_cd             = $_POST["form_rank"];                //顧客区分コード
-    $form_state          = $_POST["form_state"];               //状態
-    $shop_cd1            = $_POST["form_shop_cd"]["cd1"];      //ショップコード1
-    $shop_cd2            = $_POST["form_shop_cd"]["cd2"];      //ショップコード2
-    $shop_name           = $_POST["form_shop_name"];           //ショップ名
-    $shop_name_read      = $_POST["form_shop_read"];           //ショップ名(フリガナ)
-    $shop_cname          = $_POST["form_shop_cname"];          //略称
-    $comp_name           = $_POST["form_comp_name"];           //社名
-    $comp_name_read      = $_POST["form_comp_read"];           //社名(フリガナ)
-    $comp_name2          = $_POST["form_comp_name2"];          //社名
-    $comp_name_read2     = $_POST["form_comp_read2"];          //社名(フリガナ)
-    $post_no1            = $_POST["form_post"]["no1"];         //郵便番号
-    $post_no2            = $_POST["form_post"]["no2"];         //郵便番号
-    $address1            = $_POST["form_address1"];            //住所1
-    $address2            = $_POST["form_address2"];            //住所2
-    $address3            = $_POST["form_address3"];            //住所2
-    $address_read        = $_POST["form_address_read"];        //住所(フリガナ)
-    $area_id             = $_POST["form_area_1"];              //地区
-    $tel                 = $_POST["form_tel"];                 //TEL
+    $rank_cd             = $_POST["form_rank"];                //顧客区分コード customer classification code
+    $form_state          = $_POST["form_state"];               //状態 status 
+    $shop_cd1            = $_POST["form_shop_cd"]["cd1"];      //ショップコード1 shop code 1
+    $shop_cd2            = $_POST["form_shop_cd"]["cd2"];      //ショップコード2 shop code 2
+    $shop_name           = $_POST["form_shop_name"];           //ショップ名 shop name
+    $shop_name_read      = $_POST["form_shop_read"];           //ショップ名(フリガナ) shop name (katakana)
+    $shop_cname          = $_POST["form_shop_cname"];          //略称 abbreviation
+    $comp_name           = $_POST["form_comp_name"];           //社名 company name
+    $comp_name_read      = $_POST["form_comp_read"];           //社名(フリガナ) company name (katkana)
+    $comp_name2          = $_POST["form_comp_name2"];          //社名 company name
+    $comp_name_read2     = $_POST["form_comp_read2"];          //社名(フリガナ) company name (katkana)
+    $post_no1            = $_POST["form_post"]["no1"];         //郵便番号 psotal code
+    $post_no2            = $_POST["form_post"]["no2"];         //郵便番号 postal code
+    $address1            = $_POST["form_address1"];            //住所1 address 1
+    $address2            = $_POST["form_address2"];            //住所2 address 2
+    $address3            = $_POST["form_address3"];            //住所2 address 2
+    $address_read        = $_POST["form_address_read"];        //住所(フリガナ) address (kataakna)
+    $area_id             = $_POST["form_area_1"];              //地区 district
+    $tel                 = $_POST["form_tel"];                 //TEL 
     $fax                 = $_POST["form_fax"];                 //FAX
     $url                 = $_POST["form_url"];                 //URL
-    $claim_cd1           = $_POST["form_claim"]["cd1"];        //請求先コード1
-    $claim_cd2           = $_POST["form_claim"]["cd2"];        //請求先コード2
-    $claim_name          = $_POST["form_claim"]["name"];       //請求先名
-    $sv                  = $_POST["form_staff_1"];             //SV
-    $staff1              = $_POST["form_staff_2"];             //担当１
-    $staff2              = $_POST["form_staff_3"];             //担当２
-    $staff3              = $_POST["form_staff_4"];             //担当３
-    $staff4              = $_POST["form_staff_5"];             //担当４
-    $represent_name      = $_POST["form_represent_name"];      //代表者氏名
-    $represent_position  = $_POST["form_represent_position"];  //代表者役職
-    $represent_cell      = $_POST["form_represent_cell"];      //代表者携帯
-    $contact_name        = $_POST["form_contact_name"];        //連絡担当者氏名
-    $contact_position    = $_POST["form_contact_position"];    //連絡担当者役職
-    $contact_cell        = $_POST["form_contact_cell"];        //連絡担当者携帯
-    $guarantor1          = $_POST["form_guarantor1"];          //保証人１
-    $guarantor1_address  = $_POST["form_guarantor1_address"];  //保証人１住所
-    $guarantor2          = $_POST["form_guarantor2"];          //保証人２
-    $guarantor2_address  = $_POST["form_guarantor2_address"];  //保証人２住所
-    $position            = $_POST["form_position"];            //営業拠点
-    $holiday             = $_POST["form_holiday"];             //休日
-    $business_limit      = $_POST["form_business_limit"];      //商圏
-    $join_money          = $_POST["form_join_money"];          //加盟金
-    $assure_money        = $_POST["form_assure_money"];        //保証金
-    $royalty             = $_POST["form_royalty"];             //ロイヤリティ
-    $accounts_month      = $_POST["form_accounts_month"];      //決算月
-    $collect_terms       = $_POST["form_collect_terms"];       //回収条件
-    $limit_money         = $_POST["form_limit_money"];         //与信限度
-    $capital_money       = $_POST["form_capital_money"];       //資本金
-    $aord_div            = $_POST["trade_aord_1"];             //得意先用取引区分
-    $buy_div             = $_POST["trade_buy_1"];              //仕入先用取引区分
-    $close_day           = $_POST["form_close_1"];             //締日
-    $pay_month           = $_POST["form_pay_month"];           //集金日(月)
-    $pay_day             = $_POST["form_pay_day"];             //集金日(日)
-    $pay_way             = $_POST["form_pay_way"];             //集金方法
-    $transfer_name       = $_POST["form_transfer_name"];       //振込名義
-    $account_name        = $_POST["form_account_name"];        //口座名義
-    $bank                = $_POST["form_bank_1"][2];              //振込銀行
-    $contract_name       = $_POST["form_contract_name"];       //契約会社名
-    $represent_contract  = $_POST["form_represent_contract"];  //契約代表名
-    $cont_s_day          = $_POST["form_cont_s_day"]["y"];     //契約年月日(年)
+    $claim_cd1           = $_POST["form_claim"]["cd1"];        //請求先コード1 billing code 1
+    $claim_cd2           = $_POST["form_claim"]["cd2"];        //請求先コード2 billing code 2
+    $claim_name          = $_POST["form_claim"]["name"];       //請求先名 billing name
+    $sv                  = $_POST["form_staff_1"];             //SV 
+    $staff1              = $_POST["form_staff_2"];             //担当１ staff
+    $staff2              = $_POST["form_staff_3"];             //担当２ staff
+    $staff3              = $_POST["form_staff_4"];             //担当３ staff
+    $staff4              = $_POST["form_staff_5"];             //担当４ staff
+    $represent_name      = $_POST["form_represent_name"];      //代表者氏名 representative name
+    $represent_position  = $_POST["form_represent_position"];  //代表者役職 representative position
+    $represent_cell      = $_POST["form_represent_cell"];      //代表者携帯 representative tel
+    $contact_name        = $_POST["form_contact_name"];        //連絡担当者氏名 contact in person name
+    $contact_position    = $_POST["form_contact_position"];    //連絡担当者役職 contact in person position
+    $contact_cell        = $_POST["form_contact_cell"];        //連絡担当者携帯 contact in person TEL
+    $guarantor1          = $_POST["form_guarantor1"];          //保証人１ guarantor 1
+    $guarantor1_address  = $_POST["form_guarantor1_address"];  //保証人１住所 guarantor 1 address
+    $guarantor2          = $_POST["form_guarantor2"];          //保証人２ guarantor 2
+    $guarantor2_address  = $_POST["form_guarantor2_address"];  //保証人２住所 guarantor 2 address
+    $position            = $_POST["form_position"];            //営業拠点 base where sale is conducted
+    $holiday             = $_POST["form_holiday"];             //休日 holdiay
+    $business_limit      = $_POST["form_business_limit"];      //商圏 trade area
+    $join_money          = $_POST["form_join_money"];          //加盟金 joining fee
+    $assure_money        = $_POST["form_assure_money"];        //保証金 security deposit
+    $royalty             = $_POST["form_royalty"];             //ロイヤリティ royalty
+    $accounts_month      = $_POST["form_accounts_month"];      //決算月 cutoff month for accounting
+    $collect_terms       = $_POST["form_collect_terms"];       //回収条件 collection terms
+    $limit_money         = $_POST["form_limit_money"];         //与信限度 credit limit
+    $capital_money       = $_POST["form_capital_money"];       //資本金 capital
+    $aord_div            = $_POST["trade_aord_1"];             //得意先用取引区分 for customer trade classification
+    $buy_div             = $_POST["trade_buy_1"];              //仕入先用取引区分 supplier trade classification
+    $close_day           = $_POST["form_close_1"];             //締日 close day
+    $pay_month           = $_POST["form_pay_month"];           //集金日(月) collection date (month)
+    $pay_day             = $_POST["form_pay_day"];             //集金日(日) collection date (day)
+    $pay_way             = $_POST["form_pay_way"];             //集金方法 collection method
+    $transfer_name       = $_POST["form_transfer_name"];       //振込名義 deposit name 
+    $account_name        = $_POST["form_account_name"];        //口座名義 account name
+    $bank                = $_POST["form_bank_1"][2];              //振込銀行 desposit bank
+    $contract_name       = $_POST["form_contract_name"];       //契約会社名 contract company name
+    $represent_contract  = $_POST["form_represent_contract"];  //契約代表名 contract representative name
+    $cont_s_day          = $_POST["form_cont_s_day"]["y"];     //契約年月日(年) contract start date (year)
     $cont_s_day         .= "-";
-    $cont_s_day         .= $_POST["form_cont_s_day"]["m"];     //契約年月日(月)
+    $cont_s_day         .= $_POST["form_cont_s_day"]["m"];     //契約年月日(月) contract start date (month)
     $cont_s_day         .= "-";
-    $cont_s_day         .= $_POST["form_cont_s_day"]["d"];     //契約年月日(日)
-    $cont_e_day          = $_POST["form_cont_e_day"]["y"];     //契約終了日(年)
+    $cont_s_day         .= $_POST["form_cont_s_day"]["d"];     //契約年月日(日) contract start date (day)
+    $cont_e_day          = $_POST["form_cont_e_day"]["y"];     //契約終了日(年) contract end day (year)
     $cont_e_day         .= "-";
-    $cont_e_day         .= $_POST["form_cont_e_day"]["m"];     //契約終了日(月)
+    $cont_e_day         .= $_POST["form_cont_e_day"]["m"];     //契約終了日(月) contract end day (month)
     $cont_e_day         .= "-";
-    $cont_e_day         .= $_POST["form_cont_e_day"]["d"];     //契約終了日(日)
-    $cont_peri           = $_POST["form_cont_peri"];           //契約期間
-    $cont_r_day          = $_POST["form_cont_r_day"]["y"];     //契約更新日(年)
+    $cont_e_day         .= $_POST["form_cont_e_day"]["d"];     //契約終了日(日) contract end day (day)
+    $cont_peri           = $_POST["form_cont_peri"];           //契約期間 contract period
+    $cont_r_day          = $_POST["form_cont_r_day"]["y"];     //契約更新日(年) contract update date (year)
     $cont_r_day         .= "-";
-    $cont_r_day         .= $_POST["form_cont_r_day"]["m"];     //契約更新日(月)
+    $cont_r_day         .= $_POST["form_cont_r_day"]["m"];     //契約更新日(月) contract update date (month)
     $cont_r_day         .= "-";
-    $cont_r_day         .= $_POST["form_cont_r_day"]["d"];     //契約更新日(日)
-    $establish_day       = $_POST["form_establish_day"]["y"];  //創業日(年)
+    $cont_r_day         .= $_POST["form_cont_r_day"]["d"];     //契約更新日(日) contract update date (day)
+    $establish_day       = $_POST["form_establish_day"]["y"];  //創業日(年) establishment date (year)
     $establish_day      .= "-";
-    $establish_day      .= $_POST["form_establish_day"]["m"];  //創業日(月)
+    $establish_day      .= $_POST["form_establish_day"]["m"];  //創業日(月) establishment date (month)
     $establish_day      .= "-";
-    $establish_day      .= $_POST["form_establish_day"]["d"];  //創業日(日)
-    $corpo_day           = $_POST["form_corpo_day"]["y"];      //法人登記日(年)
+    $establish_day      .= $_POST["form_establish_day"]["d"];  //創業日(日) establishment date (day)
+    $corpo_day           = $_POST["form_corpo_day"]["y"];      //法人登記日(年) registration date (year)
     $corpo_day          .= "-";
-    $corpo_day          .= $_POST["form_corpo_day"]["m"];      //法人登記日(月)
+    $corpo_day          .= $_POST["form_corpo_day"]["m"];      //法人登記日(月) registration date (month)
     $corpo_day          .= "-";
-    $corpo_day          .= $_POST["form_corpo_day"]["d"];      //法人登記日(日)
-    $slip_issue          = $_POST["form_slip_issue"];          //伝票発行
-    $deli_comment        = $_POST["form_deli_comment"];        //納品書コメント
-    $claim_issue         = $_POST["form_claim_issue"];         //請求書発行
-    $coax                = $_POST["form_coax"];                //まるめ区分
-    $tax_div             = $_POST["form_tax_div"];             //課税区分
-    $tax_unit            = $_POST["form_tax_unit"];            //課税単位
-    $fraction_div        = $_POST["from_fraction_div"];        //端数区分
-    $qualify_pride       = $_POST["form_qualify_pride"];       //取得資格・得意分野 
-    $special_contract    = $_POST["form_special_contract"];    //特約
-    $other               = $_POST["form_other"];               //その他
-    $btype               = $_POST["form_btype"];               //業種
-    $inst                = $_POST["form_inst"];                //施設
-    $bstruct             = $_POST["form_bstruct"];             //業態
-    $accountant_name     = $_POST["form_accountant_name"];     //会計担当者氏名
-    $cname_read          = $_POST["form_cname_read"];          //略称(フリガナ)
+    $corpo_day          .= $_POST["form_corpo_day"]["d"];      //法人登記日(日) registration date (day)
+    $slip_issue          = $_POST["form_slip_issue"];          //伝票発行 issue slip
+    $deli_comment        = $_POST["form_deli_comment"];        //納品書コメント delivery note comment
+    $claim_issue         = $_POST["form_claim_issue"];         //請求書発行 issue billing statement
+    $coax                = $_POST["form_coax"];                //まるめ区分 round up/down
+    $tax_div             = $_POST["form_tax_div"];             //課税区分 tax classification
+    $tax_unit            = $_POST["form_tax_unit"];            //課税単位 tax unit
+    $fraction_div        = $_POST["from_fraction_div"];        //端数区分 round up/off
+    $qualify_pride       = $_POST["form_qualify_pride"];       //取得資格・得意分野 acquired license/field of expertise
+    $special_contract    = $_POST["form_special_contract"];    //特約 special clause
+    $other               = $_POST["form_other"];               //その他 others
+    $btype               = $_POST["form_btype"];               //業種 industry type
+    $inst                = $_POST["form_inst"];                //施設 facility
+    $bstruct             = $_POST["form_bstruct"];             //業態 business type
+    $accountant_name     = $_POST["form_accountant_name"];     //会計担当者氏名 accounting reprsentative name
+    $cname_read          = $_POST["form_cname_read"];          //略称(フリガナ) abbreviation (katakana)
     $email               = $_POST["form_email"];               //Email
-    $direct_tel          = $_POST["form_direct_tel"];          //直通TEL
-    $record              = $_POST["form_record"];              //取引履歴
-    $important           = $_POST["form_important"];           //重要事項
-    $deliver_effect      = $_POST["form_deliver_radio"];       //納品書コメント(効果)
-    $claim_send          = $_POST["form_claim_send"];          //請求書送付
-    $accounts_day       .= $_POST["form_accounts_day"];        //決算日(日)
-    $account_tel         = $_POST["form_account_tel"];         //会計ご担当者携帯
-    $prefix              = $_POST["form_prefix"];              //敬称
-    $claim_pattern       = $_POST["claim_pattern"];            //請求書様式
-    $c_tax_div           = $_POST["form_c_tax_div"];           //課税区分
+    $direct_tel          = $_POST["form_direct_tel"];          //直通TEL direct TEL
+    $record              = $_POST["form_record"];              //取引履歴 trade history
+    $important           = $_POST["form_important"];           //重要事項  important items 
+    $deliver_effect      = $_POST["form_deliver_radio"];       //納品書コメント(効果) delivery note comment (effect)
+    $claim_send          = $_POST["form_claim_send"];          //請求書送付 billing statement send 
+    $accounts_day       .= $_POST["form_accounts_day"];        //決算日(日)  cutoff day (day)
+    $account_tel         = $_POST["form_account_tel"];         //会計ご担当者携帯 accounting staff TEL
+    $prefix              = $_POST["form_prefix"];              //敬称 compellation
+    $claim_pattern       = $_POST["claim_pattern"];            //請求書様式 billing format
+    $c_tax_div           = $_POST["form_c_tax_div"];           //課税区分 tax classification
 
-    //仕入先としての情報を抽出
-    $bank_name           = $_POST["form_bank_name"];            //振込口座名
-    $b_bank_name         = $_POST["form_b_bank_name"];          //振込口座名略称
-    $payout_m            = $_POST["form_payout_month"];            //支払日
-    $payout_d            = $_POST["form_payout_day"];             //支払日
+    //仕入先としての情報を抽出 extract the information as a supplier
+    $bank_name           = $_POST["form_bank_name"];            //振込口座名 deposit account name
+    $b_bank_name         = $_POST["form_b_bank_name"];          //振込口座名略称 deposit account abbreviation
+    $payout_m            = $_POST["form_payout_month"];            //支払日 payment date
+    $payout_d            = $_POST["form_payout_day"];             //支払日 payment date
 
     #2010-04-30 hashimoto-y
-    $bill_address_font      = ($_POST["form_bill_address_font"] == '1')? 't' : 'f'; //請求先フォント
+    $bill_address_font      = ($_POST["form_bill_address_font"] == '1')? 't' : 'f'; //請求先フォント billign font
 
     /***************************/
-    //０埋め
+    //０埋め fill with 0s 
     /***************************/
-    //得意先コード１
+    //得意先コード１ customer code 1
     $shop_cd1 = str_pad($shop_cd1, 6, 0, STR_POS_LEFT);
 
-    //得意先コード２
+    //得意先コード２ customer code 2
     $shop_cd2 = str_pad($shop_cd2, 4, 0, STR_POS_LEFT);
 
 
 /***************************/
-//ルール作成（PHP）
+//ルール作成（PHP） create rules
 /***************************/
-    //ショップコード
+    //ショップコード shop code
     if($shop_cd1 != null && $shop_cd2 != null){
         if($fc_data[3] != $shop_cd1 || $fc_data[4] != $shop_cd2){
             $shop_cd_sql  = "SELECT";
@@ -1725,29 +1725,29 @@ if($_POST["button"]["entry_button"] == "登　録"){
     }
 
     //■URL
-    //●入力チェック
+    //●入力チェック check input
     if (!preg_match('/^(https?|ftp)(:\/\/[-_.!~*\'()a-zA-Z0-9;\/?:\@&=+\$,%#]+)$/', $url) && $url != null) {
         $url_err = "正しいURLを入力して下さい。";
         $err_flg = true;
     }
 
-    //■直通TEL
-    //●半角数字と「-」以外はエラー
+    //■直通TEL direct TEL
+    //●半角数字と「-」以外はエラー error if anything other than half width number and - was inputted
     $form->addRule("form_direct_tel","直通TELは半角数字と｢-｣のみ30桁以内です。","telfax");
 
-    //■会計ご担当携帯
-    //●半角数字と「-」以外はエラー
+    //■会計ご担当携帯 accounting staff TEL
+    //●半角数字と「-」以外はエラー error if anything other than half width number and - was inputted
     $form->addRule("form_account_tel","会計ご担当者携帯は半角数字と｢-｣のみ30桁以内です。","telfax");
 
-    //■代表者携帯
-    //●半角数字と「-」以外はエラー
+    //■代表者携帯 representative TEL
+    //●半角数字と「-」以外はエラー error if anything other than half width number and - was inputted
     $form->addRule("form_represent_cell","代表者携帯は半角数字と｢-｣のみ30桁以内です。","telfax");
 
-    //■連絡担当者携帯
-    //●半角数字と「-」以外はエラー
+    //■連絡担当者携帯 contact staff TEL
+    //●半角数字と「-」以外はエラー error if anything other than half width number and - was inputted
     $form->addRule("form_contact_cell","連絡担当者携帯は半角数字と｢-｣のみ30桁以内です。","telfax");
 
-    //■集金日
+    //■集金日 collection date
     if($aord_div == '61' && ($close_day != $pay_day || $pay_month != '0')){
         $close_day_err = "取引区分に現金を指定した場合の集金日は当月の締日にして下さい。";
         $err_flg = true;
@@ -1756,7 +1756,7 @@ if($_POST["button"]["entry_button"] == "登　録"){
         $err_flg = true;
     }
 
-    //■支払日
+    //■支払日 payment date
     if($buy_div == '71' && ($close_day != $payout_d || $payout_m != '0')){
         $close_outday_err = "取引区分に現金を指定した場合の支払日は当月の締日にして下さい。";
         $err_flg = true;
@@ -1765,7 +1765,7 @@ if($_POST["button"]["entry_button"] == "登　録"){
         $err_flg = true;
     }
     
-    //■請求先
+    //■請求先 billing client
     //●入力チェック
     if($shop_cd1 == $claim_cd1 && $shop_cd2 == $claim_cd2){
         $claim_flg = true;
