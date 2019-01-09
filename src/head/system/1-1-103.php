@@ -1766,7 +1766,7 @@ if($_POST["button"]["entry_button"] == "登　録"){
     }
     
     //■請求先 billing client
-    //●入力チェック
+    //●入力チェック check validity
     if($shop_cd1 == $claim_cd1 && $shop_cd2 == $claim_cd2){
         $claim_flg = true;
     }elseif($claim_cd1 == null && $claim_cd2 == null && $claim_name == null){
@@ -1775,7 +1775,7 @@ if($_POST["button"]["entry_button"] == "登　録"){
         $claim_err = "正しい請求先コードを入力して下さい。";
         $err_flg = true;
 
-    // 正しい請求先が入力された場合
+    // 正しい請求先が入力された場合 if the right billling address is inputted
     }elseif($claim_cd1 != null && $claim_cd2 != null && $claim_name != null){
         $sql  = "SELECT";
         $sql .= "   close_day,";
@@ -1799,17 +1799,17 @@ if($_POST["button"]["entry_button"] == "登　録"){
 
         $result = Db_Query($conn ,$sql); 
         $claim_data = @pg_fetch_array($result ,0 );
-        $claim_close_day  = $claim_data["close_day"];    //締め日
-        $claim_coax       = $claim_data["coax"];         //丸め区分
-        $claim_tax_div    = $claim_data["tax_div"];      //課税単位
-        $claim_tax_franct = $claim_data["tax_franct"];   //端数区分 
-        $claim_c_tax_div  = $claim_data["c_tax_div"];    //課税区分
-        $claim_pay_m      = $claim_data["pay_m"];        //集金日（月）
-        $claim_pay_d      = $claim_data["pay_d"];        //集金日（日）
+        $claim_close_day  = $claim_data["close_day"];    //締め日 close day
+        $claim_coax       = $claim_data["coax"];         //丸め区分 round up/down
+        $claim_tax_div    = $claim_data["tax_div"];      //課税単位 tax unit
+        $claim_tax_franct = $claim_data["tax_franct"];   //端数区分  round up/down
+        $claim_c_tax_div  = $claim_data["c_tax_div"];    //課税区分 tax classification
+        $claim_pay_m      = $claim_data["pay_m"];        //集金日（月） collection date (month)
+        $claim_pay_d      = $claim_data["pay_d"];        //集金日（日） collection date (day)
 
-        //請求先の締め日と同じではない場合処理開始
+        //請求先の締め日と同じではない場合処理開始 start the process if the billing address' close day is not the same
         if($close_day != $claim_close_day){
-            // 月末判定
+            // 月末判定 determine if its the end of the month
             if($claim_close_day == "29"){
                 $claim_close_day_err = "締日は請求先と同じ 月末 を選択して下さい。";
             }else{  
@@ -1820,10 +1820,10 @@ if($_POST["button"]["entry_button"] == "登　録"){
             $claim_flg = true; 
         }       
 
-        //請求先の丸め区分と同じではない場合処理開始
+        //請求先の丸め区分と同じではない場合処理開始 start the process if the round up/down is not the same with the billing address
         if($coax != $claim_coax){
 
-            //エラーメッセージに表示するため丸め区分を置換
+            //エラーメッセージに表示するため丸め区分を置換 replace the round up/down to display the error message 
             if($claim_coax == "1"){
                 $claim_coax = "切捨"; 
             }elseif($claim_coax == "2"){
@@ -1836,9 +1836,9 @@ if($_POST["button"]["entry_button"] == "登　録"){
             $err_flg = true;
         }
 
-        //請求先の課税単位と同じではない場合処理開始
+        //請求先の課税単位と同じではない場合処理開始 start the process if the tax unit of the billing address is not the same
         if($tax_unit != $claim_tax_div){
-            //エラーメッセージに表示するため課税単位を置換
+            //エラーメッセージに表示するため課税単位を置換 replace the tax unit to display the error message
             if($claim_tax_div == '2'){
                 $claim_tax_div = "伝票単位";
             }elseif($claim_tax_div == '1'){
@@ -1849,10 +1849,10 @@ if($_POST["button"]["entry_button"] == "登　録"){
             $err_flg = true;
         }
 
-        //請求先の端数区分と同じではない場合処理開始
+        //請求先の端数区分と同じではない場合処理開始 start the process if the round up/down of the billing address is not the same 
         if($fraction_div != $claim_tax_franct){
 
-            //エラーメッセージに表示するため端数区分を置換
+            //エラーメッセージに表示するため端数区分を置換 replace the round up/down to display the error message
             if($claim_tax_franct == '1'){
                 $claim_tax_franct = "切捨";
             }elseif($claim_tax_franct == '2'){
@@ -1865,10 +1865,10 @@ if($_POST["button"]["entry_button"] == "登　録"){
             $err_flg = true;
         }
 
-        //請求先の課税区分と同じではない場合処理開始
+        //請求先の課税区分と同じではない場合処理開始 start the process if the tax classification of the billing address is not the same
         if($c_tax_div != $claim_c_tax_div){
 
-            //エラーメッセージに表示するため課税区分を置換
+            //エラーメッセージに表示するため課税区分を置換 replace the tax classification to display the error message
             if($claim_c_tax_div == '1'){
                 $claim_c_tax_div = "外税";
             #2005-12-25 aoyama-n
@@ -1882,10 +1882,10 @@ if($_POST["button"]["entry_button"] == "登　録"){
             $claim_c_tax_div_err = "課税区分は請求先と同じ ".$claim_c_tax_div." を選択して下さい。";
             $err_flg = true;
         }
-        //請求先の集金日（月）と同じではない場合処理開始
+        //請求先の集金日（月）と同じではない場合処理開始 start the process if the collection date (month) ion of the billing address is not the same
         if($pay_m != $claim_pay_m){
 
-            //エラーメッセージに表示するため集金日（月）を置換
+            //エラーメッセージに表示するため集金日（月）を置換 replace the collection date (month) to display the error message
             if($claim_pay_m == '0'){
                 $claim_pay_m = "当月";
             }elseif($claim_pay_m == '1'){
@@ -1898,8 +1898,8 @@ if($_POST["button"]["entry_button"] == "登　録"){
         }
     }
 
-    //■契約年月日・契約更新日
-    //●日付の妥当性チェック
+    //■契約年月日・契約更新日 contract start date/contract update date
+    //●日付の妥当性チェック check the date's validty
     $sday_y = (int)$_POST["form_cont_s_day"]["y"];
     $sday_m = (int)$_POST["form_cont_s_day"]["m"];
     $sday_d = (int)$_POST["form_cont_s_day"]["d"];
@@ -1913,7 +1913,7 @@ if($_POST["button"]["entry_button"] == "登　録"){
     $cday_m = (int)$_POST["form_corpo_day"]["m"];
     $cday_d = (int)$_POST["form_corpo_day"]["d"];
 
-    //契約年月日
+    //契約年月日 contract start date
     if($sday_m != null || $sday_d != null || $sday_y != null){
         $sday_flg = true;
     }
@@ -1923,7 +1923,7 @@ if($_POST["button"]["entry_button"] == "登　録"){
         $err_flg = true;
     }
 
-    //契約更新日
+    //契約更新日 contract update date
     if($rday_m != null || $rday_d != null || $rday_y != null){
         $rday_flg = true;
     }
@@ -1933,13 +1933,13 @@ if($_POST["button"]["entry_button"] == "登　録"){
         $err_flg = true;
     }
 
-    //●契約更新日が契約年月日よりも前でないかチェック
+    //●契約更新日が契約年月日よりも前でないかチェック check if the contract update date is not before the contract start date
     if($cont_s_day >= $cont_r_day && $cont_s_day != '--' && $cont_r_day != '--'){
         $sday_rday_err = "契約更新日の日付は妥当ではありません。";
         $err_flg = true;
     }
 
-    //創業日
+    //創業日 establishment date
     if($eday_m != null || $eday_d != null || $eday_y != null){
         $eday_flg = true;
     }
@@ -1949,7 +1949,7 @@ if($_POST["button"]["entry_button"] == "登　録"){
         $err_flg = true;
     }
 
-    //法人登記日
+    //法人登記日 registration date
     if($cday_m != null || $cday_d != null || $cday_y != null){
         $cday_flg = true;
     }
@@ -1960,8 +1960,8 @@ if($_POST["button"]["entry_button"] == "登　録"){
     }
 
     #2010-05-01 hashimoto-y
-    //請求先フォントサイズを大にチェックを入れ以下の条件を超えてないかチェック
-    //住所１＝20 , 住所２＝20 , 住所３＝28 , 社名１＝20 , 社名２＝20
+    //請求先フォントサイズを大にチェックを入れ以下の条件を超えてないかチェック check if the billing address font size (large) is being chose and if the following condition is not being surpassed
+    //住所１＝20 , 住所２＝20 , 住所３＝28 , 社名１＝20 , 社名２＝20 address1=20 address2=20 address4=28 company name1=20 company name2=20
     if($bill_address_font == 't'){
         if( mb_strlen($address1) > 18 ){
             $address1_err = "請求書の宛先とラベルのフォントサイズを大きくする場合、住所１は１８文字以下です。";
@@ -1993,149 +1993,149 @@ if($_POST["button"]["entry_button"] == "登　録"){
 
 if($_POST["button"]["entry_button"] == "登　録" && $form->validate() && $err_flg != true ){
     /******************************/
-    //登録処理
+    //登録処理 registration process
     /******************************/
     Db_Query($conn, "BEGIN;");
     if($new_flg == true){
-        //取引先マスタ
+        //取引先マスタ trade partner master
         $insert_sql  = " INSERT INTO t_client (";
-        $insert_sql .= "    rank_cd,";                          //顧客区分
-        $insert_sql .= "    client_id,";                        //得意先ID
-        $insert_sql .= "    shop_id,";                          //ショップID
-        $insert_sql .= "    create_day,";                       //作成日
-        $insert_sql .= "    client_cd1,";                       //得意先コード
-        $insert_sql .= "    client_cd2,";                       //支店コード
-        $insert_sql .= "    state,";                            //状態
-        $insert_sql .= "    client_name,";                      //得意先名
-        $insert_sql .= "    client_read,";                      //得意先名（フリガナ）
-        $insert_sql .= "    client_cname,";                     //略称
-        $insert_sql .= "    post_no1,";                         //郵便番号１
-        $insert_sql .= "    post_no2,";                         //郵便番号２
-        $insert_sql .= "    address1,";                         //住所１
-        $insert_sql .= "    address2,";                         //住所２
-        $insert_sql .= "    address3,";                         //住所３
-        $insert_sql .= "    address_read,";                     //住所（フリガナ）
-        $insert_sql .= "    area_id,";                          //地区ID
-        $insert_sql .= "    tel,";                              //tel
+        $insert_sql .= "    rank_cd,";                          //顧客区分 customer classification
+        $insert_sql .= "    client_id,";                        //得意先ID customer ID
+        $insert_sql .= "    shop_id,";                          //ショップID shop ID
+        $insert_sql .= "    create_day,";                       //作成日 creation date
+        $insert_sql .= "    client_cd1,";                       //得意先コード customer code
+        $insert_sql .= "    client_cd2,";                       //支店コード branch code
+        $insert_sql .= "    state,";                            //状態 status
+        $insert_sql .= "    client_name,";                      //得意先名 custoemr name
+        $insert_sql .= "    client_read,";                      //得意先名（フリガナ） customer name (katkaan)
+        $insert_sql .= "    client_cname,";                     //略称 abbreviation
+        $insert_sql .= "    post_no1,";                         //郵便番号１ postal code1
+        $insert_sql .= "    post_no2,";                         //郵便番号２ postal code2
+        $insert_sql .= "    address1,";                         //住所１ address1
+        $insert_sql .= "    address2,";                         //住所２ address2
+        $insert_sql .= "    address3,";                         //住所３ address3
+        $insert_sql .= "    address_read,";                     //住所（フリガナ）address (katakana)
+        $insert_sql .= "    area_id,";                          //地区ID district Id
+        $insert_sql .= "    tel,";                              //tel 
         $insert_sql .= "    fax,";                              //fax
-        $insert_sql .= "    rep_name,";                         //代表者名
-        $insert_sql .= "    sv_staff_id,";                      //SV
-        $insert_sql .= "    b_staff_id1,";                      //担当１
-        $insert_sql .= "    b_staff_id2,";                      //担当２
-        $insert_sql .= "    b_staff_id3,";                      //担当３
-        $insert_sql .= "    b_staff_id4,";                      //担当４
-        $insert_sql .= "    charger_name,";                     //ご担当者１
-        $insert_sql .= "    holiday,";                          //休日
-        $insert_sql .= "    col_terms,";                        //回収条件
-        $insert_sql .= "    credit_limit,";                     //与信限度
-        $insert_sql .= "    capital,";                          //資本金
-        $insert_sql .= "    trade_id,";                         //取引区分（得意先用）
-        $insert_sql .= "    buy_trade_id,";                     //取引区分（仕入先用）
-        $insert_sql .= "    close_day,";                        //締日
-        $insert_sql .= "    pay_m,";                            //集金日（月）
-        $insert_sql .= "    pay_d,";                            //集金日（日）
-        $insert_sql .= "    pay_way,";                          //集金方法
-        $insert_sql .= "    account_name,";                     //口座名義
-        $insert_sql .= "    pay_name,";                         //振込名義
-        $insert_sql .= "    account_id,";                          //口座ID
-        $insert_sql .= "    cont_sday,";                        //契約開始日
-        $insert_sql .= "    cont_eday,";                        //契約終了日
-        $insert_sql .= "    cont_peri,";                        //契約期間
-        $insert_sql .= "    cont_rday,";                        //契約更新日
-        $insert_sql .= "    slip_out,";                         //伝票出力
-        $insert_sql .= "    deliver_note,";                     //納品書コメント
-        $insert_sql .= "    claim_out,";                        //請求書出力
-        $insert_sql .= "    coax,";                             //金額：丸め区分
-        $insert_sql .= "    tax_div,";                          //消費税：課税単位
-        $insert_sql .= "    tax_franct,";                       //消費税：端数区分
-        $insert_sql .= "    client_div,";                       //得意先区分
-        $insert_sql .= "    shop_name,";                        //社名
-        $insert_sql .= "    shop_read,";                        //社名(フリガナ)
-        $insert_sql .= "    shop_name2,";                       //社名2
-        $insert_sql .= "    shop_read2,";                       //社名2(フリガナ)
+        $insert_sql .= "    rep_name,";                         //代表者名 rep name
+        $insert_sql .= "    sv_staff_id,";                      //SV 
+        $insert_sql .= "    b_staff_id1,";                      //担当１ staff1
+        $insert_sql .= "    b_staff_id2,";                      //担当２ staff2
+        $insert_sql .= "    b_staff_id3,";                      //担当３ staff3
+        $insert_sql .= "    b_staff_id4,";                      //担当４ staff4
+        $insert_sql .= "    charger_name,";                     //ご担当者１ staff1
+        $insert_sql .= "    holiday,";                          //休日 holiday
+        $insert_sql .= "    col_terms,";                        //回収条件 collection condition
+        $insert_sql .= "    credit_limit,";                     //与信限度 credit limit
+        $insert_sql .= "    capital,";                          //資本金 capital
+        $insert_sql .= "    trade_id,";                         //取引区分（得意先用） trade classification (for customer)
+        $insert_sql .= "    buy_trade_id,";                     //取引区分（仕入先用）trade classification (for supplier)
+        $insert_sql .= "    close_day,";                        //締日 close day
+        $insert_sql .= "    pay_m,";                            //集金日（月） collection date(month)
+        $insert_sql .= "    pay_d,";                            //集金日（日） collection date(day)
+        $insert_sql .= "    pay_way,";                          //集金方法 collection method
+        $insert_sql .= "    account_name,";                     //口座名義 account name
+        $insert_sql .= "    pay_name,";                         //振込名義 deposit name
+        $insert_sql .= "    account_id,";                          //口座ID account ID
+        $insert_sql .= "    cont_sday,";                        //契約開始日 contract start date
+        $insert_sql .= "    cont_eday,";                        //契約終了日 contract end date
+        $insert_sql .= "    cont_peri,";                        //契約期間 contrac period
+        $insert_sql .= "    cont_rday,";                        //契約更新日 contract update date
+        $insert_sql .= "    slip_out,";                         //伝票出力 slip output
+        $insert_sql .= "    deliver_note,";                     //納品書コメント delivery note comment 
+        $insert_sql .= "    claim_out,";                        //請求書出力 billing statement ooutput 
+        $insert_sql .= "    coax,";                             //金額：丸め区分 amount: round up/down
+        $insert_sql .= "    tax_div,";                          //消費税：課税単位 tax: tax unit 
+        $insert_sql .= "    tax_franct,";                       //消費税：端数区分 tax: round up/down
+        $insert_sql .= "    client_div,";                       //得意先区分 cusotmer classification
+        $insert_sql .= "    shop_name,";                        //社名 company name
+        $insert_sql .= "    shop_read,";                        //社名(フリガナ) company name (katakna)
+        $insert_sql .= "    shop_name2,";                       //社名2 company name2
+        $insert_sql .= "    shop_read2,";                       //社名2(フリガナ) company name2 (katkana)
         $insert_sql .= "    url,";                              //URL
-        $insert_sql .= "    represe,";                          //代表者役職
-        $insert_sql .= "    rep_htel,";                         //代表者携帯
-        $insert_sql .= "    charger,";                          //連絡担当者役職
-        $insert_sql .= "    cha_htel,";                         //連絡担当者携帯
-        $insert_sql .= "    surety_name1,";                     //保証人１名前
-        $insert_sql .= "    surety_addr1,";                     //保証人１住所
-        $insert_sql .= "    surety_name2,";                     //保証人２名前
-        $insert_sql .= "    surety_addr2,";                     //保証人２住所
-        $insert_sql .= "    trade_base,";                       //営業拠点
-        $insert_sql .= "    trade_area,";                       //商圏
-        $insert_sql .= "    join_money,";                       //加盟金
-        $insert_sql .= "    guarant_money,";                    //保証金
-        $insert_sql .= "    royalty_rate,";                     //ロイヤリティ
-        $insert_sql .= "    cutoff_month,";                      //決算月
-        $insert_sql .= "    c_compa_name,";                     //契約会社名
-        $insert_sql .= "    c_compa_rep,";                      //契約代表者
-        $insert_sql .= "    license,";                          //所有資格・得意分野
-        $insert_sql .= "    s_contract,";                       //特約
-        $insert_sql .= "    other,";                            //その他
-        $insert_sql .= "    establish_day,";                    //創業日
-        $insert_sql .= "    regist_day,";                       //法人登記日
-        $insert_sql .= "    sbtype_id,";                        //業種
-        $insert_sql .= "    inst_id,";                          //施設
-        $insert_sql .= "    b_struct,";                         //業態
-        $insert_sql .= "    accountant_name,";                  //会計担当者氏名
-        $insert_sql .= "    client_cread,";                     //略称(フリガナ)
+        $insert_sql .= "    represe,";                          //代表者役職 rep position 
+        $insert_sql .= "    rep_htel,";                         //代表者携帯 rep tel
+        $insert_sql .= "    charger,";                          //連絡担当者役職 contact in person positiion
+        $insert_sql .= "    cha_htel,";                         //連絡担当者携帯 contact in person tel
+        $insert_sql .= "    surety_name1,";                     //保証人１名前 guarantor1 name
+        $insert_sql .= "    surety_addr1,";                     //保証人１住所 guarantor1 address
+        $insert_sql .= "    surety_name2,";                     //保証人２名前 guarantor2 name
+        $insert_sql .= "    surety_addr2,";                     //保証人２住所 guarantor2 address
+        $insert_sql .= "    trade_base,";                       //営業拠点 base where sale is conduct
+        $insert_sql .= "    trade_area,";                       //商圏 trade area
+        $insert_sql .= "    join_money,";                       //加盟金 joining fee
+        $insert_sql .= "    guarant_money,";                    //保証金 security deposit
+        $insert_sql .= "    royalty_rate,";                     //ロイヤリティ royalty
+        $insert_sql .= "    cutoff_month,";                      //決算月 cutoff month for accounting
+        $insert_sql .= "    c_compa_name,";                     //契約会社名  contracted company name
+        $insert_sql .= "    c_compa_rep,";                      //契約代表者 contracted representati
+        $insert_sql .= "    license,";                          //所有資格・得意分野 acquired license/field of expertise
+        $insert_sql .= "    s_contract,";                       //特約 special clause
+        $insert_sql .= "    other,";                            //その他 others
+        $insert_sql .= "    establish_day,";                    //創業日 est date
+        $insert_sql .= "    regist_day,";                       //法人登記日 register date
+        $insert_sql .= "    sbtype_id,";                        //業種 industry
+        $insert_sql .= "    inst_id,";                          //施設 facility
+        $insert_sql .= "    b_struct,";                         //業態 business type
+        $insert_sql .= "    accountant_name,";                  //会計担当者氏名  accounting reprsentative name
+        $insert_sql .= "    client_cread,";                     //略称(フリガナ)  abbreviation (katakana)
         $insert_sql .= "    email,";                            //Email
-        $insert_sql .= "    direct_tel,";                       //直通TEL
-        $insert_sql .= "    deal_history,";                     //取引履歴
-        $insert_sql .= "    importance,";                       //重要事項
-        $insert_sql .= "    deliver_effect,";                   //納品書コメント(効果)
-        $insert_sql .= "    claim_send,";                       //請求書送付(郵送)
-        $insert_sql .= "    cutoff_day,";                       //決算日
+        $insert_sql .= "    direct_tel,";                       //直通TELdirect
+        $insert_sql .= "    deal_history,";                     //取引履歴trade history
+        $insert_sql .= "    importance,";                       //重要事項important items 
+        $insert_sql .= "    deliver_effect,";                   //納品書コメント(効果)(効果) delivery note comment (effect)
+        $insert_sql .= "    claim_send,";                       //請求書送付(郵送) billing statement send (delivery)
+        $insert_sql .= "    cutoff_day,";                       //決算日cutoff date
         #2009-12-25 aoyama-n
-        #$insert_sql .= "    tax_rate_n,";                       //消費税率(現在)
-        $insert_sql .= "    account_tel,";                      //会計ご担当者TEL
-	    $insert_sql .= "    compellation,";                     //敬称
-	    $insert_sql .= "    c_pattern_id,";                     //請求書様式
-        $insert_sql .= "    c_tax_div,";                         //課税区分
-//ここからは仕入先情報
-        $insert_sql .= "    payout_m,";                         //支払日
-        $insert_sql .= "    payout_d,";                         //支払日
-        $insert_sql .= "    bank_name,";                        //口座名義
-        $insert_sql .= "    b_bank_name,";                      //口座名義略称
-//自社プロフィール用に登録
-        $insert_sql .= "    my_coax,\n";                        //まるめ
-        $insert_sql .= "    my_tax_franct,\n";                  //端数区分
-        $insert_sql .= "    my_pay_m,\n";                       //回収予定日
-        $insert_sql .= "    my_pay_d,\n";                       //回収予定日
-        $insert_sql .= "    my_close_day,\n";                   //締日
-        $insert_sql .= "    claim_set, \n";                     //請求番号設定  
+        #$insert_sql .= "    tax_rate_n,";                       //消費税率(現在) tax (current)
+        $insert_sql .= "    account_tel,";                      //会計ご担当者TEL accounting reprsentative tel
+	    $insert_sql .= "    compellation,";                     //敬称 compellation
+	    $insert_sql .= "    c_pattern_id,";                     //請求書様式 billing statement forat
+        $insert_sql .= "    c_tax_div,";                         //課税区分 tax classification
+//ここからは仕入先情報 supplier information from her
+        $insert_sql .= "    payout_m,";                         //支払日 payment date
+        $insert_sql .= "    payout_d,";                         //支払日 payment date
+        $insert_sql .= "    bank_name,";                        //口座名義 account name
+        $insert_sql .= "    b_bank_name,";                      //口座名義略称 account name abbreviation
+//自社プロフィール用に登録 register for own company profile
+        $insert_sql .= "    my_coax,\n";                        //まるめ round up/down 
+        $insert_sql .= "    my_tax_franct,\n";                  //端数区分 round up/down
+        $insert_sql .= "    my_pay_m,\n";                       //回収予定日 collection planned date
+        $insert_sql .= "    my_pay_d,\n";                       //回収予定日 collection planned date
+        $insert_sql .= "    my_close_day,\n";                   //締日 close day
+        $insert_sql .= "    claim_set, \n";                     //請求番号設定 billing number setting
         #2009-12-25 aoyama-n
-        #$insert_sql .= "    cal_peri\n";                        //カレンダー表示期間
-        $insert_sql .= "    cal_peri,\n";                        //カレンダー表示期間
-        $insert_sql .= "    tax_rate_old,\n";                   //旧消費税率
-        $insert_sql .= "    tax_rate_now,\n";                   //現消費税率
-        $insert_sql .= "    tax_change_day_now,\n";             //現税率改定日
-        $insert_sql .= "    tax_rate_new,\n";                   //新消費税率
-        $insert_sql .= "    tax_change_day_new,\n";             //新税率改定日
+        #$insert_sql .= "    cal_peri\n";                        //カレンダー表示期間 calendar display period
+        $insert_sql .= "    cal_peri,\n";                        //カレンダー表示期間 calendar display period
+        $insert_sql .= "    tax_rate_old,\n";                   //旧消費税率 old tax rate
+        $insert_sql .= "    tax_rate_now,\n";                   //現消費税率 currenttax rate
+        $insert_sql .= "    tax_change_day_now,\n";             //現税率改定日 current tax rate revision date
+        $insert_sql .= "    tax_rate_new,\n";                   //新消費税率 new tax rate
+        $insert_sql .= "    tax_change_day_new,\n";             //新税率改定日 new tax rate revision date
         #2010-05-01 hashimoto-y
-        $insert_sql .= "    bill_address_font \n";              //請求書宛先フォント
+        $insert_sql .= "    bill_address_font \n";              //請求書宛先フォント billing address font
         $insert_sql .= " )VALUES(";
-        $insert_sql .= "    '$rank_cd',";                          //顧客区分
-        $insert_sql .= "    (SELECT COALESCE(MAX(client_id), 0)+1 FROM t_client),";//得意先ID
-        $insert_sql .= "    $shop_id,";                        //FCグループID
-        $insert_sql .= "    NOW(),";                            //作成日
-        $insert_sql .= "    '$shop_cd1',";                      //得意先コード
-        $insert_sql .= "    '$shop_cd2',";                      //支店コード
-        $insert_sql .= "    '$form_state',";                    //状態
-        $insert_sql .= "    '$shop_name',";                     //得意先名
-        $insert_sql .= "    '$shop_name_read',";                //得意先（フリガナ）
-        $insert_sql .= "    '$shop_cname',";                    //略称
-        $insert_sql .= "    '$post_no1',";                      //郵便番号１
-        $insert_sql .= "    '$post_no2',";                      //郵便番号２
-        $insert_sql .= "    '$address1',";                      //住所１
-        $insert_sql .= "    '$address2',";                      //住所２
-        $insert_sql .= "    '$address3',";                      //住所３
-        $insert_sql .= "    '$address_read',";                  //住所（フリガナ）
-        $insert_sql .= "    $area_id,";                         //地区ID
+        $insert_sql .= "    '$rank_cd',";                          //顧客区分 customer classification
+        $insert_sql .= "    (SELECT COALESCE(MAX(client_id), 0)+1 FROM t_client),";//得意先ID customer ID
+        $insert_sql .= "    $shop_id,";                        //FCグループID FC group ID
+        $insert_sql .= "    NOW(),";                            //作成日 create date
+        $insert_sql .= "    '$shop_cd1',";                      //得意先コード customer code
+        $insert_sql .= "    '$shop_cd2',";                      //支店コード branch code
+        $insert_sql .= "    '$form_state',";                    //状態 status 
+        $insert_sql .= "    '$shop_name',";                     //得意先名 customer name
+        $insert_sql .= "    '$shop_name_read',";                //得意先（フリガナ） customer (katakana)
+        $insert_sql .= "    '$shop_cname',";                    //略称 abbreviation
+        $insert_sql .= "    '$post_no1',";                      //郵便番号１ postal code  1
+        $insert_sql .= "    '$post_no2',";                      //郵便番号２ postal code  2
+        $insert_sql .= "    '$address1',";                      //住所１ address
+        $insert_sql .= "    '$address2',";                      //住所２ address
+        $insert_sql .= "    '$address3',";                      //住所３ address
+        $insert_sql .= "    '$address_read',";                  //住所（フリガナ） address (katakana)
+        $insert_sql .= "    $area_id,";                         //地区ID district ID
         $insert_sql .= "    '$tel',";                           //TEL
         $insert_sql .= "    '$fax',";                           //FAX
-        $insert_sql .= "    '$represent_name',";                //代表者氏名
+        $insert_sql .= "    '$represent_name',";                //代表者氏名 rep name
         if($sv == ""){
                 $sv = "    null"; 
         }
@@ -2151,115 +2151,115 @@ if($_POST["button"]["entry_button"] == "登　録" && $form->validate() && $err_flg
         if($staff4 == ""){
                 $staff4 = "    null";
         }
-        $insert_sql .= "    $sv,";                              //契約担当１
-        $insert_sql .= "    $staff1,";                          //契約担当２
-        $insert_sql .= "    $staff2,";                          //巡回担当１
-        $insert_sql .= "    $staff3,";                          //巡回担当２
-        $insert_sql .= "    $staff4,";                          //巡回担当３
-        $insert_sql .= "    '$contact_name',";                  //ご担当者１
-        $insert_sql .= "    '$holiday',";                       //休日
-        $insert_sql .= "    '$collect_terms',";                 //回収条件
-        $insert_sql .= "    '$limit_money',";                   //与信限度
-        $insert_sql .= "    '$capital_money',";                 //資本金
-        $insert_sql .= "    '$aord_div',";                      //取引区分得意先用
-        $insert_sql .= "    '$buy_div',";                       //取引区分仕入先用
-        $insert_sql .= "    '$close_day',";                     //締日
+        $insert_sql .= "    $sv,";                              //契約担当１ contract staff 1
+        $insert_sql .= "    $staff1,";                          //契約担当２ contract staff 2
+        $insert_sql .= "    $staff2,";                          //巡回担当１ patrol staff 1
+        $insert_sql .= "    $staff3,";                          //巡回担当２ patrol staff 2
+        $insert_sql .= "    $staff4,";                          //巡回担当３ patrol staff 3
+        $insert_sql .= "    '$contact_name',";                  //ご担当者１ staff1
+        $insert_sql .= "    '$holiday',";                       //休日 holiday 
+        $insert_sql .= "    '$collect_terms',";                 //回収条件 collection condition
+        $insert_sql .= "    '$limit_money',";                   //与信限度 creditlimit
+        $insert_sql .= "    '$capital_money',";                 //資本金 capital 
+        $insert_sql .= "    '$aord_div',";                      //取引区分得意先用trade classification for customer
+        $insert_sql .= "    '$buy_div',";                       //取引区分仕入先用trade classification for supplier
+        $insert_sql .= "    '$close_day',";                     //締日 close day
         if($pay_month == ""){
                 $pay_month = "    null"; 
         }
-        $insert_sql .= "    '$pay_month',";                     //集金日（月）
+        $insert_sql .= "    '$pay_month',";                     //集金日（月）collection date (month)
         if($pay_day == ""){
                 $pay_day = "    null"; 
         }
-        $insert_sql .= "    '$pay_day',";                       //集金日（日）
-        $insert_sql .= "    '$pay_way',";                       //集金方法
-        $insert_sql .= "    '$account_name',";                  //口座名義
-        $insert_sql .= "    '$transfer_name',";                 //振込名義
+        $insert_sql .= "    '$pay_day',";                       //集金日（日）collection date (day)
+        $insert_sql .= "    '$pay_way',";                       //集金方法 collection method
+        $insert_sql .= "    '$account_name',";                  //口座名義 account name
+        $insert_sql .= "    '$transfer_name',";                 //振込名義 deposit name
         if($bank == ""){
                 $bank = "    null"; 
         }
-        $insert_sql .= "    $bank,";                            //銀行
+        $insert_sql .= "    $bank,";                            //銀行 bank
         if($cont_s_day == "--"){
             $insert_sql .= "    null,";
         }else{
-            $insert_sql .= "    '$cont_s_day',";                //契約開始日
+            $insert_sql .= "    '$cont_s_day',";                //契約開始日 contract start date
         }
         if($cont_e_day == "--"){
             $insert_sql .= "    null,";
         }else{
-            $insert_sql .= "    '$cont_e_day',";                //契約終了日
+            $insert_sql .= "    '$cont_e_day',";                //契約終了日 contract end date
         }
         if($cont_peri == ""){
             $insert_sql .= "    null,";
         }else{
-            $insert_sql .= "    '$cont_peri',";                 //契約期間
+            $insert_sql .= "    '$cont_peri',";                 //契約期間 contract period
         }
         if($cont_r_day == "--"){
             $insert_sql .= "    null,";
         }else{
-            $insert_sql .= "    '$cont_r_day',";                //契約更新日
+            $insert_sql .= "    '$cont_r_day',";                //契約更新日 contract update date
         }
-        $insert_sql .= "    '$slip_issue',";                    //伝票出力
-        $insert_sql .= "    '$deli_comment',";                  //納品書コメント
-        $insert_sql .= "    '$claim_issue',";                   //請求書出力
-        $insert_sql .= "    '$coax',";                          //金額：丸め区分
-        $insert_sql .= "    '$tax_unit',";                      //消費税：課税単位
-        $insert_sql .= "    '$fraction_div',";                  //消費税：端数単位
-        $insert_sql .= "    '3',";                              //得意先区分
-        $insert_sql .= "    '$comp_name',";                     //社名
-        $insert_sql .= "    '$comp_name_read',";                //社名(フリガナ)
-        $insert_sql .= "    '$comp_name2',";                    //社名2
-        $insert_sql .= "    '$comp_name_read2',";               //社名2(フリガナ)
+        $insert_sql .= "    '$slip_issue',";                    //伝票出力 slip output
+        $insert_sql .= "    '$deli_comment',";                  //納品書コメント delivery note comment
+        $insert_sql .= "    '$claim_issue',";                   //請求書出力 billing statement output
+        $insert_sql .= "    '$coax',";                          //金額：丸め区分 amount: round up/down
+        $insert_sql .= "    '$tax_unit',";                      //消費税：課税単位 tax: tax unit 
+        $insert_sql .= "    '$fraction_div',";                  //消費税：端数単位 tax: round up/down
+        $insert_sql .= "    '3',";                              //得意先区分 cusotmer classification
+        $insert_sql .= "    '$comp_name',";                     //社名 company name
+        $insert_sql .= "    '$comp_name_read',";                //社名(フリガナ) company name (katakna)
+        $insert_sql .= "    '$comp_name2',";                    //社名2 company name2
+        $insert_sql .= "    '$comp_name_read2',";               //社名2(フリガナ) company name2 (katkana)
         $insert_sql .= "    '$url',";                           //URL
-        $insert_sql .= "    '$represent_position',";            //代表者役職
-        $insert_sql .= "    '$represent_cell',";                //代表者携帯
-        $insert_sql .= "    '$contact_position',";              //連絡担当者役職
-        $insert_sql .= "    '$contact_cell',";                  //連絡担当者携帯
-        $insert_sql .= "    '$guarantor1',";                    //保証人１名前
-        $insert_sql .= "    '$guarantor1_address',";            //保証人１住所
-        $insert_sql .= "    '$guarantor2',";                    //保証人２名前
-        $insert_sql .= "    '$guarantor2_address',";            //保証人２住所
-        $insert_sql .= "    '$position',";                      //営業拠点
-        $insert_sql .= "    '$business_limit',";                //商圏
-        $insert_sql .= "    '$join_money',";                    //加盟金
-        $insert_sql .= "    '$assure_money',";                  //保証金
-        $insert_sql .= "    '$royalty',";                       //ロイヤリティ
-        $insert_sql .= "    '$accounts_month',";                //決算月
-        $insert_sql .= "    '$contract_name',";                 //契約会社名
-        $insert_sql .= "    '$represent_contract',";            //契約代表者
-        $insert_sql .= "    '$qualify_pride',";                 //所有資格・得意分野
-        $insert_sql .= "    '$special_contract',";              //特約
-        $insert_sql .= "    '$other',";                         //その他
+        $insert_sql .= "    '$represent_position',";            //代表者役職 rep position 
+        $insert_sql .= "    '$represent_cell',";                //代表者携帯rep tel
+        $insert_sql .= "    '$contact_position',";              //連絡担当者役職 contact in person positiion
+        $insert_sql .= "    '$contact_cell',";                  //連絡担当者携帯contact in person tel
+        $insert_sql .= "    '$guarantor1',";                    //保証人１名前 guarantor1 name
+        $insert_sql .= "    '$guarantor1_address',";            //保証人１住所 guarantor1 address
+        $insert_sql .= "    '$guarantor2',";                    //保証人２名前 guarantor2 name
+        $insert_sql .= "    '$guarantor2_address',";            //保証人２住所 guarantor2 address
+        $insert_sql .= "    '$position',";                      //営業拠点 base where sale is conduct
+        $insert_sql .= "    '$business_limit',";                //商圏  trade area
+        $insert_sql .= "    '$join_money',";                    //加盟金 joining fee
+        $insert_sql .= "    '$assure_money',";                  //保証金 security deposit
+        $insert_sql .= "    '$royalty',";                       //ロイヤリティ royalty
+        $insert_sql .= "    '$accounts_month',";                //決算月 cutoff month for accounting
+        $insert_sql .= "    '$contract_name',";                 //契約会社名 contracted company name
+        $insert_sql .= "    '$represent_contract',";            //契約代表者 contracted representati
+        $insert_sql .= "    '$qualify_pride',";                 //所有資格・得意分野 acquired license/field of expertise
+        $insert_sql .= "    '$special_contract',";              //特約 special clause
+        $insert_sql .= "    '$other',";                         //その他 others
         if($establish_day == "--"){
-        $insert_sql .= "    null,";                             //開業日
+        $insert_sql .= "    null,";                             //開業日 est date
         }else{
         $insert_sql .= "    '$establish_day',";
         }
         if($corpo_day == "--"){
-        $insert_sql .= "    null,";                              //法人登記日
+        $insert_sql .= "    null,";                              //法人登記日 register date
         }else{
         $insert_sql .= "    '$corpo_day',";
         }
-        $insert_sql .= "    $btype,";                           //業種
+        $insert_sql .= "    $btype,";                           //業種 industry
         if($inst == ""){
                 $inst = "    null"; 
         }
-        $insert_sql .= "    $inst,";                            //施設
+        $insert_sql .= "    $inst,";                            //施設 facility
         if($bstruct == ""){
                 $bstruct = "    null"; 
         }
-        $insert_sql .= "    $bstruct,";                         //業態
-        $insert_sql .= "    '$accountant_name',";               //会計担当者氏名
-        $insert_sql .= "    '$cname_read',";                    //略称(フリガナ)
+        $insert_sql .= "    $bstruct,";                         //業態 business type
+        $insert_sql .= "    '$accountant_name',";               //会計担当者氏名 accounting reprsentative name
+        $insert_sql .= "    '$cname_read',";                    //略称(フリガナ) abbreviation (katakana)
         $insert_sql .= "    '$email',";                         //Email
-        $insert_sql .= "    '$direct_tel',";                    //直通TEL
-        $insert_sql .= "    '$record',";                        //取引履歴
-        $insert_sql .= "    '$important',";                     //重要事項
-        $insert_sql .= "    '$deliver_effect',";                //納品書コメント(効果)
-        $insert_sql .= "    '$claim_send',";                    //請求書送付(郵送)
-        $insert_sql .= "    '$accounts_day',";                  //決算日(日)
+        $insert_sql .= "    '$direct_tel',";                    //直通TEL direct
+        $insert_sql .= "    '$record',";                        //取引履歴 trade history
+        $insert_sql .= "    '$important',";                     //重要事項 important items 
+        $insert_sql .= "    '$deliver_effect',";                //納品書コメント(効果) delivery note comment (effect
+        $insert_sql .= "    '$claim_send',";                    //請求書送付(郵送) billing statement send (delivery)
+        $insert_sql .= "    '$accounts_day',";                  //決算日(日) cutoff date (day)
         #2009-12-25 aoyama-n
-        #$insert_sql .= "    (SELECT";                           //消費税率(現在)
+        #$insert_sql .= "    (SELECT";                           //消費税率(現在) tax (current)
         #$insert_sql .= "        tax_rate_n";
         #$insert_sql .= "    FROM";
         #$insert_sql .= "        t_client";
@@ -2269,13 +2269,13 @@ if($_POST["button"]["entry_button"] == "登　録" && $form->validate() && $err_flg
         $insert_sql .= "    '$account_tel',";
         $insert_sql .= "    '$prefix',";
         $insert_sql .= "    $claim_pattern,";
-        $insert_sql .= "    $c_tax_div,";                        //課税区分
+        $insert_sql .= "    $c_tax_div,";                        //課税区分 tax classification
 //ここからは仕入先情報
-        $insert_sql .= "    '$payout_m',";                         //支払日
-        $insert_sql .= "    '$payout_d',";                         //支払日
-        $insert_sql .= "    '$bank_name',";                        //口座名義
-        $insert_sql .= "    '$b_bank_name',";                       //口座名義略称
-//自社プロフィール用に登録
+        $insert_sql .= "    '$payout_m',";                         //支払日 payment date
+        $insert_sql .= "    '$payout_d',";                         //支払日 payment date
+        $insert_sql .= "    '$bank_name',";                        //口座名義 account name
+        $insert_sql .= "    '$b_bank_name',";                       //口座名義略 account name abbreviation
+//自社プロフィール用に登録 register for own company profile
         $insert_sql .= "    '$coax',\n";
         $insert_sql .= "    '$fraction_div',\n";
         $insert_sql .= "    '$pay_month',\n";
@@ -2285,35 +2285,35 @@ if($_POST["button"]["entry_button"] == "登　録" && $form->validate() && $err_flg
         #2009-12-25 aoyama-n
         #$insert_sql .= "    '1'\n";
         $insert_sql .= "    '1',\n";
-        $insert_sql .= "    (SELECT";                           //旧消費税率
+        $insert_sql .= "    (SELECT";                           //旧消費税率  old tax rate
         $insert_sql .= "        tax_rate_old";
         $insert_sql .= "    FROM";
         $insert_sql .= "        t_client";
         $insert_sql .= "    WHERE";
         $insert_sql .= "    client_div = '0'";
         $insert_sql .= "    ) ,";
-        $insert_sql .= "    (SELECT";                           //現消費税率
+        $insert_sql .= "    (SELECT";                           //現消費税率  currenttax rate
         $insert_sql .= "        tax_rate_now";
         $insert_sql .= "    FROM";
         $insert_sql .= "        t_client";
         $insert_sql .= "    WHERE";
         $insert_sql .= "    client_div = '0'";
         $insert_sql .= "    ) ,";
-        $insert_sql .= "    (SELECT";                           //現税率改定日
+        $insert_sql .= "    (SELECT";                           //現税率改定日 current tax rate revision date
         $insert_sql .= "        tax_change_day_now";
         $insert_sql .= "    FROM";
         $insert_sql .= "        t_client";
         $insert_sql .= "    WHERE";
         $insert_sql .= "    client_div = '0'";
         $insert_sql .= "    ) ,";
-        $insert_sql .= "    (SELECT";                           //新消費税率
+        $insert_sql .= "    (SELECT";                           //新消費税率 new tax rate
         $insert_sql .= "        tax_rate_new";
         $insert_sql .= "    FROM";
         $insert_sql .= "        t_client";
         $insert_sql .= "    WHERE";
         $insert_sql .= "    client_div = '0'";
         $insert_sql .= "    ) ,";
-        $insert_sql .= "    (SELECT";                           //新税率改定日
+        $insert_sql .= "    (SELECT";                           //新税率改定日 new tax rate revision date
         $insert_sql .= "        tax_change_day_new";
         $insert_sql .= "    FROM";
         $insert_sql .= "        t_client";
@@ -2329,14 +2329,14 @@ if($_POST["button"]["entry_button"] == "登　録" && $form->validate() && $err_flg
             Db_Query($conn, "ROLLBACK;");
             exit;
         }
-        //登録した情報をログに残す
+        //登録した情報をログに残す leave the info registered in the log
         $result = Log_Save( $conn, "shop", "1",$shop_cd1."-".$shop_cd2,$shop_name);
         if($result === false){
             Db_Query($conn, "ROLLBACK");
             exit;
         }
 
-        //登録したショップのショップIDを抽出
+        //登録したショップのショップIDを抽出 extract the shop Id from the shop registered
         $sql  = "SELECT";
         $sql .= "   client_id";
         $sql .= " FROM";
@@ -2353,8 +2353,8 @@ if($_POST["button"]["entry_button"] == "登　録" && $form->validate() && $err_flg
         $fc_shop_id = pg_fetch_result($result,0,0);
 
 
-        //■請求先
-        //●入力時
+        //■請求先 billing client
+        //●入力時 when input
         $insert_sql = " INSERT INTO t_claim (";
         $insert_sql .= "    client_id,";
         $insert_sql .= "    claim_id,";
@@ -2388,7 +2388,7 @@ if($_POST["button"]["entry_button"] == "登　録" && $form->validate() && $err_flg
             Db_Query($conn, "ROLLBACK;");
             exit;
         }
-        //選択した顧客区分コードが直営の場合
+        //選択した顧客区分コードが直営の場合 if the selected custoemr classification code is directly managed store
         $sql  = "SELECT";
         $sql .= "   group_kind";
         $sql .= " FROM";
@@ -2400,7 +2400,7 @@ if($_POST["button"]["entry_button"] == "登　録" && $form->validate() && $err_flg
         $result     = Db_Query($conn, $sql);
         $group_kind = pg_fetch_result($result, 0);
 
-        //直営の場合、既に直営が登録されているか検索
+        //直営の場合、既に直営が登録されているか検索 if its a directly managed store (HQ's FC) then search if directly managed store is already registered
         if($group_kind == '2'){
             $sql  = "SELECT";
             $sql .= "   count(*)";
@@ -2414,10 +2414,10 @@ if($_POST["button"]["entry_button"] == "登　録" && $form->validate() && $err_flg
             $fc_rank_num = pg_fetch_result($result,0);
         }
 
-        //直営が登録されていますか？？
+        //直営が登録されていますか？？ is the directly managed store register?
         if($fc_rank_num == 0 || $fc_rank_num == null){
 
-            //登録したFCに基本出荷倉庫を選択する。
+            //登録したFCに基本出荷倉庫を選択する。 select a basic outgoing warehouse for the FC registered
             $sql  = "INSERT INTO t_ware(";
             $sql .= "   ware_id,\n";
             $sql .= "   ware_cd,\n";
@@ -2436,7 +2436,7 @@ if($_POST["button"]["entry_button"] == "登　録" && $form->validate() && $err_flg
                 exit;
             }
 
-            //登録した倉庫IDを抽出
+            //登録した倉庫IDを抽出 extract the warehouse ID registered
             $sql  = "SELECT";
             $sql .= "   ware_id ";
             $sql .= " FROM ";
@@ -2457,39 +2457,39 @@ if($_POST["button"]["entry_button"] == "登　録" && $form->validate() && $err_flg
                 note          => "",
                 shop_id       => $fc_shop_id,
             );
-            require_once(INCLUDE_DIR.(basename("2-1-200.php.inc"))); //現モジュール内のみで使用する関数ファイル
+            require_once(INCLUDE_DIR.(basename("2-1-200.php.inc"))); //現モジュール内のみで使用する関数ファイル function file that will only be used in thise module
 
-            //初期支店登録（成功時は登録したIDを返す）
+            //初期支店登録（成功時は登録したIDを返す）initial branch registration (if successful, return the ID registered
             $branch_id = Regist_Branch($conn,"default",$values);
 
-            //初期部署登録
+            //初期部署登録 register the inital department
             Regist_Init_Part($conn,$values[shop_id]);
 
-            //部署に支店を登録
+            //部署に支店を登録 register branch for a department
             if($branch_id != false){
                 Update_Part_Branch($conn,$values[shop_id],$branch_id);
             }
 
-            //本部を仕入先として登録する
-            //本部の取引先マスタの情報を抽出
+            //本部を仕入先として登録する register the HQ as a supplier
+            //本部の取引先マスタの情報を抽出 extract the HQ's trade partner master information
             $sql  = "SELECT\n";
-            $sql .= "    t_client.client_cd1,\n";       //ショップコード1
-            $sql .= "    t_client.client_name,\n";      //ショップ名
-            $sql .= "    t_client.client_cname,\n";     //略称
-            $sql .= "    t_client.post_no1,\n";         //郵便番号
-            $sql .= "    t_client.post_no2,\n";         //郵便番号
-            $sql .= "    t_client.address1,\n";         //住所1
-            $sql .= "    t_client.area_id,\n";          //地区
-            $sql .= "    t_client.tel,\n";              //TEL
-            $sql .= "    t_client.rep_name,\n";         //代表者氏名
-            $sql .= "    t_client.trade_id,\n";         //取引区分
-            $sql .= "    t_client.close_day,\n";        //締日
-            $sql .= "    t_client.pay_m,\n";            //集金日(月)
-            $sql .= "    t_client.pay_d,\n";            //集金日(日)
-            $sql .= "    t_client.coax,\n";             //まるめ区分
-            $sql .= "    t_client.tax_div,\n";          //課税単位
-            $sql .= "    t_client.tax_franct,\n";       //端数区分
-            $sql .= "    t_client.sbtype_id\n";         //業種
+            $sql .= "    t_client.client_cd1,\n";       //ショップコード shop code1
+            $sql .= "    t_client.client_name,\n";      //ショップ名 shop name
+            $sql .= "    t_client.client_cname,\n";     //略称 abbreviatiion
+            $sql .= "    t_client.post_no1,\n";         //郵便番号 postal code
+            $sql .= "    t_client.post_no2,\n";         //郵便番号 postal code
+            $sql .= "    t_client.address1,\n";         //住所1 address
+            $sql .= "    t_client.area_id,\n";          //地区 district
+            $sql .= "    t_client.tel,\n";              //TEL 
+            $sql .= "    t_client.rep_name,\n";         //代表者氏名 rep name
+            $sql .= "    t_client.trade_id,\n";         //取引区分 trade classification
+            $sql .= "    t_client.close_day,\n";        //締日 clsoe day
+            $sql .= "    t_client.pay_m,\n";            //集金日(月) collection date (month)
+            $sql .= "    t_client.pay_d,\n";            //集金日(日) collection date (day)
+            $sql .= "    t_client.coax,\n";             //まるめ区分 rorund up/dwon
+            $sql .= "    t_client.tax_div,\n";          //課税単位 tax unit
+            $sql .= "    t_client.tax_franct,\n";       //端数区分 rorund up/dwon
+            $sql .= "    t_client.sbtype_id\n";         //業種 indutry
             $sql .= " FROM\n";
             $sql .= "    t_client\n";
             $sql .= " WHERE\n";
@@ -2499,8 +2499,8 @@ if($_POST["button"]["entry_button"] == "登　録" && $form->validate() && $err_flg
             $result = Db_Query($conn, $sql);
             $h_client_data = pg_fetch_array($result, 0);
 
-            //地区マスタに本部用の地区を登録
-            //上記で登録がない場合のみ
+            //地区マスタに本部用の地区を登録register the HQ's district in the district master
+            //上記で登録がない場合のみ if there is nothing registerd yet
             $sql  = "INSERT INTO t_area(\n";
             $sql .= "   area_id,\n";
             $sql .= "   area_cd,\n";
@@ -2519,7 +2519,7 @@ if($_POST["button"]["entry_button"] == "登　録" && $form->validate() && $err_flg
                 exit;
             }
 
-            //地区IDを取得
+            //地区IDを取得 acquire the district ID
             $sql  = "SELECT";
             $sql .= "   area_id\n";
             $sql .= " FROM\n";
@@ -2538,36 +2538,36 @@ if($_POST["button"]["entry_button"] == "登　録" && $form->validate() && $err_flg
             $result = Db_Query($conn, $sql);
             $area_id = pg_fetch_result($result, 0);
 
-            //本部のデータを登録
+            //本部のデータを登録 regisetr HQ data
             $sql  = "INSERT INTO t_client(\n";
-            $sql .= "    shop_id,\n";          //取引先マスタ
-            $sql .= "    client_id,\n";        //仕入先ID
-            $sql .= "    client_cd1,\n";       //仕入先CD
-            $sql .= "    client_cd2,\n";       //仕入先CD２
-            $sql .= "    state,\n";            //状態
-            $sql .= "    client_div,\n";       //取引先区分
-            $sql .= "    create_day,\n";       //作成日
-            $sql .= "    shop_div,\n";         //本社・支社区分
-            $sql .= "    client_name,\n";      //得意先名
-            $sql .= "    client_cname,\n";     //略称
-            $sql .= "    client_read,\n";      //得意先名（フリガナ）
-            $sql .= "    post_no1,\n";         //郵便番号１
-            $sql .= "    post_no2,\n";         //郵便番号２
-            $sql .= "    address1,\n";         //住所１
-            $sql .= "    area_id,\n";          //地区  
-            $sql .= "    sbtype_id,\n";        //業種
-            $sql .= "    tel,\n";              //電話番号
-            $sql .= "    rep_name,\n";         //代表者名
-            $sql .= "    close_day,\n";        //締日  
-            $sql .= "    payout_m,\n";         //支払日(月)
-            $sql .= "    payout_d,\n";         //支払日(日)
-            $sql .= "    coax,\n";             //金額(丸め区分)
-            $sql .= "    tax_div,\n";          //消費税(課税単位)
-            $sql .= "    tax_franct,\n";       //消費税(端数)
+            $sql .= "    shop_id,\n";          //取引先マスタ trade partner master
+            $sql .= "    client_id,\n";        //仕入先ID supplier Id
+            $sql .= "    client_cd1,\n";       //仕入先CD supplier code
+            $sql .= "    client_cd2,\n";       //仕入先CD２ supplier code 2
+            $sql .= "    state,\n";            //状態 status 
+            $sql .= "    client_div,\n";       //取引先区分 trade classification
+            $sql .= "    create_day,\n";       //作成日 creation date
+            $sql .= "    shop_div,\n";         //本社・支社区分 HQ/branch classification
+            $sql .= "    client_name,\n";      //得意先名 customer name
+            $sql .= "    client_cname,\n";     //略称 abbreviation
+            $sql .= "    client_read,\n";      //得意先名（フリガナ） customer name (katakana) 
+            $sql .= "    post_no1,\n";         //郵便番号１ postal code 1
+            $sql .= "    post_no2,\n";         //郵便番号２ postal code 2
+            $sql .= "    address1,\n";         //住所１ address 
+            $sql .= "    area_id,\n";          //地区  district
+            $sql .= "    sbtype_id,\n";        //業種 indtustry
+            $sql .= "    tel,\n";              //電話番号 tel
+            $sql .= "    rep_name,\n";         //代表者名 rep name
+            $sql .= "    close_day,\n";        //締日   close day
+            $sql .= "    payout_m,\n";         //支払日(月) payent date (month)
+            $sql .= "    payout_d,\n";         //支払日(日) payent date (day)
+            $sql .= "    coax,\n";             //金額(丸め区分) amount (round up/down)
+            $sql .= "    tax_div,\n";          //消費税(課税単位) tax (tax unit)
+            $sql .= "    tax_franct,\n";       //消費税(端数) tax (fraction)
             $sql .= "    c_tax_div,\n";
             $sql .= "    head_flg,\n";
             $sql .= "    trade_id, \n";
-            $sql .= "    charge_branch_id \n";  //担当支店
+            $sql .= "    charge_branch_id \n";  //担当支店 assigned branch
             $sql .= ")VALUES(\n";
             $sql .= "    $fc_shop_id,\n";       
             $sql .= "    (SELECT COALESCE(MAX(client_id),0)+1 FROM t_client),\n";
@@ -2590,9 +2590,9 @@ if($_POST["button"]["entry_button"] == "登　録" && $form->validate() && $err_flg
             $sql .= "    '$close_day',\n";
             $sql .= "    '$h_client_data[pay_m]',\n";
             $sql .= "    '$h_client_data[pay_d]',\n";
-            $sql .= "    '$coax',";                          //金額：丸め区分
-            $sql .= "    '$tax_unit',";                      //消費税：課税単位
-            $sql .= "    '$fraction_div',";                  //消費税：端数単位
+            $sql .= "    '$coax',";                          //金額：丸め区分 amount: round up/down
+            $sql .= "    '$tax_unit',";                      //消費税：課税単位 tax: tax unit 
+            $sql .= "    '$fraction_div',";                  //消費税：端数単位 tax: round up/down unit
             $sql .= "    '$c_tax_div',";
             $sql .= "    't',";
             $sql .= "    21,";
@@ -2605,53 +2605,53 @@ if($_POST["button"]["entry_button"] == "登　録" && $form->validate() && $err_flg
                 exit;
             }
 
-            //東陽を得意先として登録する
-            //東陽の情報を抽出
+            //東陽を得意先として登録する register TOYO (directly managed store) as a customer 
+            //東陽の情報を抽出 extract TOYO's info
             $sql  = "SELECT\n";
-            $sql .= "    t_client.client_cd1,\n";       //ショップコード1
-            $sql .= "    t_client.client_cd2,\n";       //ショップコード２
-            $sql .= "    t_client.client_name,\n";      //ショップ名
-            $sql .= "    t_client.client_read,\n";      //ショップ名(フリガナ)
-            $sql .= "    t_client.client_name2,\n";     //ショップ名２
-            $sql .= "    t_client.client_read2,\n";     //ショップ名２（フリガナ）
-            $sql .= "    t_client.client_cname,\n";     //略称
-            $sql .= "    t_client.client_read,\n";      //略称（フリガナ）
-            $sql .= "    t_client.post_no1,\n";         //郵便番号
-            $sql .= "    t_client.post_no2,\n";         //郵便番号
-            $sql .= "    t_client.address1,\n";         //住所1
-            $sql .= "    t_client.address2,\n";         //住所2
-            $sql .= "    t_client.address3,\n";         //住所3
-            $sql .= "    t_client.address_read,\n";     //住所（フリガナ）
-            $sql .= "    t_client.area_id,\n";          //地区  
+            $sql .= "    t_client.client_cd1,\n";       //ショップコード1 shop code 1
+            $sql .= "    t_client.client_cd2,\n";       //ショップコード２ shop code 2
+            $sql .= "    t_client.client_name,\n";      //ショップ名 shop name
+            $sql .= "    t_client.client_read,\n";      //ショップ名(フリガナ) shop name katkaana
+            $sql .= "    t_client.client_name2,\n";     //ショップ名２ shop name 2
+            $sql .= "    t_client.client_read2,\n";     //ショップ名２（フリガナ） shop name 2 (katkana)
+            $sql .= "    t_client.client_cname,\n";     //略称 abbreviation
+            $sql .= "    t_client.client_read,\n";      //略称（フリガナ） abbreviation (katakana)
+            $sql .= "    t_client.post_no1,\n";         //郵便番号 postal code 
+            $sql .= "    t_client.post_no2,\n";         //郵便番号 postal code
+            $sql .= "    t_client.address1,\n";         //住所1 address
+            $sql .= "    t_client.address2,\n";         //住所2 address
+            $sql .= "    t_client.address3,\n";         //住所3 address
+            $sql .= "    t_client.address_read,\n";     //住所（フリガナ） address (katakana
+            $sql .= "    t_client.area_id,\n";          //地区   district
             $sql .= "    t_client.tel,\n";              //TEL   
-            $sql .= "    t_client.rep_name,\n";         //代表者氏名
-            $sql .= "    t_client.trade_id,\n";         //取引区分
-            $sql .= "    t_client.close_day,\n";        //締日  
-            $sql .= "    t_client.pay_m,\n";            //集金日(月)
-            $sql .= "    t_client.pay_d,\n";            //集金日(日)
-            $sql .= "    t_client.coax,\n";             //まるめ区分
-            $sql .= "    t_client.tax_div,\n";          //課税単位
-            $sql .= "    t_client.tax_franct,\n";       //端数区分
-            $sql .= "    t_client.sbtype_id,\n";        //業種  
+            $sql .= "    t_client.rep_name,\n";         //代表者氏名 rep name
+            $sql .= "    t_client.trade_id,\n";         //取引区分 trade classificatio
+            $sql .= "    t_client.close_day,\n";        //締日   close day
+            $sql .= "    t_client.pay_m,\n";            //集金日(月) collection date (month)
+            $sql .= "    t_client.pay_d,\n";            //集金日(日) collection date (day)
+            $sql .= "    t_client.coax,\n";             //まるめ区分 round up/down
+            $sql .= "    t_client.tax_div,\n";          //課税単位 tax unit
+            $sql .= "    t_client.tax_franct,\n";       //端数区分 round up/down
+            $sql .= "    t_client.sbtype_id,\n";        //業種   industry
             $sql .= "    t_client.c_tax_div,\n";
-            $sql .= "    t_client.rep_name,\n";         //代表者名
-            $sql .= "    t_client.represe,\n";          //代表者役職
-            $sql .= "    t_client.tel,\n";              //電話番号
+            $sql .= "    t_client.rep_name,\n";         //代表者名 rep name
+            $sql .= "    t_client.represe,\n";          //代表者役職 rep position
+            $sql .= "    t_client.tel,\n";              //電話番号 tel
             $sql .= "    t_client.fax,\n";              //FAX
-            $sql .= "    t_client.establish_day,\n";    //創業日
-            $sql .= "    t_client.email\n";             //担当者Email
+            $sql .= "    t_client.establish_day,\n";    //創業日 est date
+            $sql .= "    t_client.email\n";             //担当者Email staff email
             $sql .= " FROM\n";
             $sql .= "    t_client\n";
             $sql .= " WHERE\n";
-            $sql .= "    t_client.client_id = 93\n";    //東陽のデータ
+            $sql .= "    t_client.client_id = 93\n";    //東陽のデータ TOYO data
             $sql .= ";\n";
 
             $result = Db_Query($conn, $sql);
             $fc_client_data = pg_fetch_array($result, 0);
 
 
-            //今から登録する得意先に対し、必要なマスタデータを先に登録
-            //請求書フォーマット
+            //今から登録する得意先に対し、必要なマスタデータを先に登録 regsiter the necessary master data for the customer that is about to be registered 
+            //請求書フォーマット billing statement format
             $sql  = "INSERT INTO t_claim_sheet(\n";
             $sql .= "   c_pattern_id,\n";
             $sql .= "   c_pattern_name,\n";
@@ -2702,7 +2702,7 @@ if($_POST["button"]["entry_button"] == "登　録" && $form->validate() && $err_flg
                 exit;
             }
 
-            //登録した請求書ID
+            //登録した請求書ID billing statement ID registered
             $sql  = "SELECT\n";
             $sql .= "   MAX(c_pattern_id) AS c_pattern_id \n";
             $sql .= "FROM\n";
@@ -2714,7 +2714,7 @@ if($_POST["button"]["entry_button"] == "登　録" && $form->validate() && $err_flg
             $result = Db_Query($conn, $sql);    
             $c_pattern_id = pg_fetch_result($result, 0,0);
 
-            //売上伝票フォーマット設定
+            //売上伝票フォーマット設定 sales slip format setting
             $sql  = "INSERT INTO t_slip_sheet(\n";
             $sql .= "   s_pattern_id,\n";
             $sql .= "   s_pattern_name,\n";
@@ -2764,7 +2764,7 @@ if($_POST["button"]["entry_button"] == "登　録" && $form->validate() && $err_flg
                 exit;
             }
 
-            //登録した売上伝票ID
+            //登録した売上伝票ID sale slip ID registered
             $sql  = "SELECT\n";
             $sql .= "   MAX(s_pattern_id) AS s_pattern_id\n ";
             $sql .= "FROM\n";
@@ -2776,100 +2776,100 @@ if($_POST["button"]["entry_button"] == "登　録" && $form->validate() && $err_flg
             $result = Db_Query($conn,$sql);
             $s_pattern_id = pg_fetch_result($result, 0,0);
 
-            //東陽のデータを登録
+            //東陽のデータを登録 register toyo data
             $sql  = "INSERT INTO t_client(\n";
-            $sql .= "    client_id,\n";                                                                 //　１：得意先ID
-            $sql .= "    shop_id,\n";                                                                   //　２：ショップID
-            $sql .= "    client_cd1,\n";                                                                //　３：得意先CD１
-            $sql .= "    client_cd2,\n";                                                                //　４：得意先CD２
-            $sql .= "    state,\n";                                                                     //　５：状態
-            $sql .= "    client_div,\n";                                                                //　６：取引先区分
-            $sql .= "    create_day,\n";                                                                //　７：作成日
-            $sql .= "    shop_div,\n";                                                                  //　８：本社・支社区分
-            $sql .= "    client_name,\n";                                                               //　９：得意先名
-            $sql .= "    client_read,\n";                                                               //１０：得意先名（フリガナ）
-            $sql .= "    client_name2,\n";                                                              //１１：得意先名２
-            $sql .= "    client_read2,\n";                                                              //１２：得意先名２（フリガナ）
-            $sql .= "    client_cname,\n";                                                              //１３：略称
-            $sql .= "    client_cread,\n";                                                              //１４：略称（フリガナ）
-            $sql .= "    compellation,\n";                                                              //１５：敬称
-            $sql .= "    rep_name,\n";                                                                  //１６：代表者名
-            $sql .= "    represe,\n";                                                                   //１７：代表者役職
-            $sql .= "    tel,\n";                                                                       //１８：電話番号
+            $sql .= "    client_id,\n";                                                                 //　１：得意先ID customer id 
+            $sql .= "    shop_id,\n";                                                                   //　２：ショップID shop id
+            $sql .= "    client_cd1,\n";                                                                //　３：得意先CD１ customer code 1
+            $sql .= "    client_cd2,\n";                                                                //　４：得意先CD２ customer code 2
+            $sql .= "    state,\n";                                                                     //　５：状態 status
+            $sql .= "    client_div,\n";                                                                //　６：取引先区分 trade classsfication
+            $sql .= "    create_day,\n";                                                                //　７：作成日 craete date
+            $sql .= "    shop_div,\n";                                                                  //　８：本社・支社区分 HQ/branch classification
+            $sql .= "    client_name,\n";                                                               //　９：得意先名 customer name
+            $sql .= "    client_read,\n";                                                               //１０：得意先名（フリガナ） customer na,e (katakana)
+            $sql .= "    client_name2,\n";                                                              //１１：得意先名２ customer name 2
+            $sql .= "    client_read2,\n";                                                              //１２：得意先名２（フリガナ） customer name 2 (katkan)
+            $sql .= "    client_cname,\n";                                                              //１３：略称 abbreviation
+            $sql .= "    client_cread,\n";                                                              //１４：略称（フリガナ ） abbreviation (katkana)
+            $sql .= "    compellation,\n";                                                              //１５：敬称 compellation
+            $sql .= "    rep_name,\n";                                                                  //１６：代表者名 rep name
+            $sql .= "    represe,\n";                                                                   //１７：代表者役職 rep position
+            $sql .= "    tel,\n";                                                                       //１８：電話番号 tel
             $sql .= "    fax,\n";                                                                       //１９：FAX
-            $sql .= ($fc_client_data[establish_day] != null)? " establish_day,\n" : null;               //２０：創業日
-            $sql .= "    email,\n";                                                                     //２１：担当者Email
-            $sql .= "    post_no1,\n";                                                                  //２２：郵便番号１
-            $sql .= "    post_no2,\n";                                                                  //２３：郵便番号２
-            $sql .= "    address1,\n";                                                                  //２４：住所１
-            $sql .= "    address2,\n";                                                                  //２５：住所２
-            $sql .= "    address3,\n";                                                                  //２６：住所３
-            $sql .= "    address_read,\n";                                                              //２７：住所（フリガナ）
-            $sql .= "    area_id,\n";                                                                   //２８：地区
-            $sql .= "    sbtype_id,\n";                                                                 //２９：業態ID
-            $sql .= "    trade_id,\n";                                                                  //３０：取引区分コード
-            $sql .= "    close_day,\n";                                                                 //３１：締日
-            $sql .= "    pay_m,\n";                                                                     //３２：支払日(月)
-            $sql .= "    pay_d,\n";                                                                     //３３：支払日(日)
-            $sql .= "    coax,\n";                                                                      //３４：金額(丸め区分)
-            $sql .= "    tax_div,\n";                                                                   //３５：消費税(課税単位)
-            $sql .= "    tax_franct,\n";                                                                //３６：消費税(端数)
-            $sql .= "    c_tax_div,\n";                                                                 //３７：課税区分
-            $sql .= "    bank_div,\n";                                                                  //３８：銀行手数料負担区分
-            $sql .= "    act_flg,\n";                                                                   //３９：東陽フラグ
-            $sql .= "    c_pattern_id,\n";                                                              //４０：請求書パターン
-            $sql .= "    claim_out,\n";                                                                 //４１：請求書発行
-            $sql .= "    claim_send,\n";                                                                //４２：請求書送付    
-            $sql .= "    s_pattern_id,\n";                                                              //４３：売上伝票発行パターン
-            $sql .= "    slip_out,\n";                                                                  //４４：伝票発行
-            $sql .= "    deliver_effect,\n";                                                             //４５：納品書コメント有無
+            $sql .= ($fc_client_data[establish_day] != null)? " establish_day,\n" : null;               //２０：創業日 est date
+            $sql .= "    email,\n";                                                                     //２１：担当者Email staff email
+            $sql .= "    post_no1,\n";                                                                  //２２：郵便番号１ postal code 1
+            $sql .= "    post_no2,\n";                                                                  //２３：郵便番号２ postal code  2
+            $sql .= "    address1,\n";                                                                  //２４：住所１  address
+            $sql .= "    address2,\n";                                                                  //２５：住所２ address
+            $sql .= "    address3,\n";                                                                  //２６：住所３ address
+            $sql .= "    address_read,\n";                                                              //２７：住所（フリガナ） address (katakana)
+            $sql .= "    area_id,\n";                                                                   //２８：地区 district
+            $sql .= "    sbtype_id,\n";                                                                 //２９：業態ID industry Id
+            $sql .= "    trade_id,\n";                                                                  //３０：取引区分コード trade classfication code
+            $sql .= "    close_day,\n";                                                                 //３１：締日 close day
+            $sql .= "    pay_m,\n";                                                                     //３２：支払日(月) payment date (month)
+            $sql .= "    pay_d,\n";                                                                     //３３：支払日(日) payment date (day)
+            $sql .= "    coax,\n";                                                                      //３４：金額(丸め区分) amount (round up/down)
+            $sql .= "    tax_div,\n";                                                                   //３５：消費税(課税単位) tax (tax unit)
+            $sql .= "    tax_franct,\n";                                                                //３６：消費税(端数) tax (fraction)
+            $sql .= "    c_tax_div,\n";                                                                 //３７：課税区分 tax classification
+            $sql .= "    bank_div,\n";                                                                  //３８：銀行手数料負担区分 bank transaction fee classification
+            $sql .= "    act_flg,\n";                                                                   //３９：東陽フラグ toyo flag
+            $sql .= "    c_pattern_id,\n";                                                              //４０：請求書パターン billing statement pattern
+            $sql .= "    claim_out,\n";                                                                 //４１：請求書発行 issue billing statement
+            $sql .= "    claim_send,\n";                                                                //４２：請求書送付    send billing satatement
+            $sql .= "    s_pattern_id,\n";                                                              //４３：売上伝票発行パターン sale slip issue pattern
+            $sql .= "    slip_out,\n";                                                                  //４４：伝票発行 issu slip
+            $sql .= "    deliver_effect,\n";                                                             //４５：納品書コメント有無 comment or no comment on delivery note
             $sql .= "    charge_branch_id ";
             $sql .= ")VALUES(\n";
-            $sql .= "    (SELECT COALESCE(MAX(client_id),0)+1 FROM t_client),\n";                       //　１：得意先ID
-            $sql .= "    $fc_shop_id,\n";                                                               //　２：ショップID
-            $sql .= "    '$fc_client_data[client_cd1]',\n";                                             //　３：得意先CD１
-            $sql .= "    '$fc_client_data[client_cd2]',\n";                                             //　４：得意先CD２
-            $sql .= "    '1',\n";                                                                       //　５：状態
-            $sql .= "    '1',\n";                                                                       //　６：得意先区分
-            $sql .= "    NOW(),\n";                                                                     //　７：作成日
-            $sql .= "    '1',\n";                                                                       //　８：本社・支社区分
-            $sql .= "    '".addslashes($fc_client_data[client_name])."',\n";                            //　９：得意先名
-            $sql .= "    '".addslashes($fc_client_data[client_read])."',\n";                            //１０：得意先名（フリガナ）
-            $sql .= "    '".addslashes($fc_client_data[client_name2])."',\n";                           //１１：得意先名２
-            $sql .= "    '".addslashes($fc_client_data[client_read2])."',\n";                           //１２：得意先名２（フリガナ）
-            $sql .= "    '".addslashes($fc_client_data[client_cname])."',\n";                           //１３：略称
-            $sql .= "    '".addslashes($fc_client_data[client_cread])."',\n";                           //１４：略称（フリガナ）
-            $sql .= "    '1',\n";                                                                       //１５：敬称
-            $sql .= "    '".addslashes($fc_client_data[rep_name])."',\n";                               //１６：代表者名
-            $sql .= "    '".addslashes($fc_client_data[represe])."',\n";                                //１７：代表者役職
-            $sql .= "    '$fc_client_data[tel]',\n";                                                    //１８：電話番号
+            $sql .= "    (SELECT COALESCE(MAX(client_id),0)+1 FROM t_client),\n";                       //　１：得意先ID customer id 
+            $sql .= "    $fc_shop_id,\n";                                                               //　２：ショップID  shop id
+            $sql .= "    '$fc_client_data[client_cd1]',\n";                                             //　３：得意先CD１ customer code 1
+            $sql .= "    '$fc_client_data[client_cd2]',\n";                                             //　４：得意先CD２ customer code 2
+            $sql .= "    '1',\n";                                                                       //　５：状態 status
+            $sql .= "    '1',\n";                                                                       //　６：得意先区分 trade classsfication
+            $sql .= "    NOW(),\n";                                                                     //　７：作成日 craete date
+            $sql .= "    '1',\n";                                                                       //　８：本社・支社区分 HQ/branch classification
+            $sql .= "    '".addslashes($fc_client_data[client_name])."',\n";                            //　９：得意先名 customer name
+            $sql .= "    '".addslashes($fc_client_data[client_read])."',\n";                            //１０：得意先名（フリガナ） customer na,e (katakana)
+            $sql .= "    '".addslashes($fc_client_data[client_name2])."',\n";                           //１１：得意先名２ customer name 2
+            $sql .= "    '".addslashes($fc_client_data[client_read2])."',\n";                           //１２：得意先名２（フリガナ） customer name 2 (katkan)
+            $sql .= "    '".addslashes($fc_client_data[client_cname])."',\n";                           //１３：略称 abbreviation
+            $sql .= "    '".addslashes($fc_client_data[client_cread])."',\n";                           //１４：略称（フリガナ）  abbreviation (katkana)
+            $sql .= "    '1',\n";                                                                       //１５：敬称 compellation
+            $sql .= "    '".addslashes($fc_client_data[rep_name])."',\n";                               //１６：代表者名 rep name
+            $sql .= "    '".addslashes($fc_client_data[represe])."',\n";                                //１７：代表者役職 rep position
+            $sql .= "    '$fc_client_data[tel]',\n";                                                    //１８：電話番号  tel
             $sql .= "    '$fc_client_data[fax]',\n";                                                    //１９：FAX
-            $sql .= ($fc_client_data[establish_day] != null)? "'$fc_client_data[establish_day]',\n" : null; //２０：創業日
+            $sql .= ($fc_client_data[establish_day] != null)? "'$fc_client_data[establish_day]',\n" : null; //２０：創業日 est date
             $sql .= "    '$fc_client_data[email]',\n";                                                  //２１：Email
-            $sql .= "    '$fc_client_data[post_no1]',\n";                                               //２２：郵便番号１
-            $sql .= "    '$fc_client_data[post_no2]',\n";                                               //２３：郵便番号２
-            $sql .= "    '".addslashes($fc_client_data[address1])."',\n";                               //２４：住所１
-            $sql .= "    '".addslashes($fc_client_data[address2])."',\n";                               //２５：住所２
-            $sql .= "    '".addslashes($fc_client_data[address3])."',\n";                               //２６：住所３
-            $sql .= "    '".addslashes($fc_client_data[address_read])."',\n";                           //２７：住所（フリガナ）
-            $sql .= "    $area_id,\n";                                                                  //２８：地区
-            $sql .= "    $fc_client_data[sbtype_id],\n";                                                //２９：業種
-            $sql .= "    '$fc_client_data[trade_id]',\n";                                               //３０：取引区分
-            $sql .= "    '$fc_client_data[close_day]',\n";                                              //３１：締日    
-            $sql .= "    '$fc_client_data[pay_m]',\n";                                                  //３２：支払日（月）
-            $sql .= "    '$fc_client_data[pay_d]',\n";                                                  //３３：支払日（日）
-            $sql .= "    '$fc_client_data[coax]',\n";                                                   //３４：金額（丸め区分）
-            $sql .= "    '$fc_client_data[tax_div]',\n";                                                //３５：消費税（課税単位）
-            $sql .= "    '$fc_client_data[tax_franct]',\n";                                             //３６：消費税（端数）
-            $sql .= "    '$fc_client_data[c_tax_div]',\n";                                              //３７：課税区分
-            $sql .= "    '1',\n";                                                                       //３８：銀行手数料負担区分
-            $sql .= "    't',\n";                                                                       //３９：東陽フラグ
-            $sql .= "    $c_pattern_id,\n";                                                             //４０：請求書パターン
-            $sql .= "    '1',\n";                                                                       //４１：請求書発行
-            $sql .= "    '1',\n";                                                                       //４２：請求書送付
-            $sql .= "    $s_pattern_id,\n";                                                             //４３：売上伝票発行パターン
-            $sql .= "    '2',\n";                                                                       //４４：伝票発行
-            $sql .= "    '2',\n";                                                                       //４５：納品書コメント
+            $sql .= "    '$fc_client_data[post_no1]',\n";                                               //２２：郵便番号１  postal code 1
+            $sql .= "    '$fc_client_data[post_no2]',\n";                                               //２３：郵便番号２ postal code  2
+            $sql .= "    '".addslashes($fc_client_data[address1])."',\n";                               //２４：住所１ address
+            $sql .= "    '".addslashes($fc_client_data[address2])."',\n";                               //２５：住所２ address
+            $sql .= "    '".addslashes($fc_client_data[address3])."',\n";                               //２６：住所３ address
+            $sql .= "    '".addslashes($fc_client_data[address_read])."',\n";                           //２７：住所（フリガナ）  address (katakana)
+            $sql .= "    $area_id,\n";                                                                  //２８：地区 district
+            $sql .= "    $fc_client_data[sbtype_id],\n";                                                //２９：業種 industry 
+            $sql .= "    '$fc_client_data[trade_id]',\n";                                               //３０：取引区分 trade classfication
+            $sql .= "    '$fc_client_data[close_day]',\n";                                              //３１：締日     close day
+            $sql .= "    '$fc_client_data[pay_m]',\n";                                                  //３２：支払日（月） payment date (month)
+            $sql .= "    '$fc_client_data[pay_d]',\n";                                                  //３３：支払日（日） payment date (day)
+            $sql .= "    '$fc_client_data[coax]',\n";                                                   //３４：金額（丸め区分） amount (round up/down)
+            $sql .= "    '$fc_client_data[tax_div]',\n";                                                //３５：消費税（課税単位）  tax (tax unit)
+            $sql .= "    '$fc_client_data[tax_franct]',\n";                                             //３６：消費税（端数） tax (fraction)
+            $sql .= "    '$fc_client_data[c_tax_div]',\n";                                              //３７：課税区分 tax classification
+            $sql .= "    '1',\n";                                                                       //３８：銀行手数料負担区分 bank transaction fee classification
+            $sql .= "    't',\n";                                                                       //３９：東陽フラグ  toyo flag
+            $sql .= "    $c_pattern_id,\n";                                                             //４０：請求書パターン  billing statement pattern
+            $sql .= "    '1',\n";                                                                       //４１：請求書発行 issue billing statement
+            $sql .= "    '1',\n";                                                                       //４２：請求書送付 send billing satatement
+            $sql .= "    $s_pattern_id,\n";                                                             //４３：売上伝票発行パターン  sale slip issue pattern
+            $sql .= "    '2',\n";                                                                       //４４：伝票発行 issu slip
+            $sql .= "    '2',\n";                                                                       //４５：納品書コメント comment or no comment on delivery note
             $sql .= "    $branch_id ";
             $sql .= ");\n";
 
@@ -2879,7 +2879,7 @@ if($_POST["button"]["entry_button"] == "登　録" && $form->validate() && $err_flg
                 exit;
             }
 
-            //登録した東陽のショップIDを抽出
+            //登録した東陽のショップIDを抽出 extract the shop ID of toyo registered
             $sql  = "SELECT";
             $sql .= "   client_id ";
             $sql .= "FROM";
@@ -2897,7 +2897,7 @@ if($_POST["button"]["entry_button"] == "登　録" && $form->validate() && $err_flg
             $result     = Db_Query($conn, $sql);
             $fc_client_id = pg_fetch_result($result ,0,0);
             
-            //東陽のデータを得意先情報テーブルに登録
+            //東陽のデータを得意先情報テーブルに登録 register toyo data i nthe customer information table
             $sql  = "INSERT INTO t_client_info (";
             $sql .= "   client_id,";
             $sql .= "   claim_id,";
@@ -2914,7 +2914,7 @@ if($_POST["button"]["entry_button"] == "登　録" && $form->validate() && $err_flg
                 exit;
             }
 
-            //請求先テーブルに登録
+            //請求先テーブルに登録 register in the billing address tbale
             $sql  = "INSERT INTO t_claim (";
             $sql .= "   client_id,";
             $sql .= "   claim_id,";
@@ -2956,9 +2956,9 @@ if($_POST["button"]["entry_button"] == "登　録" && $form->validate() && $err_flg
             $sql .= "   AND";
             $sql .= "   t_price.r_price IS NOT NULL";
             $sql .= "   AND";
-            $sql .= "   t_price.shop_id = 1\n";          //本部のデータ
+            $sql .= "   t_price.shop_id = 1\n";          //本部のデータ hq data
             $sql .= "   AND";
-            $sql .= "   t_goods_info.shop_id = 1\n";     //本部のデータ
+            $sql .= "   t_goods_info.shop_id = 1\n";     //本部のデータ hq data
             $sql .= ";";
 
 
@@ -2972,7 +2972,7 @@ if($_POST["button"]["entry_button"] == "登　録" && $form->validate() && $err_flg
                 #2009-10-09 hashimoto-y
                 $stock_manage = pg_fetch_result($goods_res, $i,1);
 
-                //単価テーブルへ登録
+                //単価テーブルへ登録 register in the price per unit table
                 for($j = 2; $j < 4; $j++){
                     $sql  = "INSERT INTO t_price(";
                     $sql .= "   goods_id,";
@@ -3023,10 +3023,10 @@ if($_POST["button"]["entry_button"] == "登　録" && $form->validate() && $err_flg
             }
         }
 
-    //更新処理
+    //更新処理 update process
     }else if($new_flg == false){
-        // 得意先登録前に請求先IDを取得
-        // 請求先が入力された場合
+        // 得意先登録前に請求先IDを取得 acquire the billing client ID before registering the cusotmer
+        // 請求先が入力された場合 if the billing clientis inputted
         if($claim_name != null){
             $sql  = "SELECT";
             $sql .= "   client_id";
@@ -3048,7 +3048,7 @@ if($_POST["button"]["entry_button"] == "登　録" && $form->validate() && $err_flg
             $claim_id = $get_client_id;
         }
 
-        //取引先マスタ
+        //取引先マスタ trade partner master
         $update_sql = "UPDATE";
         $update_sql .= "    t_client";
         $update_sql .= " SET";
@@ -3143,66 +3143,66 @@ if($_POST["button"]["entry_button"] == "登　録" && $form->validate() && $err_flg
         $update_sql .= "    coax            = '$coax',";
         $update_sql .= "    tax_div         = '$tax_unit',";
         $update_sql .= "    tax_franct      = '$fraction_div',";
-        $update_sql .= "    shop_id         = $shop_id,";                   //ショップID
-        $update_sql .= "    shop_name       = '$comp_name',";               //社名
-        $update_sql .= "    shop_read       = '$comp_name_read',";          //社名(フリガナ)
-        $update_sql .= "    shop_name2      = '$comp_name2',";              //社名2
-        $update_sql .= "    shop_read2      = '$comp_name_read2',";         //社名2(フリガナ)
+        $update_sql .= "    shop_id         = $shop_id,";                   //ショップID shop Id 
+        $update_sql .= "    shop_name       = '$comp_name',";               //社名 company name
+        $update_sql .= "    shop_read       = '$comp_name_read',";          //社名(フリガナ) company name (katkana)
+        $update_sql .= "    shop_name2      = '$comp_name2',";              //社名2 company name2
+        $update_sql .= "    shop_read2      = '$comp_name_read2',";         //社名2(フリガナ) company name2 (katkana)
         $update_sql .= "    url             = '$url',";                     //URL
-        $update_sql .= "    represe         = '$represent_position',";      //代表者役職
-        $update_sql .= "    rep_htel        = '$represent_cell',";          //代表者携帯
-        $update_sql .= "    charger         = '$contact_position',";        //連絡担当者役職
-        $update_sql .= "    cha_htel        = '$contact_cell',";            //連絡担当者携帯
-        $update_sql .= "    surety_name1    = '$guarantor1',";              //保証人１名前
-        $update_sql .= "    surety_addr1    = '$guarantor1_address',";      //保証人１住所
-        $update_sql .= "    surety_name2    = '$guarantor2',";              //保証人２名前
-        $update_sql .= "    surety_addr2    = '$guarantor2_address',";      //保証人２住所
-        $update_sql .= "    trade_base      = '$position',";                //営業拠点
-        $update_sql .= "    trade_area      = '$business_limit',";          //商圏
-        $update_sql .= "    join_money      = '$join_money',";              //加盟金
-        $update_sql .= "    guarant_money   = '$assure_money',";            //保証金
-        $update_sql .= "    royalty_rate    = $royalty,";                   //ロイヤリティ
-        $update_sql .= "    cutoff_month    = '$accounts_month',";          //決算月
-        $update_sql .= "    c_compa_name    = '$contract_name',";           //契約会社名
-        $update_sql .= "    c_compa_rep     = '$represent_contract',";      //契約代表者
-        $update_sql .= "    license         = '$qualify_pride',";           //所有資格・得意分野
-        $update_sql .= "    s_contract      = '$special_contract',";        //特約
-        $update_sql .= "    other           = '$other',";                   //その他
+        $update_sql .= "    represe         = '$represent_position',";      //代表者役職 rep position 
+        $update_sql .= "    rep_htel        = '$represent_cell',";          //代表者携帯 rep tel 
+        $update_sql .= "    charger         = '$contact_position',";        //連絡担当者役職 contact in person positiion
+        $update_sql .= "    cha_htel        = '$contact_cell',";            //連絡担当者携帯 contact in person tel
+        $update_sql .= "    surety_name1    = '$guarantor1',";              //保証人１名前 guarantor1 name
+        $update_sql .= "    surety_addr1    = '$guarantor1_address',";      //保証人１住所 guarantor1 address
+        $update_sql .= "    surety_name2    = '$guarantor2',";              //保証人２名前 guarantor2 name
+        $update_sql .= "    surety_addr2    = '$guarantor2_address',";      //保証人２住所 guarantor2 address
+        $update_sql .= "    trade_base      = '$position',";                //営業拠点 base where sale is conduct
+        $update_sql .= "    trade_area      = '$business_limit',";          //商圏 trade area
+        $update_sql .= "    join_money      = '$join_money',";              //加盟金 joining fee
+        $update_sql .= "    guarant_money   = '$assure_money',";            //保証金 security deposit
+        $update_sql .= "    royalty_rate    = $royalty,";                   //ロイヤリティ royalty
+        $update_sql .= "    cutoff_month    = '$accounts_month',";          //決算月  cutoff month for accounting
+        $update_sql .= "    c_compa_name    = '$contract_name',";           //契約会社名 contracted company name
+        $update_sql .= "    c_compa_rep     = '$represent_contract',";      //契約代表者 contracted representati
+        $update_sql .= "    license         = '$qualify_pride',";           //所有資格・得意分野 acquired license/field of expertise
+        $update_sql .= "    s_contract      = '$special_contract',";        //特約 special clause
+        $update_sql .= "    other           = '$other',";                   //その他  others
         if($establish_day == "--"){
-        $update_sql .= "    establish_day   = null,";                       //創業日
+        $update_sql .= "    establish_day   = null,";                       //創業日 est date
         }else{
         $update_sql .= "    establish_day   = '$establish_day',";
         }
         if($corpo_day == "--"){
-        $update_sql .= "    regist_day      = null, ";                      //法人登記日
+        $update_sql .= "    regist_day      = null, ";                      //法人登記日 register date
         }else{
         $update_sql .= "    regist_day      = '$corpo_day,',";
         }
-        $update_sql .= "    sbtype_id       = $btype,";                     //業種
+        $update_sql .= "    sbtype_id       = $btype,";                     //業種 industry
         if($inst == ""){
             $update_sql .= "        inst_id = null,";
         }else{
-	        $update_sql .= "    inst_id     = $inst,";                      //施設
+	        $update_sql .= "    inst_id     = $inst,";                      //施設 facility
         }
         if($bstruct == ""){
             $update_sql .= "        b_struct = null,";
         }else{
-	        $update_sql .= "    b_struct    = $bstruct,";                   //業態
+	        $update_sql .= "    b_struct    = $bstruct,";                   //業態 business type
         }
-        $update_sql .= "    accountant_name = '$accountant_name', ";        //会計担当者氏名
-        $update_sql .= "    client_cread    = '$cname_read', ";             //略称(フリガナ)
+        $update_sql .= "    accountant_name = '$accountant_name', ";        //会計担当者氏名  accounting reprsentative name
+        $update_sql .= "    client_cread    = '$cname_read', ";             //略称(フリガナ) abbreviation (katakana)
         $update_sql .= "    email           = '$email', ";                  //Email
-        $update_sql .= "    direct_tel      = '$direct_tel', ";             //直通TEL
-        $update_sql .= "    deal_history    = '$record', ";                 //取引履歴
-        $update_sql .= "    importance      = '$important', ";              //重要事項
-        $update_sql .= "    deliver_effect  = '$deliver_effect' ,";         //納品書コメント(効果)
-        $update_sql .= "    claim_send      = '$claim_send', ";             //請求書送付(メール)
-        $update_sql .= "    cutoff_day      = '$accounts_day', ";           //決算日
-        $update_sql .= "    account_tel     = '$account_tel',";             //会計ご担当者携帯
-        $update_sql .= "    compellation    = '$prefix', ";                 //敬称
-        $update_sql .= "    c_pattern_id    = $claim_pattern,";             //請求書様式
-        $update_sql .= "    c_tax_div       = $c_tax_div,";                 //課税区分
-        $update_sql .= "    payout_d        = $payout_d,";                  //課税区分
+        $update_sql .= "    direct_tel      = '$direct_tel', ";             //直通TEL direct
+        $update_sql .= "    deal_history    = '$record', ";                 //取引履歴 trade history
+        $update_sql .= "    importance      = '$important', ";              //重要事項 important items 
+        $update_sql .= "    deliver_effect  = '$deliver_effect' ,";         //納品書コメント(効果) delivery note comment (effect)
+        $update_sql .= "    claim_send      = '$claim_send', ";             //請求書送付(メール) billing statement send (delivery)
+        $update_sql .= "    cutoff_day      = '$accounts_day', ";           //決算日 cutoff date
+        $update_sql .= "    account_tel     = '$account_tel',";             //会計ご担当者携帯 accounting reprsentative tel
+        $update_sql .= "    compellation    = '$prefix', ";                 //敬称 compellation
+        $update_sql .= "    c_pattern_id    = $claim_pattern,";             //請求書様式 billing statement forat
+        $update_sql .= "    c_tax_div       = $c_tax_div,";                 //課税区分 tax classification
+        $update_sql .= "    payout_d        = $payout_d,";                  //課税区分 tax classification
         $update_sql .= "    payout_m        = $payout_m,";                 
 
         #2010-05-01 hashimoto-y
@@ -3222,7 +3222,7 @@ if($_POST["button"]["entry_button"] == "登　録" && $form->validate() && $err_flg
             Db_Query($conn, "ROLLBACK;");
             exit;
         }
-        //登録した情報をログに残す
+        //登録した情報をログに残す leave the information registered in the log
         $result = Log_Save( $conn, "shop", "2",$shop_cd1."-".$shop_cd2,$shop_name);
         if($result === false){
             Db_Query($conn, "ROLLBACK");
@@ -3233,7 +3233,7 @@ if($_POST["button"]["entry_button"] == "登　録" && $form->validate() && $err_flg
             Child_Update($_GET[client_id], $close_day, $pay_month, $pay_day, $coax, $tax_unit, $fraction_div, $c_tax_div, $conn);
         }
 
-        //請求先マスタ
+        //請求先マスタ billing client master
         $update_sql = " UPDATE t_claim ";
         $update_sql .= "SET ";
         $update_sql .= "    claim_id = $claim_id";
@@ -3259,7 +3259,7 @@ if($_POST["button"]["entry_button"] == "登　録" && $form->validate() && $err_flg
         }
 
 
-        //代行先の名前をアップデート
+        //代行先の名前をアップデート update the name of the agent
         $act_data = array(
                         "act_id"   => $get_client_id,
                         "act_cd1"  => $shop_cd1,
@@ -3269,12 +3269,12 @@ if($_POST["button"]["entry_button"] == "登　録" && $form->validate() && $err_flg
         Aord_Act_Data_Update ($conn, $act_data);
 
 
-
-        //更新履歴テーブル
+ 
+        //更新履歴テーブル update history table
         $update_sql  = " INSERT INTO t_renew (";
-        $update_sql .= "    client_id,";                        //得意先ID
-        $update_sql .= "    staff_id,";                         //スタッフID
-        $update_sql .= "    renew_time";                        //現在のtimestamp
+        $update_sql .= "    client_id,";                        //得意先ID customer ID
+        $update_sql .= "    staff_id,";                         //スタッフID staff ID
+        $update_sql .= "    renew_time";                        //現在のtimestamp current timestamp
         $update_sql .= " )VALUES(";
         $update_sql .= "    (SELECT";
         $update_sql .= "        client_id";
@@ -3303,14 +3303,14 @@ if($_POST["button"]["entry_button"] == "登　録" && $form->validate() && $err_flg
     $freeze_flg = true;
 }
 
-//自動入力ボタン押下
+//自動入力ボタン押下 autofill button pressed
 if($_POST["input_button_flg"]==true){
-    $post1     = $_POST["form_post"]["no1"];             //郵便番号１
-    $post2     = $_POST["form_post"]["no2"];             //郵便番号２
+    $post1     = $_POST["form_post"]["no1"];             //郵便番号１ postal code 1
+    $post2     = $_POST["form_post"]["no2"];             //郵便番号２ postal code 2
     $post_value = Post_Get($post1,$post2,$conn);
-    //郵便番号フラグをクリア
+    //郵便番号フラグをクリア clear the postal code flag
     $cons_data["input_button_flg"] = "";
-    //郵便番号から自動入力
+    //郵便番号から自動入力 autofill using the postal code
     $cons_data["form_post"]["no1"] = $_POST["form_post"]["no1"];
     $cons_data["form_post"]["no2"] = $_POST["form_post"]["no2"];
     $cons_data["form_address_read"] = $post_value[0];
@@ -3322,8 +3322,8 @@ if($_POST["input_button_flg"]==true){
 
 if($freeze_flg == true){
 
-    // 戻るボタンの遷移先IDを取得
-    // 新規登録時
+    // 戻るボタンの遷移先IDを取得 acquire the Id of the page that will be transition when the back button is presed
+    // 新規登録時 when new registration
     if ($get_client_id == null){
         $sql    = "SELECT MAX(client_id) FROM t_client \n";
         $sql   .= "WHERE shop_id = $shop_id \n";
@@ -3331,18 +3331,18 @@ if($freeze_flg == true){
         $sql   .= ";\n";
         $res    = Db_Query($conn, $sql);
         $get_id = pg_fetch_result($res, 0, 0);
-    // 変更時
+    // 変更時 when its an edit
     }else{
         $get_id = $get_client_id;
     }
 
-	//登録確認画面では以下のボタンを表示
-	//戻る
+	//登録確認画面では以下のボタンを表示 display the following button in the registration confirmation button
+	//戻る back
 	$form->addElement("button","return_button","戻　る","onClick=\"location.href='".$_SERVER["PHP_SELF"]."?client_id=$get_id'\"");
 	//OK
 	$form->addElement("button","comp_button","登録完了","onClick=\"location.href='./1-1-103.php'\"");
 
-    //契約登録へ
+    //契約登録へ register contract
 	//$form->addElement("button","contract_button","契約登録","");
 
     $form->addElement("static","form_claim_link","","請求先");
@@ -3351,8 +3351,8 @@ if($freeze_flg == true){
 
 }else{
 
-    //登録確認画面の場合は、以下のボタンを非表示
-    //自動入力
+    //登録確認画面の場合は、以下のボタンを非表示 dont display the following button in the registration confirmation button
+    //自動入力 auto fill
     $button[] = $form->createElement("button","input_button","自動入力","onClick=\"javascript:Button_Submit_1('input_button_flg', '#', 'true', this)\""    ); 
 
     if($change_flg == true){
@@ -3360,12 +3360,12 @@ if($freeze_flg == true){
     }else{
         $message = "登録します。";
     }
-    //登録ボタン
+    //登録ボタン register button
     $button[] = $form->createElement("submit", "entry_button", "登　録", "onClick=\"javascript:return Dialogue('$message','#', this)\" $disabled");
 
-    // 変更時のみ出力
+    // 変更時のみ出力 only output when its an edit
     if ($get_client_id != null){
-        //戻るボタン
+        //戻るボタン back button
         $button[] = $form->createElement("button", "back_button", "戻　る", "onClick='javascript:location.href = \"./1-1-101.php\"'");
     }
 
@@ -3376,13 +3376,13 @@ if($freeze_flg == true){
     }
 
     $form->addGroup($button, "button", "");
-    //次へボタン
+    //次へボタン next button
     if($next_id != null){
         $form->addElement("button","next_button","次　へ","onClick=\"location.href='./1-1-103.php?client_id=$next_id'\"");
     }else{
         $form->addElement("button","next_button","次　へ","disabled");
     }
-    //前へボタン
+    //前へボタン before button
     if($back_id != null){
         $form->addElement("button","back_button","前　へ","onClick=\"location.href='./1-1-103.php?client_id=$back_id'\"");
     }else{
@@ -3391,9 +3391,9 @@ if($freeze_flg == true){
 }
 
 /*******************************/
-//関数
+//関数 fucntion
 /*******************************/
-//初期部署登録関数
+//初期部署登録関数 function for registering the initial departmment
 function Regist_Init_Part($db_con,$shop_id){
 
     $sql  = "INSERT INTO ";
@@ -3415,10 +3415,10 @@ function Regist_Init_Part($db_con,$shop_id){
 
 }
 
-//初期支店を部署に登録する関数
+//初期支店を部署に登録する関数 function that register the inital branch in the department
 function Update_Part_Branch($db_con,$shop_id,$branch_id){
 
-    // 変更SQL
+    // 変更SQL edit SQL
     $sql  = "UPDATE t_part SET ";
     $sql .= "branch_id     = '$branch_id' ";
     $sql .= "WHERE shop_id = $shop_id ";
@@ -3429,7 +3429,7 @@ function Update_Part_Branch($db_con,$shop_id,$branch_id){
 }
 
 
-//親を変更した場合に子をアップデートする関数
+//親を変更した場合に子をアップデートする関数 function that update the child when the parent is edited
 function Child_Update($client_id, $close_day, $pay_m, $pay_d, $coax, $tax_div, $tax_franct, $c_tax_div, $db_con){
 
     $sql  = "UPDATE \n";
@@ -3462,10 +3462,10 @@ function Child_Update($client_id, $close_day, $pay_m, $pay_d, $coax, $tax_div, $
     }
 }
 
-//変更時に代行先OR照会口座先として指定されている伝票をアップデート
+//変更時に代行先OR照会口座先として指定されている伝票をアップデート update the slip that will be assigned as the agent or the client that introduced the account when an edit happens
 function Aord_Act_Data_Update ($conn, $act_data){
 
-    //代行伝票アップデート
+    //代行伝票アップデート update the agent slip
     $sql  = "UPDATE ";
     $sql .= "   t_aorder_h ";
     $sql .= "SET ";
@@ -3486,7 +3486,7 @@ function Aord_Act_Data_Update ($conn, $act_data){
         exit;
     }
 
-    //紹介口座先アップデート
+    //紹介口座先アップデート update the client that introduced the account
     $sql  = "UPDATE ";
     $sql .= "   t_aorder_h ";
     $sql .= "SET ";
@@ -3508,7 +3508,7 @@ function Aord_Act_Data_Update ($conn, $act_data){
     }
 }
 
-/****************************契約終了日取得*************************/
+/****************************契約終了日取得 acquire contract end date*************************/
 
 $contract = "function Contract(me){\n";
 $contract .= "  var TERM = \"form_cont_peri\";\n";
@@ -3602,7 +3602,7 @@ $contract .= "}\n";
 /***************************/
 //Code_value
 /***************************/
-//請求先
+//請求先 billing client
 $where_sql = "    WHERE";
 $where_sql .= "        client_div = '3'";
 
@@ -3611,7 +3611,7 @@ $code_value = Code_Value("t_client",$conn,'',4);
 /****************************/
 //js
 /****************************/
-//取引区分に現金を選択した場合は、締日を支払日にする。
+//取引区分に現金を選択した場合は、締日を支払日にする。 make the close day the payment date when the trade classification is cash"現金"
 $contract .= "function trade_close_day(){\n";
 $contract .= "  if(document.dateForm.trade_aord_1.value=='61'){\n";
 $contract .= "      var close_day = document.dateForm.form_close_1.value\n";
@@ -3628,22 +3628,22 @@ $contract .= "      document.dateForm.form_payout_day.value=close_day;\n";
 $contract .= "  } \n";
 $contract .= "}\n";
 /****************************/
-//HTMLヘッダ
+//HTMLヘッダ html header
 /****************************/
 $html_header = Html_Header($page_title);
 
 /****************************/
-//HTMLフッタ
+//HTMLフッタ html footer
 /****************************/
 $html_footer = Html_Footer();
 
 /****************************/
-//メニュー作成
+//メニュー作成 create menu
 /****************************/
 $page_menu = Create_Menu_h('system','1');
 
 /****************************/
-//画面ヘッダー作成
+//画面ヘッダー作成 create screen header
 /****************************/
 $count_sql  = " SELECT ";
 $count_sql .= "     COUNT(client_cd1)";
@@ -3654,7 +3654,7 @@ $count_sql .= "    client_div = '3'";
 $count_sql .= "     AND";
 $count_sql .= "     t_client.state = 1";
 $count_sql .= ";";
-//ヘッダーに表示させる取引中データ件数
+//ヘッダーに表示させる取引中データ件数 number of transacting data that will be displayed in the header
 $result = Db_Query($conn, $count_sql);
 $dealing_count = pg_fetch_result($result,0,0);
 
@@ -3665,7 +3665,7 @@ $count_sql .= "    t_client ";
 $count_sql .= " WHERE";
 $count_sql .= "    client_div = '3'";
 $count_sql .= ";";
-//ヘッダーに表示させる全件数
+//ヘッダーに表示させる全件数 all items that will be displayed in the header
 $result = Db_Query($conn, $count_sql);
 $total_count = pg_fetch_result($result,0,0);
 
@@ -3674,14 +3674,14 @@ $page_title .= "　".$form->_elements[$form->_elementIndex[new_button]]->toHtml()
 $page_title .= "　".$form->_elements[$form->_elementIndex[change_button]]->toHtml();
 $page_header = Create_Header($page_title);
 
-// Render関連の設定
+// Render関連の設定 render related setting
 $renderer =& new HTML_QuickForm_Renderer_ArraySmarty($smarty);
 $form->accept($renderer);
 
-//form関連の変数をassign
+//form関連の変数をassign assign form related variable
 $smarty->assign('form',$renderer->toArray());
 
-//その他の変数をassign
+//その他の変数をassign assign other variables
 $smarty->assign('var',array(
     'html_header'           => "$html_header",
     'page_menu'             => "$page_menu",
@@ -3725,7 +3725,7 @@ $smarty->assign('var',array(
     'shop_name_err'         => "$shop_name_err",
 ));
 
-//テンプレートへ値を渡す
+//テンプレートへ値を渡す pass thevvalue to the template
 $smarty->display(basename($_SERVER[PHP_SELF] .".tpl"));
 
 ?>
