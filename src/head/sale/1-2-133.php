@@ -59,28 +59,28 @@ if($disp_stat == 1 || ($disp_stat == 6 && $_GET["sinsei_msg"] != true)){
 Get_ID_Check3($rental_id);
 
 /****************************/
-//受注入力に渡すPOST情報作成
+//受注入力に渡すPOST情報作成 Create the data will be passed to POST for enter order entry 1-2-101
 /****************************/
-//ヘッダー情報
+//ヘッダー情報 header information
 $sql  = "SELECT ";
-$sql .= "    t_rental_h.shop_cd1,";           //ショップCD1 0
-$sql .= "    t_rental_h.shop_cd2,";           //ショップCD2 1
-$sql .= "    t_rental_h.apply_day, ";         //レンタル申込日 2
-$sql .= "    t_rental_h.forward_day,";        //レンタル出荷日 3
-$sql .= "    t_rental_h.shop_id,";            //ショップID 4
-$sql .= "    t_client.coax, ";                //丸め区分 5
-$sql .= "    t_rental_h.h_staff_id ";         //本部担当者ID 6
+$sql .= "    t_rental_h.shop_cd1,";           //ショップCD1 0 shop_cd1 -> this i think is shop code 1
+$sql .= "    t_rental_h.shop_cd2,";           //ショップCD2 1 shop_cd2 -> this I think is shop code 2
+$sql .= "    t_rental_h.apply_day, ";         //レンタル申込日 2 rental application date -> This is equivalent to "ord_time - t_aorder_h"
+$sql .= "    t_rental_h.forward_day,";        //レンタル出荷日 3 rental shipment date -> this is going to be the value that is equivalent to "arrival_day - t_aorder_h" and "hope_day - t_aorder_h"
+$sql .= "    t_rental_h.shop_id,";            //ショップID 4 Shop ID -> I think this is equivalent to "client_id - t_aorder_h"
+$sql .= "    t_client.coax, ";                //丸め区分 5 Decimal classification -> I am not sure if this appears on the UI but I think eto yung decimals sa 原価金額(cost unit price) and 売上金額(unit price of sales) 
+$sql .= "    t_rental_h.h_staff_id ";         //本部担当者ID 6 HQ staff ID -> I think this is equivalent to "c_staff_id"
 $sql .= "FROM ";
 $sql .= "    t_rental_h ";
 $sql .= "    INNER JOIN t_client ON t_client.client_id = t_rental_h.shop_id ";
 $sql .= "WHERE ";
 $sql .= "    t_rental_h.rental_id = $rental_id;";
 $result = Db_Query($db_con, $sql);
-//GETデータ判定
+//GETデータ判定 determine GET data 
 Get_Id_Check($result);
 $ren_h_data = Get_Data($result,2);
 
-//本部情報取得
+//本部情報取得 retrieve HQ info
 $sql  = "SELECT ";
 $sql .= "    ware_id ";
 $sql .= "FROM ";
@@ -90,38 +90,38 @@ $sql .= "    client_id = (SELECT client_id FROM t_client WHERE client_div = 0);"
 $result = Db_Query($db_con, $sql); 
 $ware_id = pg_fetch_result($result, 0,0);
 
-$con_data["form_client"]["cd1"]   = $ren_h_data[0][0];  //ショップCD1
-$con_data["form_client"]["cd2"]   = $ren_h_data[0][1];  //ショップCD2
-$con_data["form_ware_select"]     = $ware_id;           //基本出荷倉庫
+$con_data["form_client"]["cd1"]   = $ren_h_data[0][0];  //ショップCD1 shopCD1 -> this i think is shop code 1
+$con_data["form_client"]["cd2"]   = $ren_h_data[0][1];  //ショップCD2 shopCD2 -> this i think is shop code 2
+$con_data["form_ware_select"]     = $ware_id;           //基本出荷倉庫 shipping warehouse of the product -> I wasnt able to encircle this sa picture i sent you but I think this is the value for the 出荷倉庫(shipping warehouse) in the header. 
 
 $forward_day_array = explode('-',$ren_h_data[0][2]);
-$con_data["form_ord_day"]["y"] = $forward_day_array[0]; //受注日
+$con_data["form_ord_day"]["y"] = $forward_day_array[0]; //受注日 this says "order date" which is the equivalent to "ord_time - t_aorder_h". I think this is what you will use instead of the header info above?? but im not sure
 $con_data["form_ord_day"]["m"] = $forward_day_array[1];   
 $con_data["form_ord_day"]["d"] = $forward_day_array[2];   
 
 $rental_day_array = explode('-',$ren_h_data[0][3]);
 
-$con_data["form_hope_day"]["y"] = $rental_day_array[0];  //希望納期
+$con_data["form_hope_day"]["y"] = $rental_day_array[0];  //希望納期 this says desired delivery date which is equivalent to "hope_day - t_aorder_h". I think this is what you will use instead of the header info above?? but im not sure
 $con_data["form_hope_day"]["m"] = $rental_day_array[1];   
 $con_data["form_hope_day"]["d"] = $rental_day_array[2];   
 
-$con_data["form_arr_day"]["y"] = $rental_day_array[0];  //出荷日
+$con_data["form_arr_day"]["y"] = $rental_day_array[0];  //出荷日 this says scheduled shipping date which is equivalent to "arrival_day - t_aorder_h". I think this is what you will use instead of the header info above?? but im not sure
 $con_data["form_arr_day"]["m"] = $rental_day_array[1];   
 $con_data["form_arr_day"]["d"] = $rental_day_array[2];   
 
-$client_id = $ren_h_data[0][4];  //得意先ID
-$coax      = $ren_h_data[0][5];  //丸め区分
+$client_id = $ren_h_data[0][4];  //得意先ID clientID -> maybe this is the equivalent of "client_id - t_aorder_h"
+$coax      = $ren_h_data[0][5];  //丸め区分 Decimal classification -> I am not sure if this appears on the UI but I think eto yung decimals sa 原価金額(cost unit price) and 売上金額(unit price of sales) 
 
 $con_data["form_staff_select"] = $ren_h_data[0][6];
 
-$con_data["client_search_flg"] = true;  //得意先リンク押下判定フラグ
+$con_data["client_search_flg"] = true;  //得意先リンク押下判定フラグ flag for checking if the client name (hyperlink) was pressed.
 
 /****************************/
-//データ復元
+//データ復元 restore data
 /****************************/
 $sql  = "SELECT ";
-$sql .= "    goods_cd,";               //商品CD 
-$sql .= "    num ";                    //数量 
+$sql .= "    goods_cd,";               //商品CD product(goods) CD(code)  -> I think this is equivalent to number 5 in the picture which is "goods_id - t_goods"
+$sql .= "    num ";                    //数量 quantity -> I think this is equivalen to "num - t_aorder_d"
 $sql .= "FROM ";
 $sql .= "    t_rental_d ";
 $sql .= "WHERE ";
@@ -130,17 +130,17 @@ $sql .= "ORDER BY line;";
 $result = Db_Query($db_con, $sql);
 $ren_d_data = Get_Data($result,2);
 
-//重複した商品は合わせる
+//重複した商品は合わせる combine the products that are the same
 for($i=0;$i<count($ren_d_data);$i++){
 	$ren_data[$ren_d_data[$i][0]] = $ren_data[$ren_d_data[$i][0]] + $ren_d_data[$i][1];
 }
 
-//データ復元
+//データ復元 restore data
 $i=0;
 while($data_num = each($ren_data)){
 	$num = $data_num[0];
 
-    $designated_date = 7;  //出荷可能数取得
+    $designated_date = 7;  //出荷可能数取得 Retrive shipping capacity -> This wasnt numbered in the picture I sent you but I think this is the 出荷可能数"shipping capacity"
 
 	$sql  = "SELECT\n";
     $sql .= "   t_goods.goods_id,\n";
@@ -261,21 +261,21 @@ while($data_num = each($ren_data)){
     $result = Db_Query($db_con, $sql);
 	$goods_data = Get_Data($result,2);
 
-	$con_data["hdn_goods_id"][$i]         = $goods_data[0][0];   //商品ID
-	$con_data["hdn_name_change"][$i]      = $goods_data[0][1];   //品名変更フラグ
-	$con_data["hdn_stock_manage"][$i]     = $goods_data[0][2];   //在庫管理
-	$con_data["form_goods_cd"][$i]        = $goods_data[0][3];   //商品CD
-	$con_data["form_goods_name"][$i]      = $goods_data[0][4];   //商品名
-	$con_data["form_sale_num"][$i]        = $ren_data[$num];     //受注数
-	$con_data["form_stock_num"][$i]       = $goods_data[0][5];   //実棚数
-	$con_data["hdn_stock_num"][$i]        = $goods_data[0][5];   //実棚数（hidden）
-	$con_data["form_rorder_num"][$i]      = $goods_data[0][6];   //発注済数
-	$con_data["form_rstock_num"][$i]      = $goods_data[0][7];   //引当数
-	$con_data["form_designated_num"][$i]  = $goods_data[0][8];   //出荷可能数
+	$con_data["hdn_goods_id"][$i]         = $goods_data[0][0];   //商品ID product(goods) ID
+	$con_data["hdn_name_change"][$i]      = $goods_data[0][1];   //品名変更フラグ product name change flag
+	$con_data["hdn_stock_manage"][$i]     = $goods_data[0][2];   //在庫管理 inventory management
+	$con_data["form_goods_cd"][$i]        = $goods_data[0][3];   //商品CD product(goods) CD(code)
+	$con_data["form_goods_name"][$i]      = $goods_data[0][4];   //商品名 product(goods) name
+	$con_data["form_sale_num"][$i]        = $ren_data[$num];     //受注数 ordered number of units. Not really sure where this will be used... maybe in number 11 出荷数"shipment number"?
+	$con_data["form_stock_num"][$i]       = $goods_data[0][5];   //実棚数 actual number of units in the shelves i think this is for number 7 in the pic
+	$con_data["hdn_stock_num"][$i]        = $goods_data[0][5];   //実棚数（hidden）actual number of units in the shelves (hidden)
+	$con_data["form_rorder_num"][$i]      = $goods_data[0][6];   //発注済数 ordered quantity -> I think this is number 8 in the picture
+	$con_data["form_rstock_num"][$i]      = $goods_data[0][7];   //引当数 Allocated number of units -> i think this number 9 in the pic i sent you
+	$con_data["form_designated_num"][$i]  = $goods_data[0][8];   //出荷可能数 -> Retrive shipping capacity -> This wasnt numbered in the picture I sent you but I think this is the 出荷可能数"shipping capacity"
 
-	//原価単価を整数部と少数部に分ける
+	//原価単価を整数部と少数部に分ける separate the 原価単価(cost unit price) into integer and decimals
     $cost_price = explode('.', $goods_data[0][9]);
-	$con_data["form_cost_price"][$i]["i"] = ($cost_price[0] != null)? $cost_price[0] : '0';  //原価単価
+	$con_data["form_cost_price"][$i]["i"] = ($cost_price[0] != null)? $cost_price[0] : '0';  //原価単価 -> 原価単価(cost unit price)
 	$con_data["form_cost_price"][$i]["d"] = ($cost_price[1] != null)? $cost_price[1] : '00';     
 
 	//$cost_price = explode('.', $goods_data[0][9]);
@@ -283,20 +283,20 @@ while($data_num = each($ren_data)){
 	//$con_data["form_cost_price"][$i]["d"] = 9999;     
 
 
-	//売上単価を整数部と少数部に分ける
+	//売上単価を整数部と少数部に分ける separate the 売上単価(unit price of sales) into integer and decimals
 /*
     $sale_price = explode('.', $goods_data[0][10]);
 	$con_data["form_sale_price"][$i]["i"] = $sale_price[0];  //売上単価
 	$con_data["form_sale_price"][$i]["d"] = ($sale_price[1] != null)? $sale_price[1] : '00';
 */
-	$con_data["form_sale_price"][$i]["i"] = '0';  //売上単価
+	$con_data["form_sale_price"][$i]["i"] = '0';  //売上単価 売上単価(unit price of sales)
 	$con_data["form_sale_price"][$i]["d"] = '00';
 
 	if($ren_data[$num] != null){
-		//原価金額計算
+		//原価金額計算 compute the 原価金額(cost amount)
         $cost_amount = bcmul($goods_data[0][9], $ren_data[$num],2);
         $cost_amount = Coax_Col($coax, $cost_amount);
-		//売上金額計算
+		//売上金額計算 compute the 売上金額(sales amount)
         //$sale_amount = bcmul($goods_data[0][10], $ren_data[$num],2);
         //$sale_amount = Coax_Col($coax, $sale_amount);
 		//受注数が入力されていた場合は、再計算
@@ -304,81 +304,81 @@ while($data_num = each($ren_data)){
 		//$con_data["form_sale_amount"][$i]     = number_format($sale_amount);
 		$con_data["form_sale_amount"][$i] = 0;
 	}
-	$con_data["hdn_tax_div"][$i]          = $goods_data[0][11]; //課税区分
+	$con_data["hdn_tax_div"][$i]          = $goods_data[0][11]; //課税区分 tax division
 	$i++;
 }
 
-//表示行数
+//表示行数 number of rows to display 
 $con_data["max_row"] = count($ren_data);
 
-//レンタル遷移判定フラグ
+//レンタル遷移判定フラグ flag for checking if it transitioned from rental page 1-2-133
 $con_data["rental_flg"] = true;
 
 /****************************/
-//部品作成
+//部品作成 craete parts
 /****************************/
-$form->addElement("hidden","form_client[cd1]");      //ショップCD1
-$form->addElement("hidden","form_client[cd2]");      //ショップCD2
-$form->addElement("hidden","form_ware_select");      //基本出荷倉庫
+$form->addElement("hidden","form_client[cd1]");      //ショップCD1 shop CD(code) 1
+$form->addElement("hidden","form_client[cd2]");      //ショップCD2 shop CD(code) 2
+$form->addElement("hidden","form_ware_select");      //基本出荷倉庫 shipping warehouse of the product -> I wasnt able to encircle this sa picture i sent you but I think this is the value for the 出荷倉庫(shipping warehouse) in the header. 
 
-$form->addElement("hidden","form_ord_day[y]","");    //受注日
+$form->addElement("hidden","form_ord_day[y]","");    //受注日 this says "order date" which is the equivalent to "ord_time - t_aorder_h". I think this is what you will use instead of the header info above?? but im not sure
 $form->addElement("hidden","form_ord_day[m]","");
 $form->addElement("hidden","form_ord_day[d]","");
 
-$form->addElement("hidden","form_hope_day[y]","");    //希望納期
+$form->addElement("hidden","form_hope_day[y]","");    //希望納期 this says desired delivery date which is equivalent to "hope_day - t_aorder_h". I think this is what you will use instead of the header info above?? but im not sure
 $form->addElement("hidden","form_hope_day[m]","");
 $form->addElement("hidden","form_hope_day[d]","");
 
-$form->addElement("hidden","form_arr_day[y]","");    //出荷日
+$form->addElement("hidden","form_arr_day[y]","");    //出荷日 this says scheduled shipping date which is equivalent to "arrival_day - t_aorder_h". I think this is what you will use instead of the header info above?? but im not sure
 $form->addElement("hidden","form_arr_day[m]","");
 $form->addElement("hidden","form_arr_day[d]","");
 
-$form->addElement("hidden", "max_row");             //最大行数
-$form->addElement("hidden", "rental_flg");          //レンタル遷移判定フラグ
-$form->addElement("hidden", "client_search_flg");   //得意先コード入力フラグ
+$form->addElement("hidden", "max_row");             //最大行数 max number of rows
+$form->addElement("hidden", "rental_flg");          //レンタル遷移判定フラグ flag for checking if it transitioned from rental page 1-2-133
+$form->addElement("hidden", "client_search_flg");   //得意先コード入力フラグ client(shop) code input flag
 
-$form->addElement("hidden","form_staff_select");    //本部担当者
+$form->addElement("hidden","form_staff_select");    //本部担当者 HQ staff -> I think this is equivalent to "c_staff_id"
 
 for($i=0;$i<count($ren_data);$i++){
 
-	//原価単価
+	//原価単価　原価単価(cost unit price)
 	$form->addElement("hidden","form_cost_price[$i][i]","");
 	$form->addElement("hidden","form_cost_price[$i][d]","");
-	//原価合計
+	//原価合計　total cost
 	$form->addElement("hidden","form_cost_amount[$i]","");
-	//売上単価
+	//売上単価 -> unit price of sales
 	$form->addElement("hidden","form_sale_price[$i][i]","");
 	$form->addElement("hidden","form_sale_price[$i][d]","");
-	//売上合計
+	//売上合計 -> sales total
 	$form->addElement("hidden","form_sale_amount[$i]","");
-	//商品ID
+	//商品ID -> goods(product) ID
     $form->addElement("hidden","hdn_goods_id[$i]");
-	//商品CD
+	//商品CD product CD(code)
 	$form->addElement("hidden","form_goods_cd[$i]","");
-	//商品名
+	//商品名 -> product(goods) name
 	$form->addElement("hidden","form_goods_name[$i]","");
-	//受注数
+	//受注数 ordered number of units. Not really sure where this will be used... maybe in number 11 出荷数"shipment number"?
 	$form->addElement("hidden","form_sale_num[$i]","");
-	//実棚数
+	//実棚数 actual number of units in the shelves i think this is for number 7 in the pic
 	$form->addElement("hidden","form_stock_num[$i]","");
-	//発注済数
+	//発注済数 ordered quantity -> I think this is number 8 in the picture
 	$form->addElement("hidden","form_rorder_num[$i]","");
-	//引当数
+	//引当数 Allocated number of units -> i think this number 9 in the pic i sent you
 	$form->addElement("hidden","form_rstock_num[$i]","");
-	//出荷可能数
+	//出荷可能数 -> Retrive shipping capacity -> This wasnt numbered in the picture I sent you but I think this is the 出荷可能数"shipping capacity"
 	$form->addElement("hidden","form_designated_num[$i]","");
-    //課税区分
+    //課税区分 tax division
     $form->addElement("hidden","hdn_tax_div[$i]");
-	//品名変更フラグ
+	//品名変更フラグ product name change flag
     $form->addElement("hidden","hdn_name_change[$i]");
-	//在庫管理
+	//在庫管理 inventory management
     $form->addElement("hidden","hdn_stock_manage[$i]");
-	//実棚数
+	//実棚数 actual number of units in the shelves i think this is for number 7 in the pic
 	$form->addElement("hidden","hdn_stock_num[$i]");
 
 }
 /****************************/
-//ＰＯＳＴ情報変更
+//ＰＯＳＴ情報変更 change the POST data
 /****************************/
 $form->setConstants($con_data);
 
